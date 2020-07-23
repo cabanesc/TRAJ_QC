@@ -25,6 +25,7 @@ function [o_alerte3, o_alerte4, o_alerte5, o_alerte6, o_alertCyc_e4, idCycprec] 
 %%%idCycprec: indices du cycle n-1
 %%---------------------------------------------------------------------------------------------------------------
         
+global PARAM;
 global T; 
 global M;
 global fid_alerte;
@@ -91,7 +92,7 @@ for id=1:length(a_cycles)
            Cyct= T.juld.data(idCyc(end))-T.juld.data(idCycprec{id}(end));
            if id > 2 & (Cyct<=a_dureeMedianCycle(idMis)*(a_cycles_sorted(id)-a_cycles_sorted(id-1))-1 ... 
              | Cyct>=a_dureeMedianCycle(idMis)*(a_cycles_sorted(id)-a_cycles_sorted(id-1))+1) ...
-             | Cyct<M.CycleTime(numMis)-0.15 | Cyct>M.CycleTime(numMis)+0.15 
+             | Cyct<M.CycleTime(numMis)-PARAM.TIME_DUREE_CYCLE_M | Cyct>M.CycleTime(numMis)+PARAM.TIME_DUREE_CYCLE_M 
                                        
               o_alerte5(a_cycles(id)+1)=str2double(floatname)    %%%ne suffit pas quand il n'y a qu'un seul cycle.
               fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(a_cycles_sorted(id)) ', PB DUREE CYCLE. Date derniere loc: ' datestr(T.juld.data(idCyc(end))+datenum('01011950','ddmmyyyy')) ', Date derniere loc précédente:' datestr(T.juld.data(idCycprec{id}(end))+datenum('01011950','ddmmyyyy')) '. Avec M.CycleTime=' num2str(M.CycleTime(numMis)) 'j']);
@@ -157,8 +158,8 @@ if isequal(a_cycles_1,a_cycles_sorted)==0
          numMismpost = T.config_mission_number.data(a_cycles==cycles_post_missing(im));   
          isMismpost = find(a_mission == numMismpost);
          dureeCyclem = a_dureeMedianCycle(isMismpost);
-         if ~isnan(dureeCyclem) & (T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))>(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem+0.5) ...
-            |T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))<(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem-0.5))
+         if ~isnan(dureeCyclem) & (T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))>(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem+PARAM.TIME_DUREE_CYCLE_JUMP) ...
+            |T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))<(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem-PARAM.TIME_DUREE_CYCLE_JUMP))
              o_alerte6=str2double(floatname);
              fprintf(fid_alerte,'%s\n',[ floatname ', cycles ' num2str(cycles_pre_missing(im)) ' - ' num2str(cycles_post_missing(im)) ', SAUTES CYCLES']); 
              fprintf('%s\n',[ floatname ', cycles ' num2str(cycles_pre_missing(im)) ' - ' num2str(cycles_post_missing(im)) ', SAUTES CYCLES']);   

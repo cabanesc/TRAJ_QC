@@ -20,10 +20,7 @@ function [o_alerte7, o_alerte8, o_alerte9, o_alertCyc_e5, o_alertCyc_e6,o_alertC
 %% LaunchLon: longitude à la date de lancement
 %%--------------------------------------------------------------------
 
-
-
-
-
+global PARAM;
 global T;
 global M;
 global P;
@@ -87,7 +84,7 @@ end
 % VERIFICATION DES DATES ET LOCS DE LANCEMENT (coherence entre les fichiers de trajectoires et de metadonnees)
 %---------------------------------
 LaunchDate_meta=datenum(M.launch_date,'yyyymmddHHMMSS');
-if abs(LaunchLat-M.launch_latitude)>0.1 | abs(LaunchLon-M.launch_longitude)>0.1 |LaunchDate+datenum('01011950','ddmmyyyy')~=LaunchDate_meta
+if abs(LaunchLat-M.launch_latitude)>PARAM.LOC_LAUNCH_DIFF_M | abs(LaunchLon-M.launch_longitude)>PARAM.LOC_LAUNCH_DIFF_M |LaunchDate+datenum('01011950','ddmmyyyy')~=LaunchDate_meta
      fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(sum(~isok)) ', INCOHERENCE ENTRE META ET TRAJ POUR LA POSITION ET/OU DATE DE LANCEMENT']);
      fprintf('%s\n',[ floatname ', cycle ' num2str(sum(~isok)) ', INCOHERENCE ENTRE META ET TRAJ POUR LA POSITION ET/OU DATE DE LANCEMENT']);
      T.position_qc.data(iLaunch)=6;% flag special pour confirmer ou non le launch date ?

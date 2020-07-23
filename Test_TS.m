@@ -21,7 +21,7 @@ ilong_drift, ilat_drift, idepth_std_drift)
 %% temp_alert: valeur 0 ou 1. 1 si pb détecté sur entre la température mesurée et la température théorique
 %% temp_non_ref: valeur 0 ou 1. 1 si la température n'est pas référencée dans la climatologie
 %%--------------------------------------------------------------------
-
+global PARAM;
 global T;
 global P;
 global fid_alerte;
@@ -40,8 +40,8 @@ global I_temp;
 
 o_alerte11 = []; o_alerte12 = [];
 
-temp_hold=50;
-psal_hold=50;
+%temp_hold=50;
+%psal_hold=50;
 itemp=0;
 ipsal=0;
 % recupeation de la temperature et de la salinite a la
@@ -67,8 +67,8 @@ idMis = find(double(missions)==numMis);
                 
 %%%Verification de la temp mesuree
                
-if (temp_drift_mes(i_rpp)<temp_drift_th(i_rpp)-10*temp_std ...
-    | temp_drift_mes(i_rpp)>temp_drift_th(i_rpp)+10*temp_std)&temp_drift_th(i_rpp)<50
+if (temp_drift_mes(i_rpp)<temp_drift_th(i_rpp)-PARAM.T_N_STD*temp_std ...
+    | temp_drift_mes(i_rpp)>temp_drift_th(i_rpp)+PARAM.T_N_STD*temp_std)&temp_drift_th(i_rpp)<50
 
     itemp=itemp+1;
     cyc_wrong_temp(itemp)=i_rpp;
@@ -94,8 +94,8 @@ else
 end
                
 % Verification de la salinite mesuree
-if (psal_drift_mes(i_rpp)<psal_drift_th(i_rpp)-psal_hold*psal_std ...
-   | psal_drift_mes(i_rpp)>psal_drift_th(i_rpp)+psal_hold*psal_std)&psal_drift_th(i_rpp)<60 
+if (psal_drift_mes(i_rpp)<psal_drift_th(i_rpp)-PARAM.S_N_STD*psal_std ...
+   | psal_drift_mes(i_rpp)>psal_drift_th(i_rpp)+PARAM.S_N_STD*psal_std)&psal_drift_th(i_rpp)<60 
    ipsal=ipsal+1;
 % recuperation des donnees aberrantes
    cyc_wrong_psal(ipsal)=i_rpp;

@@ -13,6 +13,7 @@
 clear all
 close all
 
+global PARAM;
 global P;
 global floatname;
 global TEMP_LONG;
@@ -61,6 +62,9 @@ addpath([DIR_SOFT '/decArgo_soft/soft/sub_foreign']);
 addpath([DIR_SOFT '/decArgo_soft/soft/m_map1.4e']);
 
 addpath(DIR_VISU);
+
+% recuperation des parametres
+PARAM = param
 
 % Liste des flotteurs a† tester
 fid1 = fopen(Liste_Float);
@@ -219,10 +223,11 @@ for k=1:length(allfloats{1})
 
         T=replace_fill_bynan(T);   % remplace les fillValues (9999.. par des NaN)
         
-        % VALEURS DES LOCALISATIONS ARGOS DE SURFACE
+	% VALEURS DES LOCALISATIONS ARGOS DE SURFACE
         if isfield(T,'measurement_code')==0
             idLoc =   find(~isnan(T.longitude.data)& ~isnan(T.latitude.data));
             fprintf(fid_alerte,'%s\n',[ floatname ' Attention pas de measurement_code dans le fichier Traj.'])
+ 
             fprintf('%s\n',[ floatname ' Attention pas de measurement_code dans le fichier Traj.'])
         else
             idLoc =   find(T.measurement_code.data==703);     %%%ne prend pas la premi√®re loca en surface car launch 
@@ -320,7 +325,8 @@ for k=1:length(allfloats{1})
                    
                      if length(duree_cycle_m)==1
                           dureeMedianCycle(m)=duree_cycle_m;    
-                     elseif length(duree_cycle_m)~=1 & mynanstd(duree_cycle_m)<100 
+                     %elseif length(duree_cycle_m)~=1 & mynanstd(duree_cycle_m)<100 
+                     elseif length(duree_cycle_m)~=1 & mynanstd(duree_cycle_m)<PARAM.TIME_STD_DUREE_CYCLE_M 
                           dureeMedianCycle(m)=median(duree_cycle_m); 
                      elseif isnan(duree_cycle_m)==1
                          dureeMedianCycle(m) = NaN;
@@ -338,7 +344,8 @@ for k=1:length(allfloats{1})
                     
                if length(missions)<=length(M.CycleTime)  
               
-                     if abs(dureeMedianCycle(m)-M.CycleTime(missions(m)))>0.1        
+                     %if abs(dureeMedianCycle(m)-M.CycleTime(missions(m)))>0.1        
+                     if abs(dureeMedianCycle(m)-M.CycleTime(missions(m)))>PARAM.TIME_DIFF_CYCLE        
                                                 
                         fprintf(fid_alerte,'%s\n',[ floatname ', INCOHERENCE DUREE CYCLE ENTRE META (', num2str(M.CycleTime(m)),' j) ET TRAJ (',num2str(dureeMedianCycle(m)), ' j)']); 
                         fprintf('%s\n',[ floatname ', INCOHERENCE DUREE CYCLE ENTRE META (',num2str(M.CycleTime(m)),' j) ET TRAJ (',num2str(dureeMedianCycle(m)), ' j)']);
@@ -367,6 +374,7 @@ for k=1:length(allfloats{1})
         
          if length(missions)>length(M.CycleTime)
                
+             
                 fprintf(fid_alerte,'%s\n',[ floatname ', INCOHERENCE META & TRAJ: Nbre de N∞ MISSION DANS META (', num2str(length(M.CycleTime)),' ) < ‡† celui dans TRAJ (', num2str(length(missions)), ' ). Ne peut pas correctement verifier la coherence ni pour la duree des cycles ni pour P_park.']); 
                 fprintf('%s\n',[ floatname ', INCOHERENCE META & TRAJ: Nbre de N∞ MISSION DANS META (',num2str(length(M.CycleTime)),' ) < ‡† celui dans TRAJ (', num2str(length(missions)), ' ). Ne peut pas correctement verifier la coherence ni pour la duree des cycles ni pour P_park.']);
                 if (Stat==1)
@@ -644,7 +652,8 @@ for k=1:length(allfloats{1})
              % on veut verifier que les mesures des parametres physiques
              % sont coherentes en comparant avec le modele donne (ici ISAS)
               
-             [o_alerte11, o_alerte12, temp_alert, temp_non_ref] = Test_TS(idCyc_drift, idCycprec, id, cycles_sorted,pres_long,pres_lat,numMis, missions,i_rpp, idepth_drift,...
+             %[o_alerte11, o_alerte12, temp_alert, temp_non_ref] = Test_TS(idCyc_drift, idCycprec, id, cycles_sorted,pres_long,pres_lat,numMis, missions,i_rpp, idepth_drift,...
+             [o_alerte11, o_alerte12, temp_alert, temp_non_ref] = Test_TS(idCyc_drift, id, cycles_sorted,pres_long,pres_lat,numMis, missions,i_rpp, idepth_drift,...
              ilong_drift, ilat_drift, idepth_std_drift);
                   
              
@@ -658,7 +667,7 @@ for k=1:length(allfloats{1})
               pres_drift_th(i_rpp)=-TEMP_DEPTH(idepth_drift);
               pres_drift_mes(i_rpp)=-pres_drift_mes(i_rpp); 
              
-              if(pres_drift_mes(i_rpp)<=elev-100 || pres_drift_mes(i_rpp) <-2200)
+              if(pres_drift_mes(i_rpp)<=elev-PARAM.PRESS_PARK_DIFF_BATHY_QC || pres_drift_mes(i_rpp) <-PARAM.PRESS_PARK_DUMB)
                  T.pres_qc.data(idCyc_drift)=4;    
               end
                 
@@ -667,9 +676,9 @@ for k=1:length(allfloats{1})
               selec = idCyc_drift(isok_p); select = T.pres.data(selec);   
                 
               %%recuperation des pressions de derive et moyenne par cycle
-              if(elev<-1500)   %%%ne recupere les pressions que quand la bathy est <-1500
+              if(elev<-PARAM.PRESS_FOND)   %%%ne recupere les pressions que quand la bathy est <-1500
                  
-                  pres_ok(id) = abs(mynanmean(select(find(select>50))));     %%%ne prend pas les pressions <50m 
+                  pres_ok(id) = abs(mynanmean(select(find(select>PARAM.PRESS_SURF))));     %%%ne prend pas les pressions <50m 
               else
                   pres_ok(id) = NaN;
               end
@@ -731,9 +740,9 @@ for k=1:length(allfloats{1})
                  if(~isempty(idcMisok))
                       if(length(find(~isnan(cycles_m{m})))>=1)    %% pour les cas ou cycles_m{m} ~= juste le cycle 0
                    %%prise en compte du qc mis suite a† la verif avec la bathy
-                         if mynanstd(pres(pres>200&pres<2000))<200  
+                         if mynanstd(pres(pres>PARAM.PRESS_STD_MIN&pres<PARAM.PRESS_STD_MAX))<PARAM.PRESS_STD
                      %presMedianDrift(m)=-abs(median(pres_ok_m(pres_ok_m>500&pres_ok_m<1500),2));    %%qu'en est-il quand Ppark ~ 300m ?
-                            presMedianDrift(m)=-abs(median(pres(pres>200&pres<2000),2));
+                            presMedianDrift(m)=-abs(median(pres(pres>PARAM.PRESS_STD_MIN&pres<PARAM.PRESS_STD_MAX),2));
                           else
                             presMedianDrift(m)= -M.ParkPressure(missions(m)); 
                           end
@@ -760,7 +769,7 @@ for k=1:length(allfloats{1})
                  
                 if length(missions)<=length(M.ParkPressure) & isnan(presMedianDrift(m))==0                                
                                
-                     if (abs(presMedianDrift(m)- (-M.ParkPressure(missions(m))))>20) % NC laisser une marge d'erreur
+                     if (abs(presMedianDrift(m)- (-M.ParkPressure(missions(m))))>PARAM.PRESS_PARK_DIFF_M) % NC laisser une marge d'erreur
                         fprintf(fid_alerte,'%s\n',[ floatname ', INCOHERENCE ENTRE META ET TRAJ POUR P_park : |TPmed-MP| >20 db']);
                         fprintf('%s\n',[ floatname ', INCOHERENCE ENTRE META ET TRAJ POUR P_park : |TPmed-MP| > 20 db']);
                         if Stat==1
@@ -787,10 +796,10 @@ for k=1:length(allfloats{1})
                 %%%pression mediane est bien differente de la valeur indiquee dans
                 %%%les meta.    
                 
-                if m<=length(M.ParkPressure) & abs(presMedianDrift(m) - -M.ParkPressure(m)) <  30    %%si nbre de mission dans meta et traj est <= et si la mediane de la pression est proche de celle indiquee dans les meta
+                if m<=length(M.ParkPressure) & abs(presMedianDrift(m) - -M.ParkPressure(m)) <  PARAM.PRESS_PARK_DIFF_M    %%si nbre de mission dans meta et traj est <= et si la mediane de la pression est proche de celle indiquee dans les meta
                     park_prof(m) = -M.ParkPressure(m);
-                elseif m>length(M.ParkPressure) || presMedianDrift(m)<-M.ParkPressure(m)-30 ...  %%%si nbre de mission dans meta manquant ou si la mediane de la pression trop eloignee de celle indiquee dans les meta
-                    || presMedianDrift(m)>-M.ParkPressure(m)+30
+                elseif m>length(M.ParkPressure) || presMedianDrift(m)<-M.ParkPressure(m)-PARAM.PRESS_PARK_DIFF_M ...  %%%si nbre de mission dans meta manquant ou si la mediane de la pression trop eloignee de celle indiquee dans les meta
+                    || presMedianDrift(m)>-M.ParkPressure(m)+PARAM.PRESS_PARK_DIFF_M
                 
                     park_prof(m) = presMedianDrift(m);
                 end
@@ -847,8 +856,8 @@ for k=1:length(allfloats{1})
                 % Verification de la pression de derive  (par rapport √† la
                 % pression mediane)     (remplacer par park_prof ?)
                 %keyboard     
-                if (pres_drift_mes(i_rpp)<presMedianDrift(idMis)-100 ... 
-                   | pres_drift_mes(i_rpp)>presMedianDrift(idMis)+100)        %| presMedianDrift(idMis)<=elev_all(i_rpp)-50   %%%< elev-100 plut√¥t ? ou enlever cette condition car v√©rif grounded plus loin
+                if (pres_drift_mes(i_rpp)<presMedianDrift(idMis)-PARAM.PRESS_PARK_DIFF_ISAS ... 
+                   | pres_drift_mes(i_rpp)>presMedianDrift(idMis)+PARAM.PRESS_PARK_DIFF_ISAS)        %| presMedianDrift(idMis)<=elev_all(i_rpp)-50   %%%< elev-100 plut√¥t ? ou enlever cette condition car v√©rif grounded plus loin
                   
                     ipres=ipres+1;
                     % recuperation des donnees aberrantes
@@ -881,7 +890,7 @@ for k=1:length(allfloats{1})
 
                  
 
-                 if  (elev_end_all(i_rpp)>=park_prof(idMis)+30 | elev_all(i_rpp)>=park_prof(idMis)+30) ...
+                 if  (elev_end_all(i_rpp)>=park_prof(idMis)+PARAM.PRESS_PARK_DIFF_BATH | elev_all(i_rpp)>=park_prof(idMis)+PARAM.PRESS_PARK_DIFF_BATH) ...
                      | (temp_non_ref(i_rpp)==1 & pres_alert(i_rpp)==1) 
                      alerte_grounded = 1;
                      iground=iground+1;
@@ -941,10 +950,10 @@ for k=1:length(allfloats{1})
              % positionnement
              if strfind('IRIDIUM',M.trans_system)
                  bornesurf=20000;
-                 ecartcycle=10;
+                 ecartcycle=PARAM.TIME_DIFF_FLLOCS_IR;
              elseif strfind('ARGOS',M.trans_system)
                  bornesurf=100000;
-                 ecartcycle=24;
+                 ecartcycle=PARAM.TIME_DIFF_FLLOCS_AR;
              end
              
              
@@ -1031,7 +1040,7 @@ for k=1:length(allfloats{1})
                        ecartMaxLocCycle(istat)=NaN;
                    end
                 
-                   if ecartMaxLocCycle(istat)>10
+                   if ecartMaxLocCycle(istat)>PARAM.TIME_DIFF_2LOCS %en heure
                        fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ECART MAX 2 LOC > 10h :' num2str(ecartMaxLocCycle(istat)) ' heures']);
                        fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ECART MAX 2 LOC > 10h :' num2str(ecartMaxLocCycle(istat)) ' heures']);
                        if Stat==1
@@ -1050,14 +1059,14 @@ for k=1:length(allfloats{1})
                    %----------------------------------------------------------------
                    if (locDate_qc_sorted~=6|locDate_qc_sorted~=4);
                        ecartFirstLastLoc(istat)= LocDate_sorted(end)-LocDate_sorted(1);
-                       if ecartFirstLastLoc(istat)*24 > ecartcycle & id<length(cycles_sorted) % on est pas sur le dernier cycle qui peut etre EOF
+                       if ecartFirstLastLoc(istat)*24 > ecartcycle & id<length(cycles_sorted) % on est pas sur le dernier cycle qui peut etre EOL
                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ECART FIRST LAST LOC >' num2str(ecartcycle) 'h :' num2str(ecartFirstLastLoc(istat)) ' jours']);
                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ECART FIRST LAST LOC >' num2str(ecartcycle) 'h :' num2str(ecartFirstLastLoc(istat)) ' jours']);
                            if Stat==1
                              alertCyc_e5 = [alertCyc_e5 cycles_sorted(id)];
                              alerte18(k,id)=str2double(floatname);
                            end
-                      elseif ecartFirstLastLoc(istat)*24 > 60 & id<length(cycles_sorted)
+                      elseif ecartFirstLastLoc(istat)*24 > PARAM.TIME_DIFF_FLLOCS_EOL & id<length(cycles_sorted) % en heure
                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',? EOL ?']);
                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',? EOL ?']); % peut-on considerer EOL √† partir de 5 j √† la surface ?
                            fleet_EOF(k,id)=str2double(floatname);
@@ -1129,7 +1138,7 @@ for k=1:length(allfloats{1})
                                % ne faut pas flagguer a mauvais les dates de loc.
                                % Si LaunchDate post√©rieure aux LOCS de plus de 3 jours (ou 3h ???), on se dit que c'est la launchdate qui est
                                % douteuse (les mises en route sur le bateau se font qq minutes ou heures avant)
-                               isokLaunchDate(k)=ecartLaunchDateFirstLoc(k)>-0.125; %  NC faire des stats sur ces ecarts entre launch date et premiere position: definir un seuil
+                               isokLaunchDate(k)=ecartLaunchDateFirstLoc(k)>-PARAM.TIME_DIFF_FLLOCS_AR; %  NC faire des stats sur ces ecarts entre launch date et premiere position: definir un seuil
                         
                                
                               if isokLaunchDate(k)  & M.launch_qc==1
@@ -1150,7 +1159,7 @@ for k=1:length(allfloats{1})
                                        
                                      end
                                  end
-                              elseif isokLaunchDate(k) < -0.125       %% SI L'ERREUR VIENT D'UNE LAUNCH DATE ERRONEE
+                              elseif isokLaunchDate(k) < -PARAM.TIME_DIFF_FLLOCS_AR       %% SI L'ERREUR VIENT D'UNE LAUNCH DATE ERRONEE
                                  
                                  fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ? PB LAUNCH DATE POSTERIEURE √† DATE DE LOC DE PLUS DE 3 h?']);
                                  fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ? PB LAUNCH DATE POSTERIEURE √† DATE DE LOC DE PLUS DE 3 h?']);
@@ -1161,7 +1170,7 @@ for k=1:length(allfloats{1})
                              end
                            
                         
-                           if ecartLaunchDateFirstLoc(k)>10.5 % Cas ‡† part ou ecart entre Launch date et dates de LOC tres grand
+                           if ecartLaunchDateFirstLoc(k)>PARAM.TIME_LAUNCH_FIRST_LOC_DPF % Cas ‡† part ou ecart entre Launch date et dates de LOC tres grand
                               
                               fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ? PB ECART LAUNCH DATE ET DATE DE LOC DE PLUS DE 10.5 j. DPF sans PRELUDE ?']);
                               fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ? PB ECART LAUNCH DATE ET DATE DE LOC DE PLUS DE 10.5 j. DPF sans PRELUDE ?']);
@@ -1206,7 +1215,7 @@ for k=1:length(allfloats{1})
                     
                      ecartLaunchDateFirstLoc(k)=LocDate_sorted(1)-LaunchDate;
                      
-                     if(ecartLaunchDateFirstLoc(k)>100)
+                     if(ecartLaunchDateFirstLoc(k)>PARAM.TIME_LAUNCH_FIRST_LOC_DUMB)
                           
                           fprintf(fid_alerte,'%s\n',[ floatname ', cycle '...
                           num2str(cycles(id)) ', UNE SEULE LOC et DATE INCOHERENTE.']);   
@@ -1323,7 +1332,7 @@ for k=1:length(allfloats{1})
                                         
                                     end
                                 
-                            elseif elev_float<0&elev_float>-200&isempty(find(voisins>0))==0    %%%si l'atitude du point est >-200 et l'altitude d'au moins un voisin >0 est probablement proche de la terre.
+                            elseif elev_float<0&elev_float>PARAM.ALT_GROUND_NEAR_COAST &isempty(find(voisins>0))==0    %%%si l'atitude du point est >-200 et l'altitude d'au moins un voisin >0 est probablement proche de la terre.
                                    fprintf(fid_alerte,'%s\n',[floatname ', cycle ' num2str(cycles_sorted(id)) ' ,  altitude du flotteur proche de 0 (' (num2str(elev_float)) 'm) , et au moins 1 point voisin > 0. Probablement proche terre.']); 
                                    fprintf('%s\n',[floatname ', cycle ' num2str(cycles_sorted(id)) ' ,  -20 < altitude du flotteur < 0 (' (num2str(elev_float)) 'm) , et au moins 1 point voisin > 0. Probablement proche terre.']); 
                                    if Stat == 1
@@ -1376,9 +1385,9 @@ for k=1:length(allfloats{1})
                         
                           
                         %%%%EN PROFONDEUR
-                        if distanceprof> dureeCycle*(cycles_sorted(id)-cycles_sorted(id-1))*(24*60*60)*3 % borne a adapter en fonction de la duree du cycle (vitesse maximale du flotteur : 3 m/s)
-                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',DERIVE EN PROFONDEUR > ' num2str(dureeCycle*(cycles(id)-cycles(id-1))*(24*60*60)*3/1000) 'km :' num2str(distanceprof/1000) ' km. Loc Argos probablement erron√©e.']);
-                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',DERIVE EN PROFONDEUR > ' num2str(dureeCycle*(cycles(id)-cycles(id-1))*(24*60*60)*3/1000) 'km :' num2str(distanceprof/1000) ' km. Loc Argos probablement erron√©e.']);
+                        if distanceprof> dureeCycle*(cycles_sorted(id)-cycles_sorted(id-1))*(24*60*60)*PARAM.SPEED_MAX % borne a adapter en fonction de la duree du cycle (vitesse maximale du flotteur : 3 m/s)
+                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',DERIVE EN PROFONDEUR > ' num2str(dureeCycle*(cycles(id)-cycles(id-1))*(24*60*60)*PARAM.SPEED_MAX/1000) 'km :' num2str(distanceprof/1000) ' km. Loc Argos probablement erron√©e.']);
+                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',DERIVE EN PROFONDEUR > ' num2str(dureeCycle*(cycles(id)-cycles(id-1))*(24*60*60)*PARAM.SPEED_MAX/1000) 'km :' num2str(distanceprof/1000) ' km. Loc Argos probablement erron√©e.']);
                             if Stat == 1
                                 alertCyc_e9 = [alertCyc_e9 cycles_sorted(id)];
                                 alerte28(k,cycles_sorted(id)+1)=str2double(floatname);
