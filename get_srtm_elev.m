@@ -29,7 +29,8 @@
 function [o_elev, o_lon , o_lat] = get_srtm_elev(a_lonMin, a_lonMax, a_latMin, a_latMax)
 
 global g_elevDef;
-DIR_BATHY = '/home/gherbert/andro/andro/data/bathy/SRTM30plus/data/';
+global DIR_BATHY
+%DIR_BATHY = '/home/gherbert/andro/andro/data/bathy/SRTM30plus/data/';
 % initialisation des valeurs par d�faut
 init_valdef;
 
