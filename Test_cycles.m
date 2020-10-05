@@ -71,6 +71,7 @@ for id=1:length(a_cycles)
             o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(id)];
             T.juld_qc.data(idCyc)=4;
             T.position_qc.data(idCyc)=4;
+            keyboard
         end
         
         
@@ -99,7 +100,7 @@ for id=1:length(a_cycles)
             %              | Cyct>=a_dureeMedianCycle(idMis)*(a_cycles_sorted(id)-a_cycles_sorted(id-1))+1) ...
             %              | Cyct<M.CycleTime(numMis)-PARAM.TIME_DUREE_CYCLE_M | Cyct>M.CycleTime(numMis)+PARAM.TIME_DUREE_CYCLE_M
             %keyboard
-            %  cc PARAM.TIME_DUREE_CYCLE_M  : faire un pourcentage de la duree de cycle?
+            % correction  cc 15/09/2020 : PARAM.TIME_DUREE_CYCLE_M  : faire un pourcentage de la duree de cycle?
             if id > 2 & (Cyct<=a_dureeMedianCycle(idMis)*(a_cycles_sorted(id)-a_cycles_sorted(id-1))-1 ...
                     | Cyct>=a_dureeMedianCycle(idMis)*(a_cycles_sorted(id)-a_cycles_sorted(id-1))+1) ...
                     | abs(Cyct-M.CycleTime(numMis))./M.CycleTime(numMis)*100>PARAM.TIME_DUREE_CYCLE_M
@@ -107,7 +108,7 @@ for id=1:length(a_cycles)
                 o_alerte5(a_cycles(id)+1)=str2double(floatname);    %%%ne suffit pas quand il n'y a qu'un seul cycle.
                 
                 fid_alerte=fopen(file_alerte,'a');
-                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(a_cycles_sorted(id)) ', PB DUREE CYCLE. Date derniere loc: ' datestr(T.juld.data(idCyc(end))+datenum('01011950','ddmmyyyy')) ', Date derniere loc précédente:' datestr(T.juld.data(idCycprec{id}(end))+datenum('01011950','ddmmyyyy')) '. Avec M.CycleTime=' num2str(M.CycleTime(numMis)) 'j']);
+                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(a_cycles_sorted(id)) ', PB DUREE CYCLE, Date derniere loc: ' datestr(T.juld.data(idCyc(end))+datenum('01011950','ddmmyyyy')) ', Date derniere loc précédente:' datestr(T.juld.data(idCycprec{id}(end))+datenum('01011950','ddmmyyyy')) '. Avec M.CycleTime=' num2str(M.CycleTime(numMis)) 'j']);
                 fclose(fid_alerte);
                 fprintf('%s\n',[ floatname ', cycle ' num2str(a_cycles_sorted(id)) ', PB DUREE CYCLE. Date derniere loc: ' datestr(T.juld.data(idCyc(end))+datenum('01011950','ddmmyyyy')) ', Date derniere loc précédente:' datestr(T.juld.data(idCycprec{id}(end))+datenum('01011950','ddmmyyyy')) '. Avec M.CycleTime=' num2str(M.CycleTime(numMis)) 'j']);
                 o_alertCyc_e4 =  [o_alertCyc_e4 a_cycles_sorted(id)];
@@ -121,16 +122,16 @@ for id=1:length(a_cycles)
             if abs(a_dureeMedianCycle(isMis)-M.CycleTime(isMis))<0.1 & ((unique(floor(a_duree_cycle)))>2 ...
                     & isempty(a_duree_cycle(a_duree_cycle<0))==0)
                 fid_alerte=fopen(file_alerte,'a');
-                fprintf(fid_alerte,'%s\n',[ floatname,' PB DUREE CYCLE PROVIENT PROBABLEMENT D''UN MAUVAIS ARRANGEMENT DES TRANSMISSIONS ARGOS']);
+                fprintf(fid_alerte,'%s\n',[ floatname,',, PB DUREE CYCLE PROVIENT PROBABLEMENT D''UN MAUVAIS ARRANGEMENT DES TRANSMISSIONS ARGOS']);
                 fclose(fid_alerte);
                 fprintf('%s\n',[ floatname, ' PB DUREE CYCLE PROVIENT PROBABLEMENT D''UN MAUVAIS ARRANGEMENT DES TRANSMISSIONS ARGOS']);
             end
             
         elseif(length(M.CycleTime)<isMis)                      %%% Cas où M.CycleTime mal renseigné.
             fid_alerte=fopen(file_alerte,'a');
-            fprintf(fid_alerte,'%s\n',[ floatname, ',  cycle ' num2str(a_cycles_sorted(id)) ' NE PEUT PAS COMPARER LA VALEUR MEDIANE DE LA DUREE DU CYCLE AVEC LA DUREE FOURNIE PAR LE FICHIER META CAR INFO MANQUANTE POUR N° DE MISSION ' num2str(m)]);
+            fprintf(fid_alerte,'%s\n',[ floatname, ',  cycle ' num2str(a_cycles_sorted(id)) ', NE PEUT PAS COMPARER LA VALEUR MEDIANE DE LA DUREE DU CYCLE AVEC LA DUREE FOURNIE PAR LE FICHIER META CAR INFO MANQUANTE POUR N° DE MISSION ' num2str(m)]);
             fclose(fid_alerte);
-            fprintf('%s\n',[ floatname, ' , cycle ' num2str(a_cycles_sorted(id)) ' NE PEUT PAS COMPARER LA VALEUR MEDIANE DE LA DUREE DU CYCLE AVEC LA DUREE FOURNIE PAR LE FICHIER META CAR INFO MANQUANTE POUR N° DE MISSION ' num2str(m)]);
+            fprintf('%s\n',[ floatname, ' , cycle ' num2str(a_cycles_sorted(id)) ', NE PEUT PAS COMPARER LA VALEUR MEDIANE DE LA DUREE DU CYCLE AVEC LA DUREE FOURNIE PAR LE FICHIER META CAR INFO MANQUANTE POUR N° DE MISSION ' num2str(m)]);
         end
         
     end
@@ -161,7 +162,7 @@ if isequal(a_cycles_1,a_cycles_sorted)==0
         end
     end
     fid_alerte=fopen(file_alerte,'a');
-    fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(length(cycles_missing)) ' cycles manquent,(', num2str(cycles_missing), ') ? PB DECOUPAGE CYCLE ?']);
+    fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(length(cycles_missing)) ', cycles manquent,(', num2str(cycles_missing), ') ? PB DECOUPAGE CYCLE ?']);
     fclose(fid_alerte);
     fprintf('%s\n',[ floatname ', ' num2str(length(cycles_missing)) ' cycles manquent, ? PB DECOUPAGE CYCLE ?']);
     

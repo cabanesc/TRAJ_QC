@@ -21,6 +21,7 @@
 % ------------------------------------------------------------------------------
 % RELEASES :
 %   13/05/2008 - RNU - creation
+%  modif G.Herbert
 % ------------------------------------------------------------------------------
 function [isdouble_toremove, idDoublon_date, idDoublon_lonlat] = ...
    find_doubles_datelatlon(a_posDate, a_posLon, a_posLat, a_posQc, a_posTemp)
@@ -35,7 +36,14 @@ idDelete = [];
 idDoublon_date=[];
 idDoublon_lonlat = [];
 argosDates = unique(o_posDate);
-diffDates = diff(o_posDate);
+% correction cc 24/09/2020 : attention les dates ne sont pas forcement
+% ordonnees: on peut trouver un double plus loin dans la serie
+[o_posDate_sorted,isort]=sort(o_posDate);
+o_posLon_sorted=o_posLon(isort);
+o_posLat_sorted=o_posLat(isort);
+o_posQc_sorted=o_posQc(isort);
+diffDates = diff(o_posDate_sorted);
+%diffDates = diff(o_posDate);
 
 idDoublon_d = find(diffDates<=0.000347222317941487);   %%considère un doublon lorsque la différence entre les deux positions est <=30s
  
@@ -45,22 +53,22 @@ idDoublon_d = find(diffDates<=0.000347222317941487);   %%considère un doublon l
           idDoublon=[idDoublon_d(id) idDoublon_d(id)+1];
           idDoublon_date=[idDoublon_date idDoublon];
           %% (récupère id quand doublons date associées à doublons lon-lat) --> non 
-          if(diff(o_posLon(idDoublon))==0 & diff(o_posLat(idDoublon))==0)
+          if(diff(o_posLon_sorted(idDoublon))==0 & diff(o_posLat_sorted(idDoublon))==0)
               idDoublon_lonlat = [idDoublon_lonlat; idDoublon];
               % idDoublon_date=[idDoublon_date idDoublon];
           end
           % parmi les doublons, on conserve la localisation de meilleure classe Argos
-          if (sum(isstrprop(o_posQc(idDoublon), 'digit')) ~= 0)
+          if (sum(isstrprop(o_posQc_sorted(idDoublon), 'digit')) ~= 0)
               % il n'y a que des classes 1 2 3
-             [qcMax id] = max(o_posQc(idDoublon));
+             [qcMax id] = max(o_posQc_sorted(idDoublon));
              idChoix = id(1);
-          elseif (sum(isstrprop(o_posQc(idDoublon), 'alpha')) ~= 0)
+          elseif (sum(isstrprop(o_posQc_sorted(idDoublon), 'alpha')) ~= 0)
               % il n'y a que des classes A B Z
-             [qcMin id] = min(o_posQc(idDoublon));
+             [qcMin id] = min(o_posQc_sorted(idDoublon));
              idChoix = id(1);
           else
-             idDigit = find(isstrprop(o_posQc(idDoublon), 'digit') == 1);
-             [qcMax id] = max(o_posQc(idDoublon(idDigit)));
+             idDigit = find(isstrprop(o_posQc_sorted(idDoublon), 'digit') == 1);
+             [qcMax id] = max(o_posQc_sorted(idDoublon(idDigit)));
              if (~isempty(id))
                idChoix = idDigit(id(1));
              else
@@ -73,10 +81,12 @@ idDoublon_d = find(diffDates<=0.000347222317941487);   %%considère un doublon l
           end
           idDelete = [idDelete; idDoublon];
      end
-end
-idDoublon_lonlat = idDoublon_lonlat(:);
-idDoublon_date = idDoublon_date(:);
-isdouble_toremove=idDelete;
-
+   end
+%idDoublon_lonlat = idDoublon_lonlat(:);
+idDoublon_lonlat = isort(idDoublon_lonlat(:)); % cc correction 24/09/2020
+%idDoublon_date = idDoublon_date(:);
+idDoublon_date = isort(idDoublon_date(:));
+%isdouble_toremove=idDelete;
+isdouble_toremove=isort(idDelete);
 
 return;
