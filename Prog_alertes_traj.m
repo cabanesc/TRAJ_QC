@@ -68,9 +68,10 @@ addpath(DIR_VISU);
 PARAM = param
 
 % Liste des flotteurs a� tester
+
 fid1 = fopen(Liste_Float);
-%allfloats=textscan(fid1,'%s\n','Delimiter',',','CommentStyle','#');
-allfloats=textscan(fid1,'%s%s%s\n','Delimiter',',','CommentStyle','#');
+allfloats=textscan(fid1,'%s','Delimiter',',','CommentStyle','#');
+%allfloats=textscan(fid1,'%s%s%s','Delimiter',',','CommentStyle','#');
 fclose(fid1);
 
 %% Creation du r�pertoire /STAT s'il n'existe pas
@@ -1058,26 +1059,31 @@ for k=1:length(allfloats{1})
                     end
                     %fprintf(fid3,'%s\n',[floatname ', [' num2str(cycles_sorted(id)) ']']);
                     
+                    T.grounded.data(id) = 'Y'; % add cc 05/10/2020
+
                     if(GroundedNum(id)==2)    %%% 2 = 'N'
                         fid_alerte=fopen(file_alerte,'a');
-                        fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', alerte grounded mais incohérence avec la variable T.grounded.']);
+                        fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', alerte grounded mais incohérence avec la variable T.grounded =''N''.']);
                         fclose(fid_alerte);
-                        fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', alerte grounded mais incohérence avec la variable T.grounded.']);                      %%% appliquer flags ?
+                        fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', alerte grounded mais incohérence avec la variable T.grounded =''N''.']);                      %%% appliquer flags ?
                         %%%mettre la variable grounded à 'Y' ??
-                        T.grounded.data(id) = 'Y';
+                        %T.grounded.data(id) = 'Y'; % remove cc 05/10/2020
                     end
                     
                     if(map==1)
                         m_plot(TEMP_LONG(ilong_drift,1),TEMP_LAT(ilat_drift,1),'color',[0.4660 0.6740 0.1880],'marker','p','markersize',8)
                     end
-                elseif(GroundedNum(id)==1) & alerte_grounded==0    %%%1 = 'Y'
-                    alertCyc_e3 = [alertCyc_e3 cycles_sorted(id)];
+                elseif(GroundedNum(id)==1)    %%%1 = 'Y'
+                   % alertCyc_e3 = [alertCyc_e3 cycles_sorted(id)]; %
+                   % remove cc 05/10/2020
 %                     fid_alerte=fopen(file_alerte,'a');
 %                     fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded alors que oui d''apres la variable T.grounded.']);
 %                     fclose(fid_alerte);
-                    %fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded alors que oui d''apres la variable T.grounded.']);                      %%% appliquer flags ?
+                    % fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded alors que oui d''apres la variable T.grounded.']);                      %%% appliquer flags ?
                     T.grounded.data(id)='P';
-                elseif(GroundedNum(id)==3) & alerte_grounded==0      %%%3 = 'U'
+                elseif(GroundedNum(id)==2)    %%%1 = 'Y'  % add cc 05/10/2020
+                    T.grounded.data(id)='N';
+                elseif(GroundedNum(id)==3)       %%%3 = 'U'
 %                     fid_alerte=fopen(file_alerte,'a');
 %                     fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded et ''U'' d''apres la variable T.grounded.']);
 %                     fclose(fid_alerte);
@@ -1126,11 +1132,21 @@ for k=1:length(allfloats{1})
                 %[isdouble_toremove,idDoublon_date,idDoublon_latlon] = ...
                 %    find_doubles_datelatlon(locDate, locLon, locLat, locQc, locTemp);   %%%recherche les doublons. Attention, il peut y avoir un double de date pas forcement associe à double de lon ou de lat
                 
+                 % cc 05/10/2020 : si critere de double de date <30s on
+                    % trouve enormement de doubles. Peut être normal
+                    % Je pense qu'on peut se contenter de checher les
+                    % doubles exacts seulement
+                    % PARAM.TIME_DIFF_DOUBLE_DATE_LOC=0;
+                    
                 [isdouble_toremove,idDoublon_date,idDoublon_latlon] = ...
                     find_doubles_datelatlon_30s(locDate, locLon, locLat, locQc, locTemp);   %%%recherche les doublons. Attention, il peut y avoir un double de date pas forcement associe à double de lon ou de lat
                 
                 
                 if isempty(isdouble_toremove)==0
+                    
+                   
+                    % 
+                    
                     fid_alerte=fopen(file_alerte,'a');
                     fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DOUBLE DATES DE LOC']);
                     fclose(fid_alerte);
@@ -1138,31 +1154,44 @@ for k=1:length(allfloats{1})
                     
                     %T.position_qc.data(idCyc(idDoublon_date(find(T.position_qc.data(idCyc(idDoublon_date)))>1)))=6;   %%flag à 6 les dates doublées dont le qc est >1
                     % correction cc 24/09/2020
-                    T.position_qc.data(idCyc(idDoublon_date(find(T.position_qc.data(idCyc(idDoublon_date))>1))))=6;
+                    isdb = zeros(1,length(idCyc));
+                    isdb(isdouble_toremove)=1;
+                    isflag4=T.juld_qc.data(idCyc)==4;
+                    T.juld_qc.data(idCyc(isdb&~isflag4))=6;
+                    isflag4=T.position_qc.data(idCyc)==4;
+                    T.position_qc.data(idCyc(isdb&~isflag4))=6;
+                    %T.position_qc.data(idCyc(idDoublon_date(find(T.position_qc.data(idCyc(idDoublon_date))>1))))=6;
                     
                     if Stat==1
                         alertCyc_e9 = [alertCyc_e9 cycles_sorted(id)];
                         alerte15(k,cycles_sorted(id)+1)=str2double(floatname);
                     end
                     
-                    if isequal(idDoublon_date,idDoublon_latlon)
-                        fid_alerte=fopen(file_alerte,'a');
-                        fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ' id LOC ' num2str(idDoublon_latlon(1)) '&' num2str(idDoublon_latlon(2))  ', DOUBLE DATES DE LOC ASSOCIE A DOUBLES LON-LAT']);
-                        fclose(fid_alerte);
-                        fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ' id LOC ' num2str(idDoublon_latlon(1)) '&' num2str(idDoublon_latlon(2)) ', DOUBLE DATES DE LOC ASSOCIE A DOUBLES LON-LAT']);
-                        % T.position_qc.data(idCyc(idDoublon_latlon(find(T.position_qc.data(idCyc(idDoublon_latlon)))>1)))=6;   %%flag à 6 les lon-lat doublés dont le qc est >1
-                        % correctio, cc 24/09/2020
-                        T.position_qc.data(idCyc(idDoublon_latlon(find(T.position_qc.data(idCyc(idDoublon_latlon))>1))))=6;
-                        if Stat==1
-                            alertCyc_e9 = [alertCyc_e9 cycles_sorted(id)];
-                        end
-                    end
+                    
+                    % comment cette partie cc 05/10/2020 
+%                     if isequal(idDoublon_date,idDoublon_latlon)
+%                         fid_alerte=fopen(file_alerte,'a');
+%                         fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ' id LOC ' num2str(idDoublon_latlon(1)) '&' num2str(idDoublon_latlon(2))  ', DOUBLE DATES DE LOC ASSOCIE A DOUBLES LON-LAT']);
+%                         fclose(fid_alerte);
+%                         fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ' id LOC ' num2str(idDoublon_latlon(1)) '&' num2str(idDoublon_latlon(2)) ', DOUBLE DATES DE LOC ASSOCIE A DOUBLES LON-LAT']);
+%                         % T.position_qc.data(idCyc(idDoublon_latlon(find(T.position_qc.data(idCyc(idDoublon_latlon)))>1)))=6;   %%flag à 6 les lon-lat doublés dont le qc est >1
+%                         % correctio, cc 24/09/2020
+%                         T.position_qc.data(idCyc(idDoublon_latlon(find(T.position_qc.data(idCyc(idDoublon_latlon))>1))))=6;
+%                         if Stat==1
+%                             alertCyc_e9 = [alertCyc_e9 cycles_sorted(id)];
+%                         end
+%                     end
+                     
+                     % question cc 05/10/2020? si on a un doublon de position sans doublons de
+                     % date pour un meme cycle?  que fait-on? => les
+                     % positions sont mauvaise?
+                     
                     
                 end
                 
-                % QUE FAIRE avec des doubles (FLAG ?)
-                %T.juld_qc.data(isdouble_toremove)=6;
-                T.juld_qc.data(idCyc(isdouble_toremove))=6;
+%                 % QUE FAIRE avec des doubles (FLAG ?)
+%                 %T.juld_qc.data(isdouble_toremove)=6;
+%                 T.juld_qc.data(idCyc(isdouble_toremove))=6;
                 
                 locPosition_qc = T.position_qc.data(idCyc);     %%%de nouveau car les flags ont change
                 locDate_qc = T.juld_qc.data(idCyc);             %%%idem
@@ -1298,7 +1327,9 @@ for k=1:length(allfloats{1})
                             fprintf('%s\n',[ floatname, ', ,PB LAUNCH DATE NON REALISTE, ', datestr(launch_date), '. FLAG LAUNCH MIS A 6.']);
                             %M.launch_qc = 6;
                             M.launch_qc = '6';          %correction cc 15/09/2020
+                            if T.juld_qc.data(iLaunch)~=4;
                             T.juld_qc.data(iLaunch)= 6; %add cc 15/09/2020
+                            end
                             if Stat==1
                                 alertCyc_e6 = [alertCyc_e6 1];
                                 alerte19(k)=str2double(floatname);
@@ -1317,7 +1348,9 @@ for k=1:length(allfloats{1})
                                 if M.startup_date_qc=='1' & Diff_LS<0
                                     %M.launch_qc = 6;           %%% Flag à 6 pour la launch date.
                                     M.launch_qc = '6';          %correction cc 15/09/2020
+                                    if T.juld_qc.data(iLaunch)~=4;
                                     T.juld_qc.data(iLaunch)= 6; %add cc 15/09/2020
+                                    end
                                     fid_alerte=fopen(file_alerte,'a');
                                     fprintf(fid_alerte,'%s\n',[ floatname,', , PB LAUNCH DATE ANTERIEURE A START DATE, DE ', num2str(Diff_LS), ' j. FLAG LAUNCH MIS A 6.']);
                                     fclose(fid_alerte);
@@ -1362,7 +1395,9 @@ for k=1:length(allfloats{1})
                                     fclose(fid_alerte);
                                     fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DATES DE LOC DU 1er CYCLE ANTERIEURES A LAUNCH DATE > 3h']);
                                     %T.juld.data(idSorted(isbad))=2;                 %%%%FLAG � 2 les dates Loc du 1er cycle (douteuses)
-                                    T.juld_qc.data(idSorted(isbad))=2;   % correction cc 15/09/2020
+                                    if T.juld_qc.data(idSorted(isbad))~=4
+                                    T.juld_qc.data(idSorted(isbad))=6;   % correction cc 15/09/2020
+                                    end
                                     if Stat == 1
                                         alertCyc_e5 = [alertCyc_e5 cycles_sorted(id)];
                                         alerte21(k,cycles_sorted(id)+1)=str2double(floatname);

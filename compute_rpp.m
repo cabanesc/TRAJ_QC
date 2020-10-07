@@ -43,6 +43,7 @@ tabFinalParkEtat=0;
 % JMA A3 et A6: mesures en stabilisation toutes les 1.5h puis mesures en
 % derive toutes les 6h => moyenne ponderee de ces mesures
 % Priorite 2: cas ou l'on dispose de mesures en derive
+%keyboard
 if (finalOk == 0)
     
     tabPresAdjPark = [];
@@ -125,9 +126,9 @@ if (finalOk == 0)
     if (finalOk == 0)
         idCycleMeanParkMes = find(depType == g_typeMeanParkMes & idPresKo==0);
         if (~isempty(idCycleMeanParkMes))
-            tabFinalParkPres = depPres((idCycleMeanParkMes));
-            tabFinalParkTemp = depTemp((idCycleMeanParkMes));
-            tabFinalParkPsal = depPsal((idCycleMeanParkMes));
+            tabFinalParkPres = mean(depPres((idCycleMeanParkMes)));
+            tabFinalParkTemp = mean(depTemp((idCycleMeanParkMes)));
+            tabFinalParkPsal = mean(depPsal((idCycleMeanParkMes)));
             tabFinalParkEtat = g_etatFromDec;
             finalOk = 1;
         end

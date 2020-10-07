@@ -174,7 +174,6 @@ for i=1:length(T.temp.data(idCyc_drift))
 	
 	% isas commence à 1m, si le flotteur est proche de la surface, on cherche la temperature de surface correspondante
 	if pres_mes_i<1&pres_mes_i>=-5
-	   
 	   fid_alerte=fopen(file_alerte,'a');
        fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',Proche Surface, (' num2str(pres_mes_i)  ')']);
        fclose(fid_alerte);
@@ -192,7 +191,8 @@ for i=1:length(T.temp.data(idCyc_drift))
 	    end
 	end
     temp_std_th_i = interp1(I_temp_std.depth.data,I_temp_std_profile,pres_mes_i);
-    if isnan(temp_std_th_i);
+    if isnan(temp_std_th_i)&~isempty(id_Notnan_temp_std_profile)
+        
         if pres_mes_i>I_temp_std.depth.data(id_Notnan_temp_std_profile(end))
             temp_std_th_i= I_temp_std_profile(id_Notnan_temp_std_profile(end));
         else
@@ -218,7 +218,7 @@ for i=1:length(T.temp.data(idCyc_drift))
 	    end
 	end
     psal_std_th_i = interp1(I_psal_std.depth.data,I_psal_std_profile,pres_mes_i);
-    if isnan(psal_std_th_i);
+    if isnan(psal_std_th_i)&~isempty(id_Notnan_psal_std_profile)
         if pres_mes_i>I_psal_std.depth.data(id_Notnan_psal_std_profile(end))
             psal_std_th_i= I_psal_std_profile(id_Notnan_psal_std_profile(end));
         else

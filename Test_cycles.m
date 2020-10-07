@@ -69,9 +69,9 @@ for id=1:length(a_cycles)
             fclose(fid_alerte);
             fprintf('%s\n',[ floatname ', cycle ' num2str(a_cycles(id)) ', ? PB DOUBLE CYCLE ?']);    %%parfois dû à erreur en fin de batterie, float qui reste en surface
             o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(id)];
-            T.juld_qc.data(idCyc)=4;
-            T.position_qc.data(idCyc)=4;
-            keyboard
+            %T.juld_qc.data(idCyc)=4;
+            %T.position_qc.data(idCyc)=4;
+            
         end
         
         

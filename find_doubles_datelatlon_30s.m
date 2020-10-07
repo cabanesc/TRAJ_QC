@@ -25,6 +25,7 @@
 % ------------------------------------------------------------------------------
 function [isdouble_toremove, idDoublon_date, idDoublon_lonlat] = ...
    find_doubles_datelatlon(a_posDate, a_posLon, a_posLat, a_posQc, a_posTemp)
+global PARAM
 
 o_posDate = a_posDate;
 o_posLon = a_posLon;
@@ -45,7 +46,7 @@ o_posQc_sorted=o_posQc(isort);
 diffDates = diff(o_posDate_sorted);
 %diffDates = diff(o_posDate);
 
-idDoublon_d = find(diffDates<=0.000347222317941487);   %%considère un doublon lorsque la différence entre les deux positions est <=30s
+idDoublon_d = find(diffDates<= PARAM.TIME_DIFF_DOUBLE_DATE_LOC);   %%considère un doublon lorsque la différence entre les deux positions est <=30s
  
    if (length(idDoublon_d) > 1)
      

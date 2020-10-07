@@ -40,8 +40,10 @@ thedate = T.juld.data(idLoc)+datenum('01011950','ddmmyyyy');
 isok = (thedate >= datenum('01011997','ddmmyyyy')) & (thedate < datenum(date));
 % trouve les flags 0
 isflag0 = T.juld_qc.data(idLoc)==0;
+isflag4 = T.juld_qc.data(idLoc)==4; % add cc 05/10/2020
 T.juld_qc.data(idLoc(isok&isflag0))=1; % on remplace par 1 les flag 0 uniquement.
-T.juld_qc.data(idLoc(~isok))=6;   % A voir si on met un qc special ('6') ou '4'
+T.juld_qc.data(idLoc(~isok&~isflag4))=6;   % A voir si on met un qc special ('6') ou '4'
+
 if sum(~isok)>0
     fid_alerte=fopen(file_alerte,'a');
     fprintf(fid_alerte, [ floatname ', cycle ' num2str(sum(~isok)) ', DATES DE LOC NON REALISTES. FLAG DATE MIS A 6.']);
@@ -66,8 +68,10 @@ isoklat = (thelat>=-90&thelat<=90);
 %str2double(strtrim(allfloats{1}));
 % trouve les flags 0
 isflag0 = T.position_qc.data(idLoc)==0;
+isflag4 = T.position_qc.data(idLoc)==4; % add cc 05/10/2020
 T.position_qc.data(idLoc(isoklat&isflag0))=1; % on remplace par 1 les flag 0 uniquement.
-T.position_qc.data(idLoc(~isoklat))=6;   %
+%T.position_qc.data(idLoc(~isoklat))=6;%
+T.position_qc.data(idLoc(~isoklat&~isflag4))=6;%
 %T.position_qc.data(idLoc(isoklat&isoklon&isflag0))=1; % on remplace par 1 les flag 0 uniquement.
 %T.position_qc.data(idLoc(~isoklon|~isoklat))=6;   % A voir si on met un qc special ('6') ou '4'
 if(sum (~isoklat)>0)
@@ -93,7 +97,9 @@ if abs(LaunchLat-M.launch_latitude)>PARAM.LOC_LAUNCH_DIFF_M | abs(LaunchLon-M.la
     fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(sum(~isok)) ', INCOHERENCE ENTRE META ET TRAJ POUR LA POSITION ET/OU DATE DE LANCEMENT']);
     fprintf('%s\n',[ floatname ', cycle ' num2str(sum(~isok)) ', INCOHERENCE ENTRE META ET TRAJ POUR LA POSITION ET/OU DATE DE LANCEMENT']);
     fclose(fid_alerte);
-    T.position_qc.data(iLaunch)=6;% flag special pour confirmer ou non le launch date ?
+    isflag0 = T.position_qc.data(iLaunch)==0;
+    isflag4 = T.position_qc.data(iLaunch)==4; % add cc 05/10/2020
+    T.position_qc.data(iLaunch&~isflag4)=6;% flag special pour confirmer ou non le launch date ?
     if P.Stat==1
         o_alertCyc_e6 = [o_alertCyc_e6 1];
         o_alerte9=str2double(floatname);
