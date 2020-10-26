@@ -141,10 +141,10 @@ if sum(bad_psal&psal_noqc4)>=1
 end
 
 % % trouve les min et max
-ismin = T.measurement_code.data(idCyc_drift)==297;
-ismax = T.measurement_code.data(idCyc_drift)==298;
+ismin = (T.measurement_code.data(idCyc_drift)==297)&(~isnan(T.pres.data(idCyc_drift)));
+ismax = (T.measurement_code.data(idCyc_drift)==298)&(~isnan(T.pres.data(idCyc_drift)));
 
-isminmax = T.measurement_code.data(idCyc_drift)==297|T.measurement_code.data(idCyc_drift)==298;
+isminmax = ismin|ismax;
 ismean = T.measurement_code.data(idCyc_drift)==296;
 if pres_mes(ismax)<pres_mes(ismin)
     T.pres_qc.data(idCyc_drift(ismin&pres_noqc4))=6;
@@ -230,7 +230,7 @@ for i=1:length(T.temp.data(idCyc_drift))
 	   psal_std_th_i = sqrt(psal_std_th_i^2+std(psal_th_i_all(~isnan(psal_th_i_all)))^2);
 	end
     
-    if ~isnan(temp_mes_i)
+    if ~isnan(temp_mes_i)&~isnan(pres_mes_i)
         if ~isnan(temp_th_i) % valeur referencee dans isas
             % if ismean(i)
             % delta= 2*PARAM.T_N_STD; % on est plus tolerant sur la coherence quand c'est la moyenne
@@ -309,6 +309,7 @@ for i=1:length(T.temp.data(idCyc_drift))
                             fclose(fid_alerte);
                             fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', P and T are not consistant :  PRES MESUREE, (' num2str(pres_mes_i) ')'])
                             pres_alert=1;
+                          
                         else
                             if pres_noqc4(i)==1; T.pres.data(idCyc_drift(i))=1;end;
                             fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', P and T are  consistant :  PRES MESUREE, (' num2str(pres_mes_i) ')'])

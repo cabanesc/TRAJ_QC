@@ -1,7 +1,11 @@
 % cc 29/09/2020 add a function that compute pres_drift_mes from
 % pressure at park (take flag into account).
 % from JP RANNOU code dep_compute_park_mes.m
-function [tabFinalParkPres,tabFinalParkTemp,tabFinalParkPsal,tabFinalParkEtat]= compute_rpp(T,M,idCyc_drift,idCyc_loc)
+function [tabFinalParkPres,tabFinalParkTemp,tabFinalParkPsal,tabFinalParkEtat]= compute_rpp(T,M,idCyc_drift,idCyc_loc,prof_fileName)
+
+global file_alerte;
+global floatname;
+
 
 depPres=T.pres.data(idCyc_drift);
 depTemp=T.temp.data(idCyc_drift);
@@ -233,20 +237,38 @@ if (finalOk == 0)
     
     % Priorite 7: a defaut, on met la valeur de derive fournie par le
     % meta-donnee
+	
     if (finalOk == 0)
         % on ne le fait que si le cycle a au moins une position Argos et si
-        % il n'y a pas de mesure en derive dispo
+        % il n'y a pas de mesure en derive disponible
         if (~isempty(idCyc_loc))&isempty(idCyc_drift)
-            %keyboard
-            theidMis=find(M.config_mission_number==T.config_mission_number.data(T.cycle_number_index.data==unique(T.cycle_number.data(idCyc_drift))));
-            if isempty(theidMis)
-                tabFinalParkPres=M.ParkPressure(theidMis);
-            end
+            % on verifie en plus que le flotteur a bien fait un profil pour ce cycle
+			if exist(prof_fileName)
+
+				P = read_netcdf_allthefile(prof_fileName);
+				P = replace_fill_bynan(P);
+				P = format_flags_char2num(P);
+				idcycleProf = find(P.cycle_number.data==unique(T.cycle_number.data(idCyc_drift)));
+				pres_prof = P.pres.data(idcycleProf,:);
+				pres_prof_qc = P.pres_qc.data(idcycleProf,:);
+				isok_pres=find(~isnan(pres_prof)&pres_prof_qc<3);
+				max_pres_prof = max(pres_prof(isok_pres));
+				theidMis = find(M.config_mission_number==T.config_mission_number.data(T.cycle_number_index.data==unique(T.cycle_number.data(idCyc_drift))));
+				meta_park_pressure = M.ParkPressure(theidMis);
+				if isempty(theidMis)==0&meta_park_pressure<=max_pres_prof;
+				    fid_alerte=fopen(file_alerte,'a');
+                    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(P.cycle_number.data(idcycleProf)) ', RPP == META, : ' num2str(meta_park_pressure)]);
+                    fclose(fid_alerte);
+                    fprintf('%s\n',[ floatname ', cycle ' num2str(P.cycle_number.data(idcycleProf)) ', RPP == META, : ' num2str(meta_park_pressure)]); 
+                    
+					tabFinalParkPres = M.ParkPressure(theidMis);
+				end
             
-            
-            tabFinalParkTemp = NaN;
-            tabFinalParkPsal = NaN;
-            tabFinalParkEtat = g_etatFromNcMeta;
+				
+				tabFinalParkTemp = NaN;
+				tabFinalParkPsal = NaN;
+				tabFinalParkEtat = g_etatFromNcMeta;
+			end
         end
     end
 end

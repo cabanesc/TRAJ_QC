@@ -30,7 +30,7 @@ parameters.S_N_STD = 50.; % N STD for ISAS/in drift measurement salinity compari
 
 % Test_cycle.m
 %parameters.TIME_DUREE_CYCLE_M = 0.15; % Threshold for comparison between estimate median cycle duration and metadata
-parameters.TIME_DUREE_CYCLE_M = 10; % Threshold (in %) for comparison between estimate median cycle duration and metadata  correction cc 15/09/2020
+parameters.TIME_DUREE_CYCLE_M = 90; % Threshold (in %) for comparison between estimate median cycle duration and the actual cycle duration  correction cc 15/09/2020
 parameters.TIME_DUREE_CYCLE_JUMP = 0.5; % Threshold for assuming cycle jump/mission cycle
 
 % Test_locs.m
