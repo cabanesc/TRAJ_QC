@@ -711,17 +711,18 @@ for k=1:length(allfloats{1})
                 
                 % On fait un premier check des pressions en cours de derive : Test_PTS_isas   add cc 29/09/2020
                 % et on recalcule pres_drift_mes en tenant compte des flags
-                [o_alerte11, o_alerte12,isas_alert,isas_non_ref] = Test_PTS_isas(idCyc_drift, id, cycles_sorted,ilong_drift, ilat_drift,i_rpp);
+                [o_alerte11, o_alerte12,one_isas_alert,one_isas_non_ref] = Test_PTS_isas(idCyc_drift, id, cycles_sorted,ilong_drift, ilat_drift,i_rpp);
+                isas_alert(i_rpp)=one_isas_alert;
+                isas_non_ref(i_rpp)=one_isas_non_ref;
                 % if unique(T.cycle_number.data(idCyc_drift))==111
                 % keyboard
-                
                 % end
                 % on recalcule rpp en tenant compte des flags
                 [tabFinalParkPres,tabFinalParkTemp,tabFinalParkPsal,tabFinalParkEtat]= compute_rpp(T,M,idCyc_drift,idCyc,prof_fileName); %add cc 29/09/2020 add a function to compute rpp
                 pres_drift_mes(i_rpp)=tabFinalParkPres;
                 temp_drift_mes(i_rpp)=tabFinalParkTemp;
                 psal_drift_mes(i_rpp)=tabFinalParkPsal;
-                if ( isas_alert(i_rpp)==1)
+                %if ( isas_alert(i_rpp)==1)
                     %keyboard
                     % fid_alerte=fopen(file_alerte,'a');
                     % fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', SOME DRIFT PRESSURE ARE FLAG 6  (from Test_P_ISAS)']);
@@ -736,7 +737,7 @@ for k=1:length(allfloats{1})
                     % tabFinalParkTemp
                     % lat_first_curr
                     % long_first_curr
-                end
+               % end
                 
                 
                 

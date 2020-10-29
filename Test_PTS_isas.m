@@ -323,6 +323,9 @@ for i=1:length(T.temp.data(idCyc_drift))
     end
 end
 
+
+    %keyboard
+
 if pres_alert==1
     if P.Stat==1
         o_alerte11(cycles_sorted(id)+1)=str2double(floatname);
@@ -330,9 +333,9 @@ if pres_alert==1
     if(P.map==1)
         m_plot(TEMP_LONG(ilong_drift,1),TEMP_LAT(ilat_drift,1),'color',[0.3010 0.7450 0.9330],'marker','*','markersize',5)
     end
-    isas_alert(i_rpp)=1;
+    isas_alert=1;
 else
-    isas_alert(i_rpp)=0;
+    isas_alert=0;
 end
 if psal_alert==1
 	if P.Stat==1
@@ -342,7 +345,7 @@ if psal_alert==1
 			m_plot(TEMP_LONG(ilong_drift,1),TEMP_LAT(ilat_drift,1),'color',[0.8500 0.3250 0.0980],'marker','s','markersize',8)
 	end
 end
-isas_non_ref(i_rpp)=non_ref;
+isas_non_ref=non_ref;
     
     % if bad_temp==0 & ~isnan(temp_mes)
     % if ~isnan(pres_mes)
