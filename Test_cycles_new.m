@@ -1,6 +1,6 @@
 
 
-function [o_alerte3, o_alerte4, o_alerte5, o_alerte6, o_alertCyc_e4, idCycprec] = ...
+function [o_alerte3, o_alerte4, o_alerte5, o_alerte6, o_alertCyc_e4,o_alertCyc_e5, idCycprec] = ...
     Test_cycles(a_idLoc, a_cycles, a_cycles_1, a_cycles_sorted, a_duree_cycle,a_mission, a_dureeMedianCycle)
 
 
@@ -35,6 +35,7 @@ cyc=(1);
 idCyc=(1);
 idCycprec{1}=[];
 o_alertCyc_e4 = [];
+o_alertCyc_e5 = [];
 o_alerte3=[]; o_alerte4=[]; o_alerte5=[];o_alerte6=[];
 
 unique_cyc = unique(T.cycle_number.data); 
@@ -132,7 +133,7 @@ for id=2:length(a_cycles)
                     fclose(fid_alerte);
                     fprintf('%s\n',[ floatname ', cycle ' num2str(a_cycles_sorted(id)) ', PB DUREE CYCLE. Date derniere loc: ' datestr(T.juld.data(idCyc(end))+datenum('01011950','ddmmyyyy')) ', Date derniere loc précédente:' datestr(T.juld.data(idCycprec{id}(end))+datenum('01011950','ddmmyyyy')) '. Avec  Median CycleTime=' num2str(a_dureeMedianCycle(idMis)) 'j']);
 
-                    o_alertCyc_e4 =  [o_alertCyc_e4 a_cycles_sorted(id)];
+                    %o_alertCyc_e4 =  [o_alertCyc_e4 a_cycles_sorted(id)];
 
 
                 end
@@ -147,7 +148,7 @@ for id=2:length(a_cycles)
                     fclose(fid_alerte);
                     fprintf('%s\n',[ floatname ', cycle ' num2str(a_cycles_sorted(id)) ', PB DUREE CYCLE. Date derniere loc: ' datestr(T.juld.data(idCyc(end))+datenum('01011950','ddmmyyyy')) ', Date derniere loc précédente:' datestr(T.juld.data(idCycprec{id}(end))+datenum('01011950','ddmmyyyy')) '. Avec  M.CycleTime=' num2str(M.CycleTime(numMis)) 'j']);
 
-                    o_alertCyc_e4 =  [o_alertCyc_e4 a_cycles_sorted(id)];
+                    %o_alertCyc_e4 =  [o_alertCyc_e4 a_cycles_sorted(id)];
 
 
                 end
@@ -182,68 +183,130 @@ end           %%%fin de la boucle sur les cycles
 
 % VERIFICATION DU DECOUPAGE DES CYCLES
 
-if isequal(a_cycles_1,a_cycles_sorted)==0
-    cycles_missing=setdiff(a_cycles_1,a_cycles_sorted);
-    ipre = 1;
-    ipost = 1;
-    cycles_pre_missing = [];
-    cycles_post_missing=[];
-	cycles_post_missing_to_end=[]; % add cc 06/11/2020
+%modif cc 12/11/2020
+dureeCumulee= zeros(length(a_cycles),1);
+dureeModMed= NaN*zeros(length(a_cycles),1);
+durreCycleTh= NaN*zeros(length(a_cycles),1);
+isCyc = find(a_cycles == a_cycles_sorted(1));
+numMis = unique(T.config_mission_number.data(isCyc));
+
+
+if ~isnan(numMis)
+	isMis = find(M.config_mission_number == numMis);
+	dureeCumulee(1)=a_dureeMedianCycle(isMis)*(a_cycles_sorted(1)-1);
+	idCyc = a_idLoc(T.cycle_number.data(a_idLoc) == a_cycles_sorted(1));
+	dureeMod=T.juld.data(idCyc)-dureeCumulee(1);
+	% detection de date erronnée au sein du cycle
+	iserr=abs(dureeMod-median(dureeMod))>a_dureeMedianCycle(isMis);
+	if sum(iserr)>0
+	   fid_alerte=fopen(file_alerte,'a');
+		fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(1)) ', DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
+		fclose(fid_alerte);
+		fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(1)) ', DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
+		o_alertCyc_e5 = [o_alertCyc_e5 a_cycles_sorted(1)];
+	end
+	dureeModMed(1)=median(dureeMod)-dureeCumulee(1);
+	durreCycleTh(1)=a_dureeMedianCycle(isMis);
+end
+
+for id=2:length(a_cycles)
+	isCyc = find(a_cycles == a_cycles_sorted(id));
+	numMis = unique(T.config_mission_number.data(isCyc));
+	if ~isnan(numMis)&length(a_dureeMedianCycle)>=numMis
+		isMis = find(M.config_mission_number == numMis);
+		dureeCumulee(id)=dureeCumulee(id-1)+a_dureeMedianCycle(isMis)*(a_cycles_sorted(id)-a_cycles_sorted(id-1));
+		idCyc = a_idLoc(T.cycle_number.data(a_idLoc) == a_cycles_sorted(id));
+		dureeMod=T.juld.data(idCyc)-dureeCumulee(id);
+		stdDureeMod=std(dureeMod);
+		% detection de date erronnée au sein du cycle
+		iserr=abs(dureeMod-median(dureeMod))>a_dureeMedianCycle(isMis);
+		if sum(iserr)>0 & stdDureeMod<1
+		   fid_alerte=fopen(file_alerte,'a');
+			fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(id)) ', DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
+			fclose(fid_alerte);
+			fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(id)) ',DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
+			o_alertCyc_e5 = [o_alertCyc_e5 a_cycles_sorted(id)];
+
+		end
+		dureeModMed(id)=median(dureeMod);	
+		durreCycleTh(id)=a_dureeMedianCycle(isMis);
+	end
+end
+
+dureeModMed(1)=0;
+iserrcycl=abs(dureeModMed-medianoutnan(dureeModMed))>durreCycleTh*0.5;
+iserrcycl(1)=0;
+if sum(iserrcycl)>0
+	   fid_alerte=fopen(file_alerte,'a');
+		fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(id)) ', MAUVAISE NUMEROTATION DE CYCLE ']);
+		fclose(fid_alerte);
+		fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ', MAUVAISE NUMEROTATION DE CYCLE ']);
+		o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(iserrcycl)];
+		o_alertCyc_e5 = [o_alertCyc_e5 a_cycles_sorted(iserrcycl)];
+end
+
+% if isequal(a_cycles_1,a_cycles_sorted)==0
+    % cycles_missing=setdiff(a_cycles_1,a_cycles_sorted);
+    % ipre = 1;
+    % ipost = 1;
+    % cycles_pre_missing = [];
+    % cycles_post_missing=[];
+	% cycles_post_missing_to_end=[]; % add cc 06/11/2020
 	
-    for ic=1:length(cycles_missing)% on veut retrouver les cycles precedents et suivants le cycle manquant
-        %sans qu'ils soient eux-memes
-        %manquants pour estimer la duree ecoulee
-        if isempty(find(cycles_missing==cycles_missing(ic)-1, 1))
-            cycles_pre_missing(ipre)=a_cycles_1(a_cycles_1==cycles_missing(ic)-1);
-            ipre=ipre+1;
-        end
-        if isempty(find(cycles_missing==cycles_missing(ic)+1, 1))
-            cycles_post_missing(ipost)=a_cycles_1(a_cycles_1==cycles_missing(ic)+1);
-            ipost=ipost+1;
-        end
-    end
-    fid_alerte=fopen(file_alerte,'a');
-    fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(length(cycles_missing)) ', cycles manquants, :(', num2str(cycles_missing), ') ']);
-    fclose(fid_alerte);
-    fprintf('%s\n',[ floatname ', ' num2str(length(cycles_missing)) ' cycles manquants']);
+    % for ic=1:length(cycles_missing)% on veut retrouver les cycles precedents et suivants le cycle manquant
+        % %sans qu'ils soient eux-memes
+        % %manquants pour estimer la duree ecoulee
+        % if isempty(find(cycles_missing==cycles_missing(ic)-1, 1))
+            % cycles_pre_missing(ipre)=a_cycles_1(a_cycles_1==cycles_missing(ic)-1);
+            % ipre=ipre+1;
+        % end
+        % if isempty(find(cycles_missing==cycles_missing(ic)+1, 1))
+            % cycles_post_missing(ipost)=a_cycles_1(a_cycles_1==cycles_missing(ic)+1);
+            % ipost=ipost+1;
+        % end
+    % end
+    % fid_alerte=fopen(file_alerte,'a');
+    % fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(length(cycles_missing)) ', cycles manquants, :(', num2str(cycles_missing), ') ']);
+    % fclose(fid_alerte);
+    % fprintf('%s\n',[ floatname ', ' num2str(length(cycles_missing)) ' cycles manquants']);
     
-    % Calcul de la duree entre les deux cycles encadrants le ou les
-    % cycles manquants pour determiner si coherent ou probleme de
-    % decoupage
-    %for im=1:length(cycles_pre_missing)-1 % correction cc 26/10/2020
-     for im=1:length(cycles_pre_missing)
-        isCycmpre = (T.cycle_number.data(a_idLoc) == cycles_pre_missing(im));    %indices correspondant aux cycles pre missing
-        idCycmpre = a_idLoc(isCycmpre);
-        isCycmpost = (T.cycle_number.data(a_idLoc) == cycles_post_missing(im));   %%indices correspondant aux cycles post missing
-        idCycmpost = a_idLoc(isCycmpost);
-        numMismpost = T.config_mission_number.data(a_cycles==cycles_post_missing(im));
-        isMismpost = find(a_mission == numMismpost);
-        dureeCyclem = a_dureeMedianCycle(isMismpost);
-        if ~isnan(dureeCyclem) & (T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))>(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem+PARAM.TIME_DUREE_CYCLE_JUMP) ...
-                |T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))<(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem-PARAM.TIME_DUREE_CYCLE_JUMP))
-            o_alerte6=str2double(floatname);
-            fid_alerte=fopen(file_alerte,'a');
-            fprintf(fid_alerte,'%s\n',[ floatname ', cycles ' num2str(cycles_pre_missing(im)) ' - ' num2str(cycles_post_missing(im)) ', MAUVAISE NUMEROTATION CYCLE CONSECUTIVE A CYCLE MANQUANT']);
-            fclose(fid_alerte);
-            fprintf('%s\n',[ floatname ', cycles ' num2str(cycles_pre_missing(im)) ' - ' num2str(cycles_post_missing(im)) ', MAUVAISE NUMEROTATION CYCLE CONSECUTIVE A CYCLE MANQUANT']);
-            %o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(id)]; %
-            %correction cc 26/10/2020
-            o_alertCyc_e4 = [o_alertCyc_e4 cycles_post_missing(im)];
-			% on regarde si le decalage est present juqu'a la fin  add cc 06/11/2020
-			ipost=find(unique_cyc==cycles_post_missing(im));
-			allpost=unique_cyc(ipost+1:end);
+    % % Calcul de la duree entre les deux cycles encadrants le ou les
+    % % cycles manquants pour determiner si coherent ou probleme de
+    % % decoupage
+    % %for im=1:length(cycles_pre_missing)-1 % correction cc 26/10/2020
+     % for im=1:length(cycles_pre_missing)
+        % isCycmpre = (T.cycle_number.data(a_idLoc) == cycles_pre_missing(im));    %indices correspondant aux cycles pre missing
+        % idCycmpre = a_idLoc(isCycmpre);
+        % isCycmpost = (T.cycle_number.data(a_idLoc) == cycles_post_missing(im));   %%indices correspondant aux cycles post missing
+        % idCycmpost = a_idLoc(isCycmpost);
+        % numMismpost = T.config_mission_number.data(a_cycles==cycles_post_missing(im));
+        % isMismpost = find(a_mission == numMismpost);
+        % dureeCyclem = a_dureeMedianCycle(isMismpost);
+        % if ~isnan(dureeCyclem) & (T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))>(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem+PARAM.TIME_DUREE_CYCLE_JUMP) ...
+                % |T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))<(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem-PARAM.TIME_DUREE_CYCLE_JUMP))
+            % o_alerte6=str2double(floatname);
+            % fid_alerte=fopen(file_alerte,'a');
+            % fprintf(fid_alerte,'%s\n',[ floatname ', cycles ' num2str(cycles_pre_missing(im)) ' - ' num2str(cycles_post_missing(im)) ', MAUVAISE NUMEROTATION CYCLE CONSECUTIVE A CYCLE MANQUANT']);
+            % fclose(fid_alerte);
+            % fprintf('%s\n',[ floatname ', cycles ' num2str(cycles_pre_missing(im)) ' - ' num2str(cycles_post_missing(im)) ', MAUVAISE NUMEROTATION CYCLE CONSECUTIVE A CYCLE MANQUANT']);
+            % %o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(id)]; %
+            % %correction cc 26/10/2020
+            % o_alertCyc_e4 = [o_alertCyc_e4 cycles_post_missing(im)];
+			% % on regarde si le decalage est present juqu'a la fin  add cc 06/11/2020
+			% ipost=find(unique_cyc==cycles_post_missing(im));
+			% allpost=unique_cyc(ipost+1:end);
 			
-			for kipost=1:length(allpost)
-			    isCycmpost = (T.cycle_number.data(a_idLoc) == allpost(kipost));   
-				idCycmpost = a_idLoc(isCycmpost);
-				numMismpost = T.config_mission_number.data(a_cycles==cycles_post_missing(im));
-				isMismpost = find(a_mission == numMismpost);
-				dureeCyclem = a_dureeMedianCycle(isMismpost);
-				if ~isnan(dureeCyclem) & (T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))>(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem+PARAM.TIME_DUREE_CYCLE_JUMP) |T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))<(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem-PARAM.TIME_DUREE_CYCLE_JUMP))
-				o_alertCyc_e4 = [o_alertCyc_e4 allpost(kipost)];
-				end
-			end
-        end
-    end
-end
-end
+			% for kipost=1:length(allpost)
+			    % isCycmpost = (T.cycle_number.data(a_idLoc) == allpost(kipost));   
+				% idCycmpost = a_idLoc(isCycmpost);
+				% numMismpost = T.config_mission_number.data(a_cycles==cycles_post_missing(im));
+				% isMismpost = find(a_mission == numMismpost);
+				% dureeCyclem = a_dureeMedianCycle(isMismpost);
+				% if ~isnan(dureeCyclem) & (T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))>(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem+PARAM.TIME_DUREE_CYCLE_JUMP) |T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))<(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem-PARAM.TIME_DUREE_CYCLE_JUMP))
+				% o_alertCyc_e4 = [o_alertCyc_e4 allpost(kipost)];
+				% end
+			% end
+        % end
+    % end
+% end
+

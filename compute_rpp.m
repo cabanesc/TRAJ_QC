@@ -248,12 +248,12 @@ if (finalOk == 0)
 				P = read_netcdf_allthefile(prof_fileName);
 				P = replace_fill_bynan(P);
 				P = format_flags_char2num(P);
-				idcycleProf = find(P.cycle_number.data==unique(T.cycle_number.data(idCyc_drift)));
+				idcycleProf = find(P.cycle_number.data==unique(T.cycle_number.data(idCyc_loc)));
 				pres_prof = P.pres.data(idcycleProf,:);
 				pres_prof_qc = P.pres_qc.data(idcycleProf,:);
 				isok_pres=find(~isnan(pres_prof)&pres_prof_qc<3);
 				max_pres_prof = max(pres_prof(isok_pres));
-				theidMis = find(M.config_mission_number==T.config_mission_number.data(T.cycle_number_index.data==unique(T.cycle_number.data(idCyc_drift))));
+				theidMis = find(M.config_mission_number==T.config_mission_number.data(T.cycle_number_index.data==unique(T.cycle_number.data(idCyc_loc))));
 				meta_park_pressure = M.ParkPressure(theidMis);
 				if isempty(theidMis)==0&meta_park_pressure<=max_pres_prof;
 				    fid_alerte=fopen(file_alerte,'a');

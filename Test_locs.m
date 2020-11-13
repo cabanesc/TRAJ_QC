@@ -28,8 +28,8 @@ global floatname;
 global file_alerte;
 
 o_alerte7=[]; o_alerte8=[]; o_alerte9=[];
-o_alertCyc_e5 = []; o_alertCyc_e6= []; o_alertCyc_e9= 0;
-
+o_alertCyc_e5 = []; o_alertCyc_e6= []; %o_alertCyc_e9= 0; 
+o_alertCyc_e9= [];
 % VERIFICATION DES DATES DE LOC ARGOS: DATES REALISTES: later than 1 st January 1997
 %----------------------------------------------------------------------------------
 % 17167 <= JULD < UTC date of chec
@@ -62,8 +62,11 @@ end
 %%%LOCS REALISTES: latitudes et longitudes corrects
 
 thelon = T.longitude.data(idLoc);
+if thelon>180
+thelon=thelon-360;
+end
 thelat = T.latitude.data(idLoc);
-%isoklon = (thelon>=-180&thelon<=180);    %%%attention  dans certains cas, longitude de 0 à 360. (apex incois ap9) vois si selon le type de flotteur
+isoklon = (thelon>=-180&thelon<=180);    %%%attention  dans certains cas, longitude de 0 à 360. (apex incois ap9) vois si selon le type de flotteur
 isoklat = (thelat>=-90&thelat<=90);
 %str2double(strtrim(allfloats{1}));
 % trouve les flags 0
@@ -71,7 +74,7 @@ isflag0 = T.position_qc.data(idLoc)==0;
 isflag4 = T.position_qc.data(idLoc)==4; % add cc 05/10/2020
 T.position_qc.data(idLoc(isoklat&isflag0))=1; % on remplace par 1 les flag 0 uniquement.
 %T.position_qc.data(idLoc(~isoklat))=6;%
-T.position_qc.data(idLoc(~isoklat&~isflag4))=6;%
+T.position_qc.data(idLoc((~isoklat|~isoklon)&~isflag4))=6;%
 %T.position_qc.data(idLoc(isoklat&isoklon&isflag0))=1; % on remplace par 1 les flag 0 uniquement.
 %T.position_qc.data(idLoc(~isoklon|~isoklat))=6;   % A voir si on met un qc special ('6') ou '4'
 if(sum (~isoklat)>0)

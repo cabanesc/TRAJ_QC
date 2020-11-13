@@ -6,12 +6,18 @@ close all
 id=0;
 
 param=config;
+
+addpath(param.DIR_TOOL);
+addpath([param.DIR_TOOL '/Lib_Argo/']);
+addpath([param.DIR_TOOL '/Lib_Argo/Plots']);
+addpath([param.DIR_TOOL 'Lib_Argo/Tests_TR']);
+addpath([param.DIR_TOOL '/Lib_Argo/RWnetcdf/R2008b']);
 liste_rep_alerte = param.liste_rep_alerte;
 
 liste_alertes = param.liste_alertes;
 
 %%%%Fichiers Altran
-DIR = [param.DIR_LISTE '/Liste_livraison2019/'];
+DIR = [param.DIR_LISTE 'Liste_livraison2019/'];
 
 %liste_al = dir([DIR '*.txt']);   %%%liste flotteurs altran
 
@@ -45,33 +51,35 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
     cyc_al = [];
     cyc_test = [];
     
+	
+	% Recuperation de la liste de tous les flotteurs de la liste
+	mat_all = importdata(fich_allfloat);
+	for k = 1:length(mat_all)
+		if isa(mat_all,'cell')
+			float_all(k) = str2num(mat_all{k}(1:7));  %%%récupération flotteur initiaux
+		elseif isa(mat_all,'double')
+			float_all(k) = mat_all(k);
+		end
+		
+	end
+	
     for j = 1:length(liste_alertes)     %%% boucle sur les types d'erreurs
         fich_err = [DIR liste_rep_alerte{l} '/' liste_rep_alerte{l} '_erreur_' liste_alertes{j} '.txt'];
+		
+		
         if exist(fich_err,'file')==2
-            idi = idi+1;
-            alerte{idi} = liste_alertes{j};
+		    idi = idi+1;
+			alerte{idi} = liste_alertes{j};
+			
+		    err_al = importdata(fich_err,',');    %%% Erreurs altran
+            
             fich_err_t = dir([DIR2 liste_rep_alerte{l} '/*' liste_alertes{j} '*b.txt']);
-            %fich_err_t = dir([DIR2 '*'  liste_alertes{j} '*b.txt']);
-            %	if liste_alertes{j}(1) == 'g'
-            %    		fich_err_t = dir([DIR2 '*'  liste_alertes{j} '*b_0.txt']);
-            %	end
-            %fich_err_test = [DIR2 liste_rep_alerte{l} '/' fich_err_t.name];
-            %fich_err_test = [DIR2 fich_err_t.name];
             fich_err_test = [DIR2 liste_rep_alerte{l} '/' fich_err_t.name];
             
-            
-            mat_all = importdata(fich_allfloat);
-            for k = 1:length(mat_all)
-                if isa(mat_all,'cell')
-                    float_all(k) = str2num(mat_all{k}(1:7));  %%%récupération flotteur initiaux
-                elseif isa(mat_all,'double')
-                    float_all(k) = mat_all(k);
-                end
-                
-            end
-            
-            %keyboard
-            err_al = importdata(fich_err,',');    %%% Erreurs altran
+            err_test = importdata(fich_err_test,',');      %%%Erreurs du test
+			
+			
+			% récupération des flotteurs/cycles concernes par l'alerte Altran
             id=0;
             for k = 1:length(err_al)      %%% k: flotteurs concernés par l'erreur d'apres altran
                 if isa(err_al,'cell')
@@ -79,21 +87,50 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
                 elseif isa(err_al,'double')
                     float_al(idi,k) = err_al(k);
                 end
-                
+				
+				% verification que ces cycles  existent bien dans les traj  add cc 03/11/2020
+				NcVar.cycle_number.name='CYCLE_NUMBER'; 
+				doneT=0;
+				ii=0;
+				while ~doneT&& ii<=length(param.DAC)-1
+					% lecture des traj
+					ii=ii+1;
+					floatname =num2str(float_al(idi,k));
+					traj_fileName_R = [param.DIR_FTP param.DAC{ii} '/' floatname '/' floatname '_Rtraj.nc'];
+					traj_fileName_D = [param.DIR_FTP param.DAC{ii} '/' floatname '/' floatname '_Dtraj.nc'];
+					if exist(traj_fileName_D,'file');
+						[T,DimT,GlobT]=read_netcdf_allthefile(traj_fileName_D,NcVar);
+						traj_fileName_final=[floatname '_Dtraj.nc'];
+						doneT=1;
+					elseif exist(traj_fileName_R,'file');
+						[T,DimT,GlobT]=read_netcdf_allthefile(traj_fileName_R,NcVar);
+						doneT=1;
+						traj_fileName_final=[floatname '_Rtraj.nc'];
+					end
+				end 
+				cycle_traj=unique(T.cycle_number.data); 
+				
                 id = id+1;
                 if(j~=7)      %%%fichier launchdate où pas de cycle indiqué
                     if isa(err_al,'cell')
                         a=strfind(err_al{k},'['); b = strfind(err_al{k},']');
-                        cyc_al{idi,id} = [str2num(err_al{k}(a+1:b-1))];
+						
+                        thecycles = [str2num(err_al{k}(a+1:b-1))];
+						isintraj = ismember(thecycles,cycle_traj);
+						cyc_al{idi,id} = thecycles(isintraj);
+						
                     elseif isa(err_al, 'double')
-                        cyc_al{idi,id} = err_al(length(err_al)+k);
+						thecycles = err_al(length(err_al)+k); 
+						isintraj = ismember(thecycles,cycle_traj);
+						cyc_al{idi,id} = thecycles(isintraj);
                     end
                 else
                     cyc_al{idi,id} = 1;
                 end
+				
             end
             
-            err_test = importdata(fich_err_test,',');      %%%Erreurs du test
+            % récupération des flotteurs/cycles concernes par l'alerte Test
             id=0;
             %  keyboard
             for k = 1:length(err_test)
@@ -115,7 +152,7 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
                     cyc_test{idi,id} = 1;
                 end
             end
-            if isempty(err_test)     %%cas où le fichier erreur test existe mais il est
+            if isempty(err_test)     %%cas où le fichier erreur test existe mais il est vide
                 float_test(idi,k)  = err_test(k);
             end
             
@@ -137,17 +174,17 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
             
             if(float_al(i,m)~=float_al(i,m-1))
                 if(m==2)
-                    cycalok{i,1}=cyc_al(i,1);
+                    cycalok{i,1}=cyc_al{i,1};
                 end
                 id = id+1;
-                cycalok{i,id} = cyc_al(i,m);
+                cycalok{i,id} = cyc_al{i,m};
             end
             
             if(float_al(i,m)==float_al(i,m-1))
                 if(m==2)
-                    cycalok{i,1} = [cyc_al(i,1) cyc_al(i,2)];
+                    cycalok{i,1} = [cyc_al{i,1} cyc_al{i,2}];
                 else
-                    cyc_al_ok = [cycalok{i,id} cyc_al(i,m)];
+                    cyc_al_ok = [cycalok{i,id} cyc_al{i,m}];
                     cycalok{i,id} = cyc_al_ok;
                 end
             end
@@ -201,7 +238,6 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
         float_alok{i} = unique(float_al(i,:),'stable');
     end
     
-    
     float_id = [];
     float_testsup = [];
     nb_idem=[];
@@ -218,9 +254,9 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
     Prcent_flo_id = [];
     Prcent_flo_supp = [];
     Prcent_flo_miss = [];
-    cyc_test_identique =[];
-    cyc_test_miss = [];
-    cyc_test_supp = [];
+    cyc_test_identique =cell(1,1);
+    cyc_test_miss = cell(1,1);;
+    cyc_test_supp = cell(1,1);;
     nb_cyc_id= zeros(1,length(float_testok));
     nb_cyc_supp= zeros(1,length(float_testok));
     nb_cyc_miss= zeros(1,length(float_testok));
@@ -229,7 +265,7 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
     nb_flo_miss= zeros(1,length(float_testok));
     
     for i = 1:length(float_testok)   %%%pour chaque alerte
-        
+ 
         ii=0;
         iii=0;
         it=0;
@@ -238,7 +274,7 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
         flo_test = double(float_testok{i}(:));  %%%flotteurs test pour l'alerte donnée
         
         flo_al= flo_al(~isnan(flo_al)); flo_test=flo_test(~isnan(flo_test));
-        is_identique = ismember(flo_test,flo_al);
+        [is_identique] = ismember(flo_test,flo_al);
         is_identique_al = ismember(flo_al,flo_test);
         
         flo_identique{i} = flo_test(is_identique);   %%%flotteur identiques dans Altran et test
@@ -260,46 +296,82 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
         nb_without_err_test = length(find(ismember(float_all,float_test(:,:))==0));
         
         %%%%Cycles identiques, supplémentaires et manquants pour un même
-        %%%%flotteur
-        
-        %%%cycles identiques dans test et altran et comptage
-        if(isempty(find(is_identique==1))==0)
-            
-            ident = find(is_identique==1);
-            
-            for mm = 1:length(ident)
-                cyc_test_identique{i,mm}= cyc_test{i,ident(mm)};
-                nb_cyc_id(i) = nb_cyc_id(i) + length(double(cyc_test_identique{i,mm}));
+        %%%%flotteur  % correction cc 03/11/2020
+        float_al_test = unique([flo_al ;flo_test]); % tous les flotteurs altran/test concernes par l'alerte
+		mm=0;
+		for ifloat=1:length(float_al_test)
+		    % on verifie si flotteur present dans flo_al
+			isal=ismember(flo_al,float_al_test(ifloat));
+		    istest=ismember(flo_test,float_al_test(ifloat));
+			 mm=mm+1;
+			if sum(isal)==1&&sum(istest)==1 % flotteur dans les deux listes
+			
+			   cyc_test_i_float = unique(cyc_test{i,istest});
+               cyc_al_i_float = unique(cycalok{i,isal});
+			   cyc_test_identique{i,mm}= [cyc_test_i_float(ismember(cyc_test_i_float,cyc_al_i_float))];
+			   nb_cyc_id(i) = nb_cyc_id(i) + sum(ismember(cyc_test_i_float,cyc_al_i_float));
+			   cyc_test_supp{i,mm}= [cyc_test_i_float(~ismember(cyc_test_i_float,cyc_al_i_float))];
+			   nb_cyc_supp(i) = nb_cyc_supp(i) + sum(~ismember(cyc_test_i_float,cyc_al_i_float));
+			   cyc_test_miss{i,mm}= [ cyc_al_i_float(~ismember(cyc_al_i_float,cyc_test_i_float))];
+			   nb_cyc_miss(i) = nb_cyc_miss(i) + sum(~ismember(cyc_al_i_float,cyc_test_i_float));			   
+           
+            else
+			cyc_test_supp{i,mm}=[];
+			cyc_test_miss{i,mm}=[];
+			end
+            if sum(isal)==1&&sum(istest)==0 % flotteur seulement dans alertes altran
+               cyc_al_i_float = unique(cycalok{i,isal});
+			   cyc_test_miss{i,mm}= [cyc_test_miss{i,mm} cyc_al_i_float];
+			   nb_cyc_miss(i) = nb_cyc_miss(i) + length(cyc_al_i_float);			   
+            end	
+            if sum(isal)==0&&sum(istest)==1 % flotteur seulement dans alertes test
+			   cyc_test_i_float = unique(cyc_test{i,istest});
+			   cyc_test_supp{i,mm}= [cyc_test_supp{i,mm} cyc_test_i_float];
+			   nb_cyc_supp(i) = nb_cyc_supp(i) + length(cyc_test_i_float);			   
             end
-        else
-            cyc_test_identique{i} = [];
-        end
+        end	
+		
+        % %%%cycles identiques dans test et altran et comptage
+        % if(isempty(find(is_identique==1))==0)
+            
+            % ident = find(is_identique==1); % trouve les flotteurs identiques dans les deux listes, index test
+            % ident_al = find(is_identique_al==1); % trouve les flotteurs identiques dans les deux listes, index altran
+			
+            % for mm = 1:length(ident)% pour tous les flotteurs identique, il faut trouver les cycles identiques entre altran et test% cc 03/11/2020
+			    % cyc_test_i_float = cyc_test{i,ident(mm)};
+				% cyc_al_i_float=cycalok{i,ident_al(mm)};
+                % cyc_test_identique{i,mm}= cyc_test{i,ident(mm)};
+                % nb_cyc_id(i) = nb_cyc_id(i) + length(double(cyc_test_identique{i,mm}));
+            % end
+        % else
+            % cyc_test_identique{i} = [];
+        % end
         
-        %%%cycle supplémentaires dans test (et comptage)
-        if(isempty(find(is_identique==0))==0)
+        % %%%cycle supplémentaires dans test (et comptage)
+        % if(isempty(find(is_identique==0))==0)
             
-            non_ident = find(is_identique==0);
+            % non_ident = find(is_identique==0);
             
-            for mm = 1:length(non_ident)
-                cyc_test_supp{i,mm}= cyc_test{i,non_ident(mm)};
-                nb_cyc_supp(i) = nb_cyc_supp(i)+length(double(cyc_test_supp{i,mm}));
-            end
-        else
-            cyc_test_supp{i} = [];
-        end
+            % for mm = 1:length(non_ident)
+                % cyc_test_supp{i,mm}= cyc_test{i,non_ident(mm)};
+                % nb_cyc_supp(i) = nb_cyc_supp(i)+length(double(cyc_test_supp{i,mm}));
+            % end
+        % else
+            % cyc_test_supp{i} = [];
+        % end
         
-        %%cyles manquants dans test et comptage
-        %  keyboard
-        if(isempty(find(is_identique_al==0))==0)
-            miss = find(is_identique_al==0);
-            for u = 1:length(miss)
-                cyc_test_miss{i,u} = cell2mat(cycalok{i,miss(u)});
-                nb_cyc_miss(i) = nb_cyc_miss(i) + length(double(cyc_test_miss{i,u}));
-            end
+        % %%cyles manquants dans test et comptage
+        % %  keyboard
+        % if(isempty(find(is_identique_al==0))==0)
+            % miss = find(is_identique_al==0);
+            % for u = 1:length(miss)
+                % cyc_test_miss{i,u} = cell2mat(cycalok{i,miss(u)});
+                % nb_cyc_miss(i) = nb_cyc_miss(i) + length(double(cyc_test_miss{i,u}));
+            % end
             
-            %else
-            %  cyc_test_miss{i} = [];
-        end
+            % %else
+            % %  cyc_test_miss{i} = [];
+        % end
         
         
         
@@ -355,9 +427,11 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
     
     figure
     %subplot(2,1,1)
-    bar(Prcent)
-	
-    xticks([1:1:length(Prcent)])
+    %bar(Prcent)
+	b=bar(nb_flot);
+	b(2).FaceColor=[0.4660    0.6740    0.1880];
+    %xticks([1:1:length(Prcent)])
+	xticks([1:1:length(nb_flot)])
 	%set(gca,'Xtick',[1:1:length(Prcent)])
     alerte_str = cellstr(alerte);
     xticklabels(alerte_str)
@@ -382,23 +456,25 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
     
     figure
     alerte_str = cellstr(alerte);
-    bar(nb_cyc)
+    b=bar(nb_cyc);
+	b(2).FaceColor=[0.4660    0.6740    0.1880];
     xticks([1:1:length(nb_cyc)])
     %set(gca,'Xtick',[1:1:length(nb_cyc)])
 	xticklabels(alerte_str)
 	%h=set(gca,'XTickLabel',alerte_str);
     xtickangle(45)
     titre1 = ['Nbre de cycles identiques(b), supplementaires(g), manquants(y)']
-    titre2 = ['pour un flotteur present dans les deux cas'];
+    %titre2 = ['pour un flotteur present dans les deux cas'];
     titre3 = char(liste_rep_alerte(l));
-    title({titre1  titre2  titre3},'interp','none');
+    %title({titre1  titre2  titre3},'interp','none');
+	title({titre1    titre3},'interp','none');
     %title({'Nbre de cycles identiques, supplémentaires, manquants' ...
     %    'pour un flotteur présent dans les deux cas'});
     grid on
     %     Namefig = ['/home/gherbert/Images/compa_test_altran/compa_par_type/Cyc_id_supp_miss_' liste_rep_alerte{l} 'pourverif2.png'];
     Namefig = [param.DIR_HOME '/figures/Cyc_id_supp_miss_' liste_rep_alerte{l} 'pourverif2.png']; % cc modif chemin sauvegarde fgiure
     saveas(gcf,Namefig)
-    
+    keyboard
     
     figure
     positionVector1 = [0.1, 0.25, 0.4, 0.5];
@@ -481,28 +557,29 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
                     n_err = n_err+1;
                     % keyboard
                     if(i==1)
-                        fprintf(fid_1,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cycalok{i,idfloat_miss})) ']']);
+                        %fprintf(fid_1,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cycalok{i,idfloat_miss})) ']']);
+						fprintf(fid_1,'%s\n',[num2str(tps(j)) ',[' num2str((cycalok{i,idfloat_miss})) ']']);
                     elseif(i==2)%
-                        fprintf(fid_2,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cycalok{i,idfloat_miss})) ']']);
-                        
+                        %fprintf(fid_2,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cycalok{i,idfloat_miss})) ']']);
+                        fprintf(fid_2,'%s\n',[num2str(tps(j)) ',[' num2str((cycalok{i,idfloat_miss})) ']']);
                     elseif(i==3)
-                        fprintf(fid_3,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cycalok{i,idfloat_miss})) ']']);
-                        
+                        %fprintf(fid_3,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cycalok{i,idfloat_miss})) ']']);
+                        fprintf(fid_3,'%s\n',[num2str(tps(j)) ',[' num2str((cycalok{i,idfloat_miss})) ']']);
                     elseif(i==4)
-                        fprintf(fid_4,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cycalok{i,idfloat_miss})) ']']);
-                        
+                        %fprintf(fid_4,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cycalok{i,idfloat_miss})) ']']);
+                        fprintf(fid_4,'%s\n',[num2str(tps(j)) ',[' num2str((cycalok{i,idfloat_miss})) ']']);
                     elseif(i==5)
-                        fprintf(fid_5,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cycalok{i,idfloat_miss})) ']']);
-                        
+                        %fprintf(fid_5,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cycalok{i,idfloat_miss})) ']']);
+                        fprintf(fid_5,'%s\n',[num2str(tps(j)) ',[' num2str((cycalok{i,idfloat_miss})) ']']);
                     elseif(i==6)
-                        fprintf(fid_6,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cycalok{i,idfloat_miss})) ']']);
-                        
+                        %fprintf(fid_6,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cycalok{i,idfloat_miss})) ']']);
+                        fprintf(fid_6,'%s\n',[num2str(tps(j)) ',[' num2str((cycalok{i,idfloat_miss})) ']']);
                     elseif(i==7)
-                        fprintf(fid_7,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cyc_alok{i,idfloat_miss})) ']']);
-                        
+                        %fprintf(fid_7,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cyc_alok{i,idfloat_miss})) ']']);
+                        fprintf(fid_7,'%s\n',[num2str(tps(j)) ',[' num2str((cyc_alok{i,idfloat_miss})) ']']);
                     elseif(i==8)
-                        fprintf(fid_8,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cyc_alok{i,idfloat_miss})) ']']);
-                        
+                        %fprintf(fid_8,'%s\n',[num2str(tps(j)) ',[' num2str(cell2mat(cyc_alok{i,idfloat_miss})) ']']);
+                        fprintf(fid_8,'%s\n',[num2str(tps(j)) ',[' num2str((cyc_alok{i,idfloat_miss})) ']']);
                     end
                 end
             end

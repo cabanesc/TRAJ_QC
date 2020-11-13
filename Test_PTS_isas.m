@@ -1,4 +1,4 @@
-function [o_alerte11,o_alerte12,isas_alert,isas_non_ref] = Test_PTS_isas(idCyc_drift, id, cycles_sorted,ilong_drift, ilat_drift,i_rpp)
+function [o_alerte11,o_alerte12,isas_alert,isas_non_ref,proche_surface] = Test_PTS_isas(idCyc_drift, id, cycles_sorted,ilong_drift, ilat_drift,i_rpp)
 
 %%-----------------------------------------------------------------------
 %% Estime la pression a partir de la temperature mesurée et de la clim ISAS
@@ -100,6 +100,7 @@ pres_alert=0;
 temp_alert=0;
 psal_alert=0;
 non_ref=1;
+proche_surface=0;
 
 temp_mes = T.temp.data(idCyc_drift);
 pres_mes = T.pres.data(idCyc_drift);
@@ -152,20 +153,31 @@ if pres_mes(ismax)<pres_mes(ismin)
     bad_pres(isminmax)=1;
 end
 
+isstd = T.measurement_code.data==294&T.cycle_number.data==cycles_sorted(id);
+presstd =T.pres.data(isstd);
+% % on ne verifie la coherence P,T (isout=1)que pour certaines variables (instantanées et moyenne)
+% isout(ismean)=0;
+% isout(~ismean)=1;
+% isout(isminmax)=0;
+% isout(isstd)=0;
+% if presstd<100
+% isout(ismean)=1;
+% end
 
-isout(~ismean)=1;
+
 isout(ismean)=1;
 if sum(bad_pres(isminmax))==0&sum(ismin)~=0&sum(ismax)~=0
    % on verifie que la pression moyenne est comprise entre la pression min et la pression max
     isout = ismean&((pres_mes> pres_mes(ismax)|pres_mes<pres_mes(ismin))& bad_pres==0); % indicateur qui sert pour flagguer les means plus tard
 end
-
-
-
+ if presstd<100
+ isout(ismean)=1;
+ end
+isout(~ismean)=1;
 
 %on verifie les couples (P,T),(P,S) quand c'est possible
 for i=1:length(T.temp.data(idCyc_drift))
-    if unique(T.cycle_number.data(idCyc_drift))==2&i==5
+    if unique(T.cycle_number.data(idCyc_drift))==70&str2num(floatname)==3900857
         % keyboard
     end
     temp_mes_i = T.temp.data(idCyc_drift(i));
@@ -178,7 +190,8 @@ for i=1:length(T.temp.data(idCyc_drift))
        fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',Proche Surface, (' num2str(pres_mes_i)  ')']);
        fclose(fid_alerte);
        fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',Proche Surface, (' num2str(pres_mes_i)  ')'])
-       pres_mes_i=1;                
+       pres_mes_i=1;   
+       proche_surface=1;	   
 	end
     % recuperation temp et psal theorique et temp_std et psal_std
 	
@@ -232,8 +245,8 @@ for i=1:length(T.temp.data(idCyc_drift))
     
     if ~isnan(temp_mes_i)&~isnan(pres_mes_i)
         if ~isnan(temp_th_i) % valeur referencee dans isas
-            % if ismean(i)
-            % delta= 2*PARAM.T_N_STD; % on est plus tolerant sur la coherence quand c'est la moyenne
+            % if ismean(i) & presstd>100& presstd<1000
+             % delta= 10*PARAM.T_N_STD; % on est plus tolerant sur la coherence quand c'est la moyenne et que le flotteur n'a pas derive a pression ~constante
             % else
             delta= PARAM.T_N_STD;
             %end
