@@ -207,6 +207,8 @@ if ~isnan(numMis)
 	end
 	dureeModMed(1)=median(dureeMod)-dureeCumulee(1);
 	durreCycleTh(1)=a_dureeMedianCycle(isMis);
+else
+    dureeCumulee(1)=0;
 end
 
 for id=2:length(a_cycles)

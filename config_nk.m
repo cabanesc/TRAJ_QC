@@ -40,7 +40,9 @@ param.DIR_NEW_TRAJ_FILE ='/export/home1/ccabanes/data/TRAJ_QC/trajFiles/';    % 
 param.save_traj_file = 1;  %%% 1: sauve les fichiers traj   0: ne sauve pas   % add cc 26/10/2020 
 
 
-% liste des flotteurs à triater : plusisuers listes possibles % add cc 02/11/2020
+% liste des flotteurs à traiter : 
+%  cc 02/11/2020 pour compa_altran_alertes: plusieurs listes possibles
+%                pour Prog_alertes_traj: pour le moment 1 seule liste (pas encore testé avec plusieurs)
 % param.liste_rep_alerte  = {'AOML_RISER_apex_argos'; 'JMA_APEX_PI_JAMSTEC'; 'CSIRO_APEX_argos_apf9';'CSIRO_APEX_argos_apf8'; 'INCOIS_APEX_Argos_apf8'; 'INCOIS_APEX_Argos_apf9';'AOML_SOLOII_Dmode_all'; 'AOML_SOLOII_Dmode_all_bis'};
 param.liste_rep_alerte = {'INCOIS_APEX_Argos_apf8'};
 % Config pour la comparaison des alertes  % add cc 02/11/2020

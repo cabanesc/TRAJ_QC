@@ -183,13 +183,13 @@ if (finalOk == 0)
             presMin = depPres((idCycleMinPresAtParkPres));
             presMax = depPres((idCycleMaxPresAtParkPres));
             
-            if ((presMin ~= g_presDef) && (presMax ~= g_presDef))
+            
                 tabFinalParkPres = mean([presMin presMax]);
                 tabFinalParkTemp = NaN;
                 tabFinalParkPsal = NaN;
                 tabFinalParkEtat = g_etatFromDec;
                 finalOk = 1;
-            end
+            
         end
     end
     

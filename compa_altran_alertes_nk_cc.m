@@ -254,6 +254,7 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
     Prcent_flo_id = [];
     Prcent_flo_supp = [];
     Prcent_flo_miss = [];
+	
     cyc_test_identique =cell(1,1);
     cyc_test_miss = cell(1,1);;
     cyc_test_supp = cell(1,1);;
@@ -263,7 +264,10 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
     nb_flo_id= zeros(1,length(float_testok));
     nb_flo_supp= zeros(1,length(float_testok));
     nb_flo_miss= zeros(1,length(float_testok));
-    
+    Prcent_cyc_id= zeros(1,length(float_testok));
+    Prcent_cyc_supp(i) =zeros(1,length(float_testok));
+	Prcent_cyc_miss(i)=zeros(1,length(float_testok));
+   
     for i = 1:length(float_testok)   %%%pour chaque alerte
  
         ii=0;
@@ -296,7 +300,8 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
         nb_without_err_test = length(find(ismember(float_all,float_test(:,:))==0));
         
         %%%%Cycles identiques, supplémentaires et manquants pour un même
-        %%%%flotteur  % correction cc 03/11/2020
+        %%%%flotteur  % correction cc 03/11/2020 : les cycles supp/missing pour des flotteurs identiques dans les listes altran et TRAJQC n'etaient pas comptés
+		%%%%%
         float_al_test = unique([flo_al ;flo_test]); % tous les flotteurs altran/test concernes par l'alerte
 		mm=0;
 		for ifloat=1:length(float_al_test)
@@ -330,6 +335,9 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
 			   nb_cyc_supp(i) = nb_cyc_supp(i) + length(cyc_test_i_float);			   
             end
         end	
+		Prcent_cyc_id(i) = nb_cyc_id(i)./(nb_cyc_id(i)+nb_cyc_miss(i))*100;
+		Prcent_cyc_supp(i) = nb_cyc_supp(i)./(nb_cyc_id(i)+nb_cyc_miss(i))*100;
+		Prcent_cyc_miss(i) = nb_cyc_miss(i)./(nb_cyc_id(i)+nb_cyc_miss(i))*100;
 		
         % %%%cycles identiques dans test et altran et comptage
         % if(isempty(find(is_identique==1))==0)
@@ -379,10 +387,10 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
     end
     
     %%%figures
-    nb_flo=[];
-    Prcent=[];
-    nb_cyc=[];
-    nb_flot=[];
+    nb_flo=zeros(length(Prcent_flo_id),2);
+    Prcent=zeros(length(Prcent_flo_id),3);
+    nb_cyc=zeros(length(Prcent_flo_id),3);
+    nb_flot=zeros(length(Prcent_flo_id),3);
     
     
     
@@ -423,19 +431,28 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
     
     
     
-    
+    % Figure 1 Nombre de flotteurs identiques/sup/missing
+	%====================================================
     
     figure
     %subplot(2,1,1)
     %bar(Prcent)
 	b=bar(nb_flot);
-	b(2).FaceColor=[0.4660    0.6740    0.1880];
-    %xticks([1:1:length(Prcent)])
+
+    %pour matlab2020
+    % if size(nb_flot,1)==1
+	% b.FaceColor = 'flat';
+	 % b.CData(1,:) = [0 0.4470 0.7410];
+    % b.CData(2,:) = [0.4660    0.6740    0.1880];
+	 % b.CData(3,:) = [0.9290 0.6940 0.1250]
+	% else
+	% b(2).FaceColor=[0.4660    0.6740    0.1880];
+	% end
+	
+	
 	xticks([1:1:length(nb_flot)])
-	%set(gca,'Xtick',[1:1:length(Prcent)])
     alerte_str = cellstr(alerte);
     xticklabels(alerte_str)
-	%h=set(gca,'XTickLabel',alerte_str);
     xtickangle(45)
     title({'Pourcentage de Flotteurs identiques à Altran' ...
         liste_rep_alerte{l}},'interp','none');
@@ -449,19 +466,27 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
 	mkdir([param.DIR_HOME '/figures/' liste_rep_alerte{l}])
 	end
 	
-    Namefig = [param.DIR_HOME '/figures/flot_id_supp_miss_' liste_rep_alerte{l} 'pourverif2.png']; % cc modif chemin sauvegarde fgiure
+    Namefig = [param.DIR_HOME '/figures/' liste_rep_alerte{l} '/flot_id_supp_miss_' liste_rep_alerte{l} 'pourverif2.png']; % cc modif chemin sauvegarde fgiure
     saveas(gcf,Namefig)
     
-    %subplot(2,1,2)
     
+    % Figure2 Nombre de cycles identiques/sup/missing
+	%====================================================
     figure
     alerte_str = cellstr(alerte);
     b=bar(nb_cyc);
-	b(2).FaceColor=[0.4660    0.6740    0.1880];
+	% pour matlab2020
+	% if size(nb_flot,1)==1
+	% b.FaceColor = 'flat';
+	 % b.CData(1,:) = [0 0.4470 0.7410];
+    % b.CData(2,:) = [0.4660    0.6740    0.1880];
+	 % b.CData(3,:) = [0.9290 0.6940 0.1250]
+	% else
+	% b(2).FaceColor=[0.4660    0.6740    0.1880];
+	% end
+	
     xticks([1:1:length(nb_cyc)])
-    %set(gca,'Xtick',[1:1:length(nb_cyc)])
 	xticklabels(alerte_str)
-	%h=set(gca,'XTickLabel',alerte_str);
     xtickangle(45)
     titre1 = ['Nbre de cycles identiques(b), supplementaires(g), manquants(y)']
     %titre2 = ['pour un flotteur present dans les deux cas'];
@@ -472,19 +497,19 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
     %    'pour un flotteur présent dans les deux cas'});
     grid on
     %     Namefig = ['/home/gherbert/Images/compa_test_altran/compa_par_type/Cyc_id_supp_miss_' liste_rep_alerte{l} 'pourverif2.png'];
-    Namefig = [param.DIR_HOME '/figures/Cyc_id_supp_miss_' liste_rep_alerte{l} 'pourverif2.png']; % cc modif chemin sauvegarde fgiure
+    Namefig = [param.DIR_HOME '/figures/' liste_rep_alerte{l} '/Cyc_id_supp_miss_' liste_rep_alerte{l} 'pourverif2.png']; % cc modif chemin sauvegarde fgiure
     saveas(gcf,Namefig)
-    keyboard
+    %keyboard
     
+	% Figure3 Nombre flotteur ALTRAN/TRAJ_QC pour chaque alerte
+	%====================================================
     figure
     positionVector1 = [0.1, 0.25, 0.4, 0.5];
     subplot('Position',positionVector1)
     %subplot(2,1,1)
     bar(nb_flo)
-    %set(gca,'Xtick',[1:1:length(nb_cyc)])
 	xticks([1:1:length(nb_cyc)])
     xticklabels(alerte_str)
-	%h=set(gca,'XTickLabel',alerte_str);
     xtickangle(45)
     grid on
     title({'Nb de flotteurs par alerte'...
@@ -501,7 +526,7 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
         'et flotteurs sans alertes'});
     grid on
     %     Namefig = ['/home/gherbert/Images/compa_test_altran/compa_par_type/Nb_flot_' liste_rep_alerte{l} 'pourverif2.png'];
-    Namefig = [param.DIR_HOME '/figures/Nb_flot_' liste_rep_alerte{l} 'pourverif2.png']; % cc modif chemin sauvegarde fgiure
+    Namefig = [param.DIR_HOME '/figures/' liste_rep_alerte{l} '/Nb_flot_' liste_rep_alerte{l} 'pourverif2.png']; % cc modif chemin sauvegarde fgiure
     saveas(gcf,Namefig)
     
     

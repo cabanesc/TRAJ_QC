@@ -164,7 +164,6 @@ presstd =T.pres.data(isstd);
 % isout(ismean)=1;
 % end
 
-
 isout(ismean)=1;
 if sum(bad_pres(isminmax))==0&sum(ismin)~=0&sum(ismax)~=0
    % on verifie que la pression moyenne est comprise entre la pression min et la pression max
@@ -177,7 +176,7 @@ isout(~ismean)=1;
 
 %on verifie les couples (P,T),(P,S) quand c'est possible
 for i=1:length(T.temp.data(idCyc_drift))
-    if unique(T.cycle_number.data(idCyc_drift))==70&str2num(floatname)==3900857
+    if unique(T.cycle_number.data(idCyc_drift))==10
         % keyboard
     end
     temp_mes_i = T.temp.data(idCyc_drift(i));
@@ -316,12 +315,12 @@ for i=1:length(T.temp.data(idCyc_drift))
                             end
                         end
                         if int_pres_alert==1
-                            if pres_noqc4(i)==1; T.pres.data(idCyc_drift(i))=6;end;
-                            fid_alerte=fopen(file_alerte,'a');
-                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',P and T are not consistant :  PRES MESUREE, (' num2str(pres_mes_i) ')' ]);
-                            fclose(fid_alerte);
-                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', P and T are not consistant :  PRES MESUREE, (' num2str(pres_mes_i) ')'])
-                            pres_alert=1;
+%                             if pres_noqc4(i)==1; T.pres.data(idCyc_drift(i))=6;end;
+%                             fid_alerte=fopen(file_alerte,'a');
+%                             fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',P and T are not consistant :  PRES MESUREE, (' num2str(pres_mes_i) ')' ]);
+%                             fclose(fid_alerte);
+%                             fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', P and T are not consistant :  PRES MESUREE, (' num2str(pres_mes_i) ')'])
+%                             pres_alert=1;
                           
                         else
                             if pres_noqc4(i)==1; T.pres.data(idCyc_drift(i))=1;end;

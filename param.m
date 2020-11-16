@@ -4,7 +4,7 @@ parameters.TIME_STD_DUREE_CYCLE_M = 100;% in day % Max value for Standard Deviat
 parameters.TIME_DIFF_CYCLE = .1; % in day % Max value for difference in cycle duration between META and TRAJ file
 parameters.TIME_DIFF_DOUBLE_DATE_LOC = 0; % en jour (initial 30s) % add cc 05/10/2020
 parameters.PRESS_PARK_DIFF_BATHY_QC = 100; % Put QC=4 if pressure is xxx dbar below the bathymertry
-parameters.PRESS_PARK_DUMB = 2800; % Threshold for dumb park pressure, put QC=4 (cc: a modifier si on traite une liste de deep)
+parameters.PRESS_PARK_DUMB = 2800; % Threshold for dumb park pressure, put QC=4 (cc : ce parametre doit s'adapter si deep => fait ligne 255 Prog_alertes_traj.m)
 parameters.PRESS_FOND = 1500; % keep pressure when bathymetry is below
 parameters.PRESS_SURF = 50; % keep pressure below
 parameters.PRESS_STD_MAX = 2000; % compute pressure std for pressure lower than

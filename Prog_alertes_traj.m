@@ -68,7 +68,8 @@ addpath(DIR_VISU);
 PARAM = param
 
 
-for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
+%for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
+for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore teste que ca marche bien d'enchainer les listes!!
     % Liste des flotteurs a tester
     
     fid1 = fopen(Liste_Float{ilist});
@@ -251,6 +252,9 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
             disp(['NOT FOUND: ' traj_fileName_R]);
         else
             
+            if isfield(M,'ProfilePressure')
+               PARAM.PRESS_PARK_DUMB=max(max(M.ProfilePressure)+400, PARAM.PRESS_PARK_DUMB);
+            end
             % RECUPERATION des indices de localisation (idLoc) et de derive en profondeur (idDrift)
             % -------------------------------------------------------------------------------------
             icounterfloat=icounterfloat+1;
@@ -584,7 +588,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
                     
                     
                     
-                    istat=istat+1; % cc incrementé ligne 501??
+                    %istat=istat+1; % cc incrementé ligne 501??
                     % numero du cycle
                     numCycle = cycles_sorted(id);
                     numMis=T.config_mission_number.data(id);
@@ -763,7 +767,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
                         % lat_first_curr
                         % long_first_curr
                         % end
-                        
+                       
                         
                         
                         
@@ -846,7 +850,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
                     fclose all;
                     
                 end   %%% fin de la boucle sur les cycles (id)
-                %keyboard
+                
                 
                 
                 %% ------------------------------------------------------------------
@@ -1331,10 +1335,11 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
                                     alerte18(k,id)=str2double(floatname);
                                 end
                                 %elseif ecartFirstLastLoc(istat)*24 > PARAM.TIME_DIFF_FLLOCS_EOL & id<length(cycles_sorted) % en heure
-                            elseif ecartFirstLastLoc(istat)*24 >= PARAM.TIME_DIFF_FLLOCS_EOL | (ecartFirstLastLoc(istat)*24 > ecartcycle & id==length(cycles_sorted))% en heure   % correction cc 24/09/2020
+                            elseif (id>1&ecartFirstLastLoc(istat)*24) >= PARAM.TIME_DIFF_FLLOCS_EOL | (ecartFirstLastLoc(istat)*24 > ecartcycle & id==length(cycles_sorted))% en heure   % correction cc 24/09/2020
                                 fid_alerte=fopen(file_alerte,'a');
                                 fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',? EOL ?']);
                                 fclose(fid_alerte);
+                     
                                 fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',? EOL ?']); % peut-on considerer EOL à partir de 5 j à la surface ?
                                 fleet_EOF(k,id)=str2double(floatname);
                                 if Stat==1
