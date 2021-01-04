@@ -44,11 +44,13 @@ maxocc=max(occcyc);
 cyc=NaN*zeros(length(a_cycles),maxocc);
 
 
+
 numMis = T.config_mission_number.data(1);
 isMis = find(M.config_mission_number == numMis);
 isCyc = (T.cycle_number.data(a_idLoc) == a_cycles(1));
 idCyc = a_idLoc(isCyc);
-
+cyc(1,1:length(T.juld.data(idCyc)))=T.juld.data(idCyc);  % add cc 18/12/2020 pour pouvoir tester duplication des donnees cycle 0-1 ou 1-2 
+ 
 for id=2:length(a_cycles)
     %idCyc_prec=idCyc;
     numCycle = a_cycles(id);
@@ -62,7 +64,6 @@ for id=2:length(a_cycles)
         isCycprec = (T.cycle_number.data(a_idLoc)==(numCycle-1));
         idCycprec{id} = [a_idLoc(isCycprec)];
     end
-    
     
     if (id>1 & sum(idCyc)>0 & sum(idCycprec{id})>0)
         
@@ -104,7 +105,7 @@ for id=2:length(a_cycles)
         
         idMis = find(double(a_mission)==numMis);
         % on ne va considerer que les cycles superieurs au 1 (possibilite de prelude qui fausse)
-        
+		
         if(length(a_mission)<=length(M.CycleTime) & a_cycles(id)~=0 & ~isnan(numMis))    %% cycles(id)~=0 sinon numMis pouvait etre = NaN et erreur sur conditions suivantes. conditions sur numMis car peut avoir numMis=Nan et cycles(1)=1 quand cycle 0 dans T.cycle_number mais pas de measurement_code 703.
             %%date de la derniere loc du cycle donne - date de la
             %%derniere loc du cycle precedent
@@ -240,7 +241,7 @@ iserrcycl=abs(dureeModMed-medianoutnan(dureeModMed))>durreCycleTh*0.5;
 iserrcycl(1)=0;
 if sum(iserrcycl)>0
 	   fid_alerte=fopen(file_alerte,'a');
-		fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(id)) ', MAUVAISE NUMEROTATION DE CYCLE ']);
+		fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ', MAUVAISE NUMEROTATION DE CYCLE ']);
 		fclose(fid_alerte);
 		fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ', MAUVAISE NUMEROTATION DE CYCLE ']);
 		o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(iserrcycl)];
