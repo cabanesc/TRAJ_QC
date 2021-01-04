@@ -34,7 +34,8 @@ parameters.TIME_DUREE_CYCLE_M = 90; % Threshold (in %) for comparison between es
 parameters.TIME_DUREE_CYCLE_JUMP = 0.5; % Threshold for assuming cycle jump/mission cycle
 
 % Test_locs.m
-parameters.LOC_LAUNCH_DIFF_M = 0.1; % Threshold for comparison between measured launch location and metadata 
+parameters.LOC_LAUNCH_DIFF_M = 0.1; % Threshold for comparison between traj launch location and metadata 
+parameters.DATE_LAUNCH_DIFF_M = 1e-4; % Threshold for comparison between traj launch date and metadata -minute près % add cc 18/12/2020
 
 
 end

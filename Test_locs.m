@@ -94,8 +94,10 @@ end
 %
 % VERIFICATION DES DATES ET LOCS DE LANCEMENT (coherence entre les fichiers de trajectoires et de metadonnees)
 %---------------------------------
+
 LaunchDate_meta=datenum(M.launch_date,'yyyymmddHHMMSS');
-if abs(LaunchLat-M.launch_latitude)>PARAM.LOC_LAUNCH_DIFF_M | abs(LaunchLon-M.launch_longitude)>PARAM.LOC_LAUNCH_DIFF_M |LaunchDate+datenum('01011950','ddmmyyyy')~=LaunchDate_meta
+%if abs(LaunchLat-M.launch_latitude)>PARAM.LOC_LAUNCH_DIFF_M | abs(LaunchLon-M.launch_longitude)>PARAM.LOC_LAUNCH_DIFF_M |LaunchDate+datenum('01011950','ddmmyyyy')~=LaunchDate_meta
+if abs(LaunchLat-M.launch_latitude)>PARAM.LOC_LAUNCH_DIFF_M | abs(LaunchLon-M.launch_longitude)>PARAM.LOC_LAUNCH_DIFF_M | abs(LaunchDate+datenum('01011950','ddmmyyyy')-LaunchDate_meta)> PARAM.DATE_LAUNCH_DIFF_M % add cc 18/12/2020 seconde près pour la difference
     fid_alerte=fopen(file_alerte,'a');
     fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(sum(~isok)) ', INCOHERENCE ENTRE META ET TRAJ POUR LA POSITION ET/OU DATE DE LANCEMENT']);
     fprintf('%s\n',[ floatname ', cycle ' num2str(sum(~isok)) ', INCOHERENCE ENTRE META ET TRAJ POUR LA POSITION ET/OU DATE DE LANCEMENT']);
