@@ -588,7 +588,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                     
                     
                     
-                    %istat=istat+1; % cc incrementé ligne 501??
+                    %istat=istat+1; % cc dejà incrementé ligne 570??
                     % numero du cycle
                     numCycle = cycles_sorted(id);
                     numMis=T.config_mission_number.data(id);
@@ -1922,42 +1922,43 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                 if(Wr_Err==1)
                     if(isempty(alertCyc_e3)==0)
                         fid3=fopen(file3,'a');
-                        fprintf(fid3,'%s\n',[floatname ', [' num2str(alertCyc_e3) ']']);   %%% Grounded
+                        %fprintf(fid3,'%s\n',[floatname ', [' num2str((alertCyc_e3)) ']']);   %%% Grounded  cc 18/12/2020 : elimination des doubles dans les alertes
+						fprintf(fid3,'%s\n',[floatname ', [' num2str(unique(alertCyc_e3)) ']']);   %%% Grounded
                         fclose(fid3);
                     end
                     if(isempty(alertCyc_e4)==0)
                         fid4=fopen(file4,'a');
-                        fprintf(fid4,'%s\n',[floatname ', [' num2str(alertCyc_e4) ']']);   %%% alerte cycle
+                        fprintf(fid4,'%s\n',[floatname ', [' num2str(unique(alertCyc_e4)) ']']);   %%% alerte cycle
                         fclose(fid4);
                     end
                     if(isempty(alertCyc_e5)==0)
                         fid5=fopen(file5,'a');
-                        fprintf(fid5,'%s\n',[floatname ', [' num2str(alertCyc_e5) ']']);    %%% alerte locdate
+                        fprintf(fid5,'%s\n',[floatname ', [' num2str(unique(alertCyc_e5)) ']']);    %%% alerte locdate
                         fclose(fid5);
                     end
                     if(isempty(alertCyc_e6)==0)
                         fid6=fopen(file6,'a');
-                        fprintf(fid6,'%s\n',[floatname ', [' num2str(alertCyc_e6) ']']);   %%% alerte launchdate
+                        fprintf(fid6,'%s\n',[floatname ', [' num2str(unique(alertCyc_e6)) ']']);   %%% alerte launchdate
                         fclose(fid6);
                     end
                     if(isempty(alertCyc_e7)==0)
                         fid7=fopen(file7,'a');
-                        fprintf(fid7,'%s\n',[floatname ', [' num2str(alertCyc_e7) ']']);   %%% alerte pression
+                        fprintf(fid7,'%s\n',[floatname ', [' num2str(unique(alertCyc_e7)) ']']);   %%% alerte pression
                         fclose(fid7);
                     end
                     if(isempty(alertCyc_e8)==0)
                         fid8=fopen(file8,'a');
-                        fprintf(fid8,'%s\n',[floatname ', [' num2str(alertCyc_e8) ']']);   %%% alerte loc terre
+                        fprintf(fid8,'%s\n',[floatname ', [' num2str(unique(alertCyc_e8)) ']']);   %%% alerte loc terre
                         fclose(fid8);
                     end
                     if(isempty(alertCyc_e9)==0)
                         fid9=fopen(file9,'a');
-                        fprintf(fid9,'%s\n',[floatname ', [' num2str(alertCyc_e9) ']']);   %%% alerte loc pos
+                        fprintf(fid9,'%s\n',[floatname ', [' num2str(unique(alertCyc_e9)) ']']);   %%% alerte loc pos
                         fclose(fid9);
                     end
                     if(isempty(alertCyc_e10)==0)
                         fid10=fopen(file10,'a');
-                        fprintf(fid10,'%s\n',[floatname ', [' num2str(alertCyc_e10) ']']);   %%% Incoherence meta/traj pour durée de cycles
+                        fprintf(fid10,'%s\n',[floatname ', [' num2str(unique(alertCyc_e10)) ']']);   %%% Incoherence meta/traj pour durée de cycles
                         fclose(fid10);
                     end
                 end
@@ -2005,20 +2006,20 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                 
                 
                 
-                % Sauvegarde des nouveaux fichiers traj
+                % Sauvegarde des nouveaux fichiers traj contenant les flags et les vitesses (deep, surface , errors,...)
                 if P.save_traj_file==1
                     filename_new =[P.DIR_NEW_TRAJ_FILE traj_fileName_final];
                     if exist(P.DIR_NEW_TRAJ_FILE)==0
                         mkdir(P.DIR_NEW_TRAJ_FILE)
                     end
-                    % create Udeep for example
-                    T.u_deep.name='U_DEEP';
-                    T.u_deep.dim={'N_CYCLE'};
-                    T.u_deep.data=NaN*zeros(DimT.n_cycle.dimlength,1);
-                    T.u_deep.long_name='Estward component of the deep velocity';
-                    T.u_deep.units='cm/s';
-                    T.u_deep.FillValue_=99999;
-                    T.u_deep.type=6;
+					
+                    T =  create_new_variables(T,DimT,'deep_velocity'); % cree les champs vides pour les vitesses (deep, surface), les erreurs 
+					T =  create_new_variables(T,DimT,'first_surface_velocity'); 
+					T =  create_new_variables(T,DimT,'last_surface_velocity'); 
+					
+					% Compute velocities
+					
+					
                     
                     create_netcdf_allthefile(T,DimT,filename_new,GlobT)
                     
