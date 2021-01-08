@@ -977,7 +977,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         
                     end  %%fin de la boucle sur les missions
                     
-                end   %%fin de la boucle sur idLoc
+                end   %%fin de la condition sur idLoc
                 
                 %%% alerte 10, 13, 14
                 %%%%BOUCLE SUR LES CYCLES
@@ -1097,10 +1097,10 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             end
                             %fprintf(fid3,'%s\n',[floatname ', [' num2str(cycles_sorted(id)) ']']);
                             
-                            T.grounded.data(id) = 'Y'; % add cc 05/10/2020
-                            
+                            %T.grounded.data(id) = 'Y'; % add cc 05/10/2020
+                            T.grounded.data(idCyc_sorted(id)) = 'Y'; % correction cc 08/01/2021
                             %else
-                            if(GroundedNum(id)~=2)
+                            if(GroundedNum(idCyc_sorted(id))~=2)
                                 fid_alerte=fopen(file_alerte,'a');
                                 fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', grounded selon bathy mais incohérence avec la variable T.grounded =''N''.']);
                                 fclose(fid_alerte);
@@ -1112,31 +1112,31 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             if(map==1)
                                 m_plot(TEMP_LONG(ilong_drift,1),TEMP_LAT(ilat_drift,1),'color',[0.4660 0.6740 0.1880],'marker','p','markersize',8)
                             end
-                        elseif(GroundedNum(id)==1)    %%%1 = 'Y'
+                        elseif(GroundedNum(idCyc_sorted(id))==1)    %%%1 = 'Y'
                             % alertCyc_e3 = [alertCyc_e3 cycles_sorted(id)]; %
                             % remove cc 05/10/2020
                             %                     fid_alerte=fopen(file_alerte,'a');
                             %                     fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded alors que oui d''apres la variable T.grounded.']);
                             %                     fclose(fid_alerte);
                             % fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded alors que oui d''apres la variable T.grounded.']);                      %%% appliquer flags ?
-                            T.grounded.data(id)='P';
-                        elseif(GroundedNum(id)==2)    %%%2 = 'N'  % add cc 05/10/2020
-                            T.grounded.data(id)='N';
-                        elseif(GroundedNum(id)==3)       %%%3 = 'U'
+                            T.grounded.data(idCyc_sorted(id))='P';
+                        elseif(GroundedNum(idCyc_sorted(id))==2)    %%%2 = 'N'  % add cc 05/10/2020
+                            T.grounded.data(idCyc_sorted(id))='N';
+                        elseif(GroundedNum(idCyc_sorted(id))==3)       %%%3 = 'U'
                             %                     fid_alerte=fopen(file_alerte,'a');
                             %                     fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded et ''U'' d''apres la variable T.grounded.']);
                             %                     fclose(fid_alerte);
                             % fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded et ''U'' d''apres la variable T.grounded.']);                      %%% appliquer flags ?
-                            T.grounded.data(id)='N';
+                            T.grounded.data(idCyc_sorted(id))='N';
                         end
                         
                         
                         
                     end   %% fin de la condition sur l'existence des LOC
                     
-                    if(isnan(T.config_mission_number.data(id))==0)
+                    if(isnan(T.config_mission_number.data(idCyc_sorted(id)))==0)
                         %%id mission du flotteur pour ce cycle
-                        numMis=T.config_mission_number.data(id);   %%%attention pour id=1 peut etre = NaN;
+                        numMis=T.config_mission_number.data(idCyc_sorted(id));   %%%attention pour id=1 peut etre = NaN;
                         idMis = find(missions==numMis);
                         % recuperation des durees de cycle
                         if idMis<=length(dureeMedianCycle)
@@ -1186,7 +1186,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         
                         if isempty(isdouble_toremove)==0
                             
-                            
+                            %keyboard
                             %
                             
                             fid_alerte=fopen(file_alerte,'a');
@@ -1199,7 +1199,6 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             isdb = zeros(length(idCyc),1);
                             isdb(isdouble_toremove)=1;
                             isflag4=T.juld_qc.data(idCyc)==4;
-                            
                             T.juld_qc.data(idCyc(isdb&~isflag4))=6;
                             isflag4=T.position_qc.data(idCyc)==4;
                             T.position_qc.data(idCyc(isdb&~isflag4))=6;
@@ -1263,7 +1262,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         locQc_sorted=locQc(idSorted);
                         locDate_qc_sorted=locDate_qc(idSorted);
                         locPosition_qc_sorted=locPosition_qc(idSorted);
-                        idCyc_sorted=idCyc(idSorted);
+                        %idCyc_sorted=idCyc(idSorted);
                         
                         
                         %
@@ -1450,9 +1449,10 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                             fclose(fid_alerte);
                                             fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DATES DE LOC DU 1er CYCLE ANTERIEURES A LAUNCH DATE > 3h']);
                                             %T.juld.data(idSorted(isbad))=2;                 %%%%FLAG � 2 les dates Loc du 1er cycle (douteuses)
-                                            if T.juld_qc.data(idSorted(isbad))~=4
-                                                T.juld_qc.data(idSorted(isbad))=6;   % correction cc 15/09/2020
-                                            end
+											
+                                            notQC4=T.juld_qc.data(idCyc(idSorted))~=4;
+                                            T.juld_qc.data(idCyc(idSorted(isbad&notQC4)))=6;   % correction cc 15/09/2020
+                                            
                                             if Stat == 1
                                                 alertCyc_e5 = [alertCyc_e5 cycles_sorted(id)];
                                                 alerte21(k,cycles_sorted(id)+1)=str2double(floatname);
@@ -1670,7 +1670,8 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                                 if(map==1)
                                                     m_plot(LONG(ilong,1),LAT(ilat,1),'color','g','marker','o','markersize',5);
                                                 end
-                                                T.position_qc.data(idCyc)=6; % correction cc 09/10/2020
+												keyboard
+                                                T.position_qc.data(idCyc(idSorted(iilocl)))=6; % correction cc 09/10/2020
                                                 %T.position_qc.data(idCyc)=4;
                                             end
                                         else
@@ -1835,7 +1836,8 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         idKo = find(ranges > ECART_MAX_LOC_ARGOS*1000);
                         
                         if  (~isempty(idKo))&~isempty(o_idBadPos) % if that test fail, use koba to flag bad positions => erreur locpos d'altran
-                            fid_alerte=fopen(file_alerte,'a');
+                            
+							fid_alerte=fopen(file_alerte,'a');
                             fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', LOC DISTANTES DE PLUS DE 30 km']);
                             fclose(fid_alerte);
                             fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', LOC DISTANTE DE PLUS DE 30 km']);
@@ -1843,8 +1845,11 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                 alertCyc_e9 = [alertCyc_e9 cycles_sorted(id)];
                             end
                             
-                            if T.position_qc.data(idCyc(o_idBadPos))~=4;
-                                T.position_qc.data(idCyc(o_idBadPos))=6;
+                            % if T.position_qc.data(idCyc(o_idBadPos))~=4;
+                                % T.position_qc.data(idCyc(o_idBadPos))=6;
+                            % end
+							if T.position_qc.data(idCyc(idSorted(o_idBadPos)))~=4;  % correction cc 07/01/2021
+                                T.position_qc.data(idCyc(idSorted(o_idBadPos)))=6;
                             end
                         end
                         % [o_date, o_longitude, o_latitude, o_posAcc, o_posQcIn, o_posQcOut, ...
@@ -1876,8 +1881,11 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         % o_speed_isok(idDoublon_date)=NaN;  %%car koba ne prend pas en compte les doublons de date si pas associés à doublons de lon/lat
                         % o_speed_isokd = o_speed_isok;
                         
-                        
+                        if(isempty(o_idBadPos)==0)&isequal(LocDateok_sorted,locDateok)==0
+						%keyboard
+						end
                         if(isempty(o_idBadPos)==0)
+						    
                             fid_alerte=fopen(file_alerte,'a');
                             fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', LOCA ARGOS ERRONEE (d''apres test de Koba), Position ' num2str(o_idBadPos') ' ']);
                             fclose(fid_alerte);
