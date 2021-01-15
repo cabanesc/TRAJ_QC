@@ -67,7 +67,14 @@ addpath(DIR_VISU);
 % recuperation des parametres
 PARAM = param
 
+% logfile pour le calcul des vitesses
+logfile=[P.DIR_HOME '/logs/compute_velocities.log'];
 
+flog=fopen(logfile,'w');
+fclose(flog);
+if ~exist([P.DIR_HOME '/logs/'])
+	mkdir([P.DIR_HOME '/logs/'])
+end
 %for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore teste que ca marche bien d'enchainer les listes!!
     % Liste des flotteurs a tester
@@ -2046,8 +2053,9 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
 					T =  create_new_variables(T,DimT,'first_surface_velocity'); 
 					T =  create_new_variables(T,DimT,'last_surface_velocity'); 
 					
+					
 					% Compute velocities and write in netcdf file
-					T= compute_velocities(T,unique([alertCyc_e4 alertCyc_e8] ));
+					T= compute_velocities(T,P,unique([alertCyc_e4 alertCyc_e8] ));
 					
 					% Compute velocities and write in andro file
 					compute_velocities_to_yo(T,P,unique([alertCyc_e4 alertCyc_e8]));
