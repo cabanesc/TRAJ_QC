@@ -462,11 +462,11 @@ for idCy_sorted = 1:length(yoCycle)
 		
 		% consigne les vitesses qui sont calculés avec des positions éloignées des first/last loc
 		if first_good_loc(idCy)~=0
-		fprintf(flog,'%d #%d: Loc utilisee a la remontee ne correspond pas a la premiere loc argos. Decalage:  %d vitesse de surface: %f temps moyen(h) entre deux loc  %f \n', ...
+		fprintf(flog,'%d #%d: Loc utilisee a la remontee ne correspond pas a la premiere loc argos. First Loc+%d Vitesse de surface: %f Temps moyen(h) entre deux locs  %f \n', ...
                     floatNum, yoCycle(idCy), first_good_loc(idCy), T.v_first_surface_velocity.data(idCy), diffTimeLoc*24);
 	    end
 		if last_good_loc(idCy)~=0
-		fprintf(flog,'%d #%d: Loc utilisee a la descente ne correspond pas a la derniere loc argos. Decalage:  %d vitesse de surface: %f temps moyen(h) entre deux loc  %f \n', ...
+		fprintf(flog,'%d #%d: Loc utilisee a la descente ne correspond pas a la derniere loc argos. Last Loc%d Vitesse de surface: %f Temps moyen(h) entre deux locs  %f \n', ...
                     floatNum, yoCycle(idCy), last_good_loc(idCy), T.v_last_surface_velocity.data(idCy), diffTimeLoc*24);
 	    end
 		
