@@ -109,7 +109,17 @@ temp_noqc4 = T.temp_qc.data(idCyc_drift)<4;
 pres_noqc4 = T.pres_qc.data(idCyc_drift)<4;
 psal_noqc4 = T.psal_qc.data(idCyc_drift)<4;
 
-%  1ere verification
+%  1ere verification: par rapport à des bornes
+% on fait au moins 1 test donc on passe  le flag 0 a 1 pour PRES,TEMP et PSAL %
+% si la verif par rapport aux bornes echoue => flag 6
+% cc 14/01/2021
+temp_qc0 = T.temp_qc.data(idCyc_drift)==0;
+pres_qc0 = T.pres_qc.data(idCyc_drift)==0;
+psal_qc0 = T.psal_qc.data(idCyc_drift)==0;
+T.temp_qc.data(idCyc_drift(temp_qc0))=1;
+T.pres_qc.data(idCyc_drift(pres_qc0))=1;
+T.psal_qc.data(idCyc_drift(psal_qc0))=1;
+
 bad_temp=(temp_mes<I_temp_min|temp_mes>I_temp_max);
 bad_pres=(pres_mes>PARAM.PRESS_PARK_DUMB|pres_mes<-5|(pres_mes==0&temp_mes==0));
 bad_psal=(psal_mes<I_psal_min|psal_mes>I_psal_max);
@@ -155,24 +165,25 @@ end
 
 isstd = T.measurement_code.data==294&T.cycle_number.data==cycles_sorted(id);
 presstd =T.pres.data(isstd);
-% % on ne verifie la coherence P,T (isout=1)que pour certaines variables (instantanées et moyenne)
-% isout(ismean)=0;
-% isout(~ismean)=1;
-% isout(isminmax)=0;
-% isout(isstd)=0;
-% if presstd<100
-% isout(ismean)=1;
-% end
 
-isout(ismean)=1;
-if sum(bad_pres(isminmax))==0&sum(ismin)~=0&sum(ismax)~=0
-   % on verifie que la pression moyenne est comprise entre la pression min et la pression max
-    isout = ismean&((pres_mes> pres_mes(ismax)|pres_mes<pres_mes(ismin))& bad_pres==0); % indicateur qui sert pour flagguer les means plus tard
-end
+% % on ne verifie la coherence P,T (istocheck=1) a partir d'ISAS:
+% % Pour les variables instantannées : oui
+% % Pour les variables moyennes : non sauf si la pression du flotteur reste stable pdt la dérive
+% % Pour les min/max : non
+istocheck(ismean)=1;
+
+% if sum(bad_pres(isminmax))==0&sum(ismin)~=0&sum(ismax)~=0
+  % on verifie que la pression moyenne est comprise entre la pression min et la pression max
+    % istocheck = ismean&((pres_mes> pres_mes(ismax)|pres_mes<pres_mes(ismin))& bad_pres==0); % indicateur qui sert pour flagguer les means plus tard
+% end
  if presstd<100
- isout(ismean)=1;
+ istocheck(ismean)=1;
  end
-isout(~ismean)=1;
+  if presstd>100
+ istocheck(ismean)=0;
+ end
+istocheck(~ismean)=1;
+
 
 %on verifie les couples (P,T),(P,S) quand c'est possible
 for i=1:length(T.temp.data(idCyc_drift))
@@ -252,7 +263,7 @@ for i=1:length(T.temp.data(idCyc_drift))
             if ~(isminmax(i)) % on ne flaggue pas la non coherence pour les min, max
                 if (abs(temp_mes_i-temp_th_i) > delta*temp_std_th_i)
                     
-                    if bad_temp(i)==0 & bad_pres(i)==0 &isout(i)==1% aucune des donnees n'est vraiment mauvaise par le 1er test, sinon elles ont deja ete flagguees
+                    if bad_temp(i)==0 & bad_pres(i)==0 &istocheck(i)==1% aucune des donnees n'est vraiment mauvaise par le 1er test, sinon elles ont deja ete flagguees
                         if pres_noqc4(i)==1; T.pres_qc.data(idCyc_drift(i))=6;end;
                         if temp_noqc4(i)==1; T.temp_qc.data(idCyc_drift(i))=6;end;
                         fid_alerte=fopen(file_alerte,'a');
@@ -359,85 +370,4 @@ if psal_alert==1
 end
 isas_non_ref=non_ref;
     
-    % if bad_temp==0 & ~isnan(temp_mes)
-    % if ~isnan(pres_mes)
-    % diff_temp = I_temp_profile-temp_mes;
-    % id_zero = find((sign(diff_temp(1:end-1)).*sign(diff_temp(2:end)))==-1);  % trouve les zeros (-1)
-    
-    % dT_dP=diff(I_temp_profile)'./diff(I_temp.depth.data);
-    % if isempty(id_zero)==0 % temperature referencee
-    % int_pres_alert=1; % =1 si une des pressions est mauvaise
-    % % trouve les pressions theoriques (plusieurs si inversion de T)
-    % for k=1:length(id_zero)
-    % pres_th_stdm(k)= interp1(I_temp_profile(id_zero(k):id_zero(k)+1),I_temp.depth.data(id_zero(k):id_zero(k)+1),temp_mes);
-    % DT(k)= interp1(I_temp_std.depth.data,I_temp_std_profile,pres_th_stdm(k));
-    % dT_dPi(k) = interp1((I_temp.depth.data(1:end-1)+I_temp.depth.data(2:end))/2,dT_dP,pres_th_stdm(k));
-    % DP(k)=abs(DT(k)./dT_dPi(k));
-    % if abs(pres_mes-pres_th_stdm(k))<5*DP(k)|(T.measurement_code.data(idCyc_drift(i))==297|T.measurement_code.data(idCyc_drift(i))==298) % pas d'alertes si MIN MAX car T,P pas forcement coherent
-    % int_pres_alert=0;
-    % end
-    % end
-    
-    
-    % if int_pres_alert==1&T.pres_qc.data(idCyc_drift(i))~=4
-    % pres_alert=1;
-    % %T.temp_qc.data(idCyc_drift(i))=6;
-    % T.pres_qc.data(idCyc_drift(i))=6;
-    % elseif int_pres_alert==0&T.pres_qc.data(idCyc_drift(i))~=4&((T.measurement_code.data(idCyc_drift(i))~=297|T.measurement_code.data(idCyc_drift(i))~=298));
-    % %verification plus fine de la coherence T,P
-    % temp_th= interp1(I_temp.depth.data,I_temp_profile,pres_mes);
-    % temp_std_th= interp1(I_temp_std.depth.data,I_temp_std_profile,pres_mes);
-    % T.pres_qc.data(idCyc_drift(i))=1;
-    % T.temp_qc.data(idCyc_drift(i))=1;
-    % if abs(temp_mes-temp_th)>PARAM.T_N_STD*temp_std_th
-    
-    % if T.pres_qc.data(idCyc_drift(i))~=4
-    % T.pres_qc.data(idCyc_drift(i))=6; pres_alert=1;
-    % end
-    % if T.temp_qc.data(idCyc_drift(i))~=4;
-    % T.temp_qc.data(idCyc_drift(i))=6;temp_alert=1;
-    % end
-    % end
-    % end
-    
-    % else  % temperature non referencee
-    % % verifie que les pressions sont possibles
-    % bad_pres=pres_mes>PARAM.PRESS_PARK_DUMB|pres_mes<-5;
-    % if bad_pres==1
-    % T.pres_qc.data(idCyc_drift(i)) = 6;
-    % pres_alert=1;
-    % elseif ((T.measurement_code.data(idCyc_drift(i))~=297|T.measurement_code.data(idCyc_drift(i))~=298))
-    % %verification plus fine de la coherence T,P
-    % temp_th= interp1(I_temp.depth.data,I_temp_profile,pres_mes);
-    % temp_std_th= interp1(I_temp_std.depth.data,I_temp_std_profile,pres_mes);
-    % T.pres_qc.data(idCyc_drift(i))=1;
-    % T.temp_qc.data(idCyc_drift(i))=1;
-    % if abs(temp_mes-temp_th)>PARAM.T_N_STD*temp_std_th
-    
-    % if T.pres_qc.data(idCyc_drift(i))~=4
-    % T.pres_qc.data(idCyc_drift(i))=6; pres_alert=1;
-    % end
-    % if T.temp_qc.data(idCyc_drift(i))~=4;
-    % T.temp_qc.data(idCyc_drift(i))=6;temp_alert=1;
-    % end
-    % end
-    % end
-    % end
-    % end
-    % elseif bad_temp==1&~isnan(temp_mes)
-    % %keyboard
-    % if T.temp_qc.data(idCyc_drift(i))~=4
-    % T.temp_qc.data(idCyc_drift(i))=6;
-    % T.pres_qc.data(idCyc_drift(i)) =6; % on flaggue aussi P, car on ne peut pas la verifier et souvent c'est dans les choux  aussi
-    % temp_alert=1;
-    % end
-    % % verifie que les pressions sont possibles
-    % bad_pres=pres_mes>PARAM.PRESS_PARK_DUMB|pres_mes<-5;
-    % if bad_pres==1&T.pres_qc.data(idCyc_drift(i))~=4
-    % T.pres_qc.data(idCyc_drift(i)) = 6;
-    % pres_alert=1;
-    % end
-    % end
-    
-    
-    % end
+   

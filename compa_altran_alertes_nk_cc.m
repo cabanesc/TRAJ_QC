@@ -254,7 +254,6 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
     Prcent_flo_id = [];
     Prcent_flo_supp = [];
     Prcent_flo_miss = [];
-	
     cyc_test_identique =cell(1,1);
     cyc_test_miss = cell(1,1);;
     cyc_test_supp = cell(1,1);;
@@ -265,8 +264,8 @@ for l = 1:length(liste_rep_alerte)     %%%  boucle sur les listes
     nb_flo_supp= zeros(1,length(float_testok));
     nb_flo_miss= zeros(1,length(float_testok));
     Prcent_cyc_id= zeros(1,length(float_testok));
-    Prcent_cyc_supp(i) =zeros(1,length(float_testok));
-	Prcent_cyc_miss(i)=zeros(1,length(float_testok));
+    Prcent_cyc_supp =zeros(1,length(float_testok));
+	Prcent_cyc_miss=zeros(1,length(float_testok));
    
     for i = 1:length(float_testok)   %%%pour chaque alerte
  

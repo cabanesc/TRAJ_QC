@@ -59,20 +59,20 @@ T.(['v_' varlow]).units='cm/s';
 T.(['v_' varlow]).FillValue_=99999;
 T.(['v_' varlow]).type=6;
 
-% create U_DEEP_VELOCITY_ERROR
-T.(['u_' varlow '_error']).name=['U_' varupp '_ERROR'];
-T.(['u_' varlow '_error']).dim={'N_CYCLE'};
-T.(['u_' varlow '_error']).data=NaN*zeros(DimT.n_cycle.dimlength,1);
-T.(['u_' varlow '_error']).long_name=['Error on the eastward component of the deep ' varlow];
-T.(['u_' varlow '_error']).units='cm/s';
-T.(['u_' varlow '_error']).FillValue_=99999;
-T.(['u_' varlow '_error']).type=6;
+% create UERR_DEEP_VELOCITY
+T.(['uerr_' varlow ]).name=['UERR_' varupp ];
+T.(['uerr_' varlow ]).dim={'N_CYCLE'};
+T.(['uerr_' varlow ]).data=NaN*zeros(DimT.n_cycle.dimlength,1);
+T.(['uerr_' varlow ]).long_name=['Error on the eastward component of the ' varlow];
+T.(['uerr_' varlow ]).units='cm/s';
+T.(['uerr_' varlow ]).FillValue_=99999;
+T.(['uerr_' varlow ]).type=6;
 
 % create V_DEEP_VELOCITY_ERROR
-T.(['v_' varlow '_error']).name=['V_' varupp '_ERROR'];
-T.(['v_' varlow '_error']).dim={'N_CYCLE'};
-T.(['v_' varlow '_error']).data=NaN*zeros(DimT.n_cycle.dimlength,1);
-T.(['v_' varlow '_error']).long_name=['Error on the northward component of the ' varlow];
-T.(['v_' varlow '_error']).units='cm/s';
-T.(['v_' varlow '_error']).FillValue_=99999;
-T.(['v_' varlow '_error']).type=6;
+T.(['verr_' varlow ]).name=['VERR_' varupp ];
+T.(['verr_' varlow ]).dim={'N_CYCLE'};
+T.(['verr_' varlow ]).data=NaN*zeros(DimT.n_cycle.dimlength,1);
+T.(['verr_' varlow ]).long_name=['Error on the northward component of the ' varlow];
+T.(['verr_' varlow ]).units='cm/s';
+T.(['verr_' varlow ]).FillValue_=99999;
+T.(['verr_' varlow ]).type=6;

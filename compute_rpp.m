@@ -41,7 +41,7 @@ finalOk = 0;
 tabFinalParkPres=NaN;
 tabFinalParkTemp=NaN;
 tabFinalParkPsal=NaN;
-tabFinalParkEtat=0;
+tabFinalParkEtat=' ';
 % Priorite 1: cas ou l'on dispose de mesures en phase de
 % stabilisation et des mesures en derive
 % JMA A3 et A6: mesures en stabilisation toutes les 1.5h puis mesures en
@@ -120,7 +120,7 @@ if (finalOk == 0)
             tabFinalParkPsal = sum(tabPsalAdjPark)*1.5 + sum(tabPsalDriftMes)*6;
             tabFinalParkPsal = tabFinalParkPsal/(length(tabPsalAdjPark)*1.5+length(tabPsalDriftMes)*6);
         end
-        tabFinalParkEtat = g_etatFromDec;
+        tabFinalParkEtat = '1';
         finalOk = 1;
     end
     
@@ -133,7 +133,7 @@ if (finalOk == 0)
             tabFinalParkPres = mean(depPres((idCycleMeanParkMes)));
             tabFinalParkTemp = mean(depTemp((idCycleMeanParkMes)));
             tabFinalParkPsal = mean(depPsal((idCycleMeanParkMes)));
-            tabFinalParkEtat = g_etatFromDec;
+            tabFinalParkEtat = '2';
             finalOk = 1;
         end
     end
@@ -146,7 +146,7 @@ if (finalOk == 0)
             tabFinalParkPres = depPres(dCycle(idCycleMedianParkMes));
             tabFinalParkTemp = NaN;
             tabFinalParkPsal = NaN;
-            tabFinalParkEtat = g_etatFromTxt;
+            tabFinalParkEtat = '3';
             finalOk = 1;
         end
     end
@@ -159,7 +159,7 @@ if (finalOk == 0)
             tabFinalParkPres = depPres((idCycleParkMes));
             tabFinalParkTemp = depTemp((idCycleParkMes));
             tabFinalParkPsal = depPsal((idCycleParkMes));
-            tabFinalParkEtat = g_etatFromDec;
+            tabFinalParkEtat = '4';
             finalOk = 1;
         end
     end
@@ -169,7 +169,7 @@ if (finalOk == 0)
             tabFinalParkPres = depPres((idCycleParkMes));
             tabFinalParkTemp = depTemp((idCycleParkMes));
             tabFinalParkPsal = depPsal((idCycleParkMes));
-            tabFinalParkEtat = g_etatFromDec;
+            tabFinalParkEtat = '4';
             finalOk = 1;
         end
     end
@@ -187,7 +187,7 @@ if (finalOk == 0)
                 tabFinalParkPres = mean([presMin presMax]);
                 tabFinalParkTemp = NaN;
                 tabFinalParkPsal = NaN;
-                tabFinalParkEtat = g_etatFromDec;
+                tabFinalParkEtat = '5';
                 finalOk = 1;
             
         end
@@ -242,7 +242,7 @@ if (finalOk == 0)
         % on ne le fait que si le cycle a au moins une position Argos et si
         % il n'y a pas de mesure en derive disponible
         if (~isempty(idCyc_loc))&isempty(idCyc_drift)
-            % on verifie en plus que le flotteur a bien fait un profil pour ce cycle
+            % on verifie en plus que le flotteur a bien fait un profil  qui a atteint au moins  ParkPressure pour ce cycle
 			if exist(prof_fileName)
 
 				P = read_netcdf_allthefile(prof_fileName);
@@ -262,12 +262,12 @@ if (finalOk == 0)
                     fprintf('%s\n',[ floatname ', cycle ' num2str(P.cycle_number.data(idcycleProf)) ', RPP == META, : ' num2str(meta_park_pressure)]); 
                     
 					tabFinalParkPres = M.ParkPressure(theidMis);
+					tabFinalParkEtat = '6';
+
 				end
             
-				
 				tabFinalParkTemp = NaN;
 				tabFinalParkPsal = NaN;
-				tabFinalParkEtat = g_etatFromNcMeta;
 			end
         end
     end

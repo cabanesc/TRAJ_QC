@@ -264,6 +264,12 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
             
             T=replace_fill_bynan(T);   % remplace les fillValues (9999.. par des NaN)
             
+			%Variables temporaires utiles pour le calcul des vitesses. 
+			% rajout de T.position_qc_koba pour stoker l'info sur les resultats des tests de koba
+			 T.position_qc_koba=T.position_qc;
+			 T.representative_park_temperature.data=NaN*T.representative_park_pressure.data;
+
+		
             % VALEURS DES LOCALISATIONS ARGOS DE SURFACE
             if isfield(T,'measurement_code')==0
                 idLoc =   find(~isnan(T.longitude.data)& ~isnan(T.latitude.data));
@@ -751,6 +757,9 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         pres_drift_mes(i_rpp)=tabFinalParkPres;
                         temp_drift_mes(i_rpp)=tabFinalParkTemp;
                         psal_drift_mes(i_rpp)=tabFinalParkPsal;
+						T.representative_park_pressure.data(idCyc_sorted(id))=tabFinalParkPres;
+                        T.representative_park_pressure_status.data(idCyc_sorted(id))=tabFinalParkEtat;
+						T.representative_park_temperature.data(idCyc_sorted(id))=tabFinalParkTemp; % stokage pour fichier yo
                         %if ( isas_alert(i_rpp)==1)
                         %keyboard
                         % fid_alerte=fopen(file_alerte,'a');
@@ -1098,9 +1107,9 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             %fprintf(fid3,'%s\n',[floatname ', [' num2str(cycles_sorted(id)) ']']);
                             
                             %T.grounded.data(id) = 'Y'; % add cc 05/10/2020
-                            T.grounded.data(idCyc_sorted(id)) = 'Y'; % correction cc 08/01/2021
+                            T.grounded.data(idCyc_sorted(id)) = 'B'; % correction cc 08/01/2021
                             %else
-                            if(GroundedNum(idCyc_sorted(id))~=2)
+                            if(GroundedNum(idCyc_sorted(id))==2)
                                 fid_alerte=fopen(file_alerte,'a');
                                 fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', grounded selon bathy mais incohérence avec la variable T.grounded =''N''.']);
                                 fclose(fid_alerte);
@@ -1115,14 +1124,15 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         elseif(GroundedNum(idCyc_sorted(id))==1)    %%%1 = 'Y'
                             % alertCyc_e3 = [alertCyc_e3 cycles_sorted(id)]; %
                             % remove cc 05/10/2020
-                            %                     fid_alerte=fopen(file_alerte,'a');
-                            %                     fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded alors que oui d''apres la variable T.grounded.']);
-                            %                     fclose(fid_alerte);
+                            % fid_alerte=fopen(file_alerte,'a');
+                            % fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded alors que oui d''apres la variable T.grounded.']);
+                            % fclose(fid_alerte);
                             % fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded alors que oui d''apres la variable T.grounded.']);                      %%% appliquer flags ?
-                            T.grounded.data(idCyc_sorted(id))='P';
+                            T.grounded.data(idCyc_sorted(id))='N';   %  cc 15/01/2021
                         elseif(GroundedNum(idCyc_sorted(id))==2)    %%%2 = 'N'  % add cc 05/10/2020
                             T.grounded.data(idCyc_sorted(id))='N';
-                        elseif(GroundedNum(idCyc_sorted(id))==3)       %%%3 = 'U'
+                        %elseif(GroundedNum(idCyc_sorted(id))==3)       %%%3 = 'U'
+						else       %%%'U' and all other
                             %                     fid_alerte=fopen(file_alerte,'a');
                             %                     fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded et ''U'' d''apres la variable T.grounded.']);
                             %                     fclose(fid_alerte);
@@ -1287,11 +1297,21 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                 fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', cycle DPF accolé, ECART MAX 2 LOC > 10h :' num2str(ecartMaxLocCycle(istat)) ' heures']);
                                 fclose(fid_alerte);
                                 fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', cycle DPF accolé, ECART MAX 2 LOC > 10h :' num2str(ecartMaxLocCycle(istat)) ' heures']);
+								
                                 if Stat==1
                                     alertCyc_e4 = [alertCyc_e4 cycles_sorted(id)];
                                 end
-                                % commentaire cc 25/09/2020 comment flaguer numero de
-                                % cycle des LOC du DPF?
+								
+								% % cc ajout 10/01/2021 pour ne pas utiliser dans calcul des vitesses (test)
+								% igoodd=find(locDate_qc_sorted<6);
+								% ijump=find(diff(LocDate_sorted(locDate_qc_sorted<6))==ecartMaxLocCycle(istat)/24);
+								% if numCycle==0
+								   % T.cycle_number_qc.data(idCyc(idSorted(igoodd(ijump+1:end))))=6;
+								% end
+								% if numCycle==1
+								   % T.cycle_number_qc.data(idCyc(idSorted(igoodd(1:ijump))))=6;
+								% end
+                            
                                 
                             else
                                 fid_alerte=fopen(file_alerte,'a');
@@ -1344,6 +1364,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                 if Stat==1
                                     alertCyc_e4 = [alertCyc_e4 cycles_sorted(id)];
                                 end
+								
                             end
                             ecartFirstLastLoc(icounterfloat,istat) = ecartFirstLastLoc(istat);
                         end
@@ -1670,8 +1691,8 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                                 if(map==1)
                                                     m_plot(LONG(ilong,1),LAT(ilat,1),'color','g','marker','o','markersize',5);
                                                 end
-												keyboard
-                                                T.position_qc.data(idCyc(idSorted(iilocl)))=6; % correction cc 09/10/2020
+												%keyboard
+                                                T.position_qc.data(idCyc(idSorted(iiloc)))=6; % correction cc 09/10/2020
                                                 %T.position_qc.data(idCyc)=4;
                                             end
                                         else
@@ -1697,7 +1718,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                             fclose(fid_alerte);
                                             fprintf('%s\n',[floatname ', cycle ' num2str(cycles_sorted(id)) ' ,  -20 < altitude du flotteur < 0 (' (num2str(elev_float)) 'm) , et au moins 1 point voisin > 0. Probablement proche terre.']);
                                             if Stat == 1
-                                                alertCyc_e8 = [alertCyc_e8 cycles_sorted(id)];
+                                                alertCyc_e8 = [alertCyc_e8 cycles_sorted(id)];   
                                             end
                                             isprocheterre=1;
                                         end
@@ -1834,7 +1855,9 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         ranges = distance_lpo(locLat, locLon);
                         ECART_MAX_LOC_ARGOS=30; % remarque pour altran, le seuil est 30km. Mais visualisation apres. On met donc un seuil plus grand pour flag auto
                         idKo = find(ranges > ECART_MAX_LOC_ARGOS*1000);
-                        
+						% sauvegarde des resultats koba pour calcul des vitesses
+                        T.position_qc_koba.data(idCyc(idSorted(o_idBadPos)))=6;
+						
                         if  (~isempty(idKo))&~isempty(o_idBadPos) % if that test fail, use koba to flag bad positions => erreur locpos d'altran
                             
 							fid_alerte=fopen(file_alerte,'a');
@@ -2010,9 +2033,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                 %plot(temp_drift_mes,'k',temp_drift_th,'*r');
                 %title('Temp mesuree(k) et theorique (r)');
                 %ylabel('T');
-                
-                
-                
+
                 
                 % Sauvegarde des nouveaux fichiers traj contenant les flags et les vitesses (deep, surface , errors,...)
                 if P.save_traj_file==1
@@ -2025,10 +2046,16 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
 					T =  create_new_variables(T,DimT,'first_surface_velocity'); 
 					T =  create_new_variables(T,DimT,'last_surface_velocity'); 
 					
-					% Compute velocities
+					% Compute velocities and write in netcdf file
+					T= compute_velocities(T,unique([alertCyc_e4 alertCyc_e8] ));
 					
+					% Compute velocities and write in andro file
+					compute_velocities_to_yo(T,P,unique([alertCyc_e4 alertCyc_e8]));
 					
-                    
+					% remove temporary variable
+                    T=rmfield(T,'position_qc_koba');
+					T=rmfield(T,'representative_park_temperature');
+					% save new netcdf files 
                     create_netcdf_allthefile(T,DimT,filename_new,GlobT)
                     
                 end
