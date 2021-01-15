@@ -36,8 +36,8 @@ param.map=0;      %%%1 affiche une carte et localise les erreurs.
 
 param.Stat = 1;   %%% 1: recupere les cycles concernees par des erreurs donnees   ; 0: ne recupere pas
 
+param.save_traj_file = 1;  %%% 1: calcule les vitesses et sauve les fichiers traj / et Atlas 0: ne sauve pas   % add cc 26/10/2020 
 param.DIR_NEW_TRAJ_FILE ='/export/home1/ccabanes/data/TRAJ_QC/trajFiles/';    % add cc 26/10/2020
-param.save_traj_file = 1;  %%% 1: sauve les fichiers traj   0: ne sauve pas   % add cc 26/10/2020 
 param.ATLAS_FILE ='/export/home1/ccabanes/data/TRAJ_QC/ATLAS/uvPTS_RTQC_atlas.dat';    % add cc 15/01/2021   fichier texte au format ANDRO
 
 
