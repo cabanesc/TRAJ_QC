@@ -204,6 +204,7 @@ for  idCy_sorted = 1:length(yoCycle)
     cycleQc = cycleQc(idGood);
     cycleAccuracy = cycleAccuracy(idGood);
     cycleQc_koba = cycleQc_koba(idGood);
+	
 	 
    if (numCycle ~= cyNumPrev + 1)
                cyNumPrev = -1;
