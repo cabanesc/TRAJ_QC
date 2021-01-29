@@ -49,6 +49,10 @@ precision(3) = 150;
 % precision affectée à une position GPS
 precision(4) = 30;
 a_posQc(find(a_posQc == 'G')) = '4';
+% on affecte la plus mauvaise précision si pas de classe % cc corection
+% 29/01/2021
+a_posQc(find(a_posQc == '0')) = '1';
+
 
 % distance maximale acceptable
 qcFirst = str2num(a_posQc(1));
