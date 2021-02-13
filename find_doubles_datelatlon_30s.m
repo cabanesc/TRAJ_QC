@@ -24,14 +24,14 @@
 %  modif G.Herbert
 % ------------------------------------------------------------------------------
 function [isdouble_toremove, idDoublon_date, idDoublon_lonlat] = ...
-    find_doubles_datelatlon(a_posDate, a_posLon, a_posLat, a_posQc, a_posTemp)
+    find_doubles_datelatlon(a_posDate, a_posLon, a_posLat, a_posQc)
 global PARAM
 
 o_posDate = a_posDate;
 o_posLon = a_posLon;
 o_posLat = a_posLat;
 o_posQc = a_posQc;
-o_posTemp = a_posTemp;
+%o_posTemp = a_posTemp;
 % on supprime les éventuels doublons de dates
 idDelete = [];
 idDoublon_date=[];

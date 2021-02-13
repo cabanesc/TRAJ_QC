@@ -2,9 +2,9 @@ function parameters = param()
 
 parameters.TIME_STD_DUREE_CYCLE_M = 100;% in day % Max value for Standard Deviation of cycle duration (for more than one cycle)  
 parameters.TIME_DIFF_CYCLE = .1; % in day % Max value for difference in cycle duration between META and TRAJ file
-parameters.TIME_DIFF_DOUBLE_DATE_LOC = 0; % en jour (initial 30s) % add cc 05/10/2020
+parameters.TIME_DIFF_DOUBLE_DATE_LOC = 0; % in hour (initial 30s) % add cc 05/10/2020
 parameters.PRESS_PARK_DIFF_BATHY_QC = 100; % Put QC=4 if pressure is xxx dbar below the bathymertry
-parameters.PRESS_PARK_DUMB = 2800; % Threshold for dumb park pressure, put QC=4 (cc : ce parametre doit s'adapter si deep => fait ligne 255 Prog_alertes_traj.m)
+parameters.PRESS_PARK_DUMB = 2200; % Threshold for dumb park pressure, put QC=4 (cc : ce parametre doit s'adapter si deep => fait ligne 255 Prog_alertes_traj.m)
 parameters.PRESS_FOND = 1500; % keep pressure when bathymetry is below
 parameters.PRESS_SURF = 50; % keep pressure below
 parameters.PRESS_STD_MAX = 2000; % compute pressure std for pressure lower than
@@ -12,7 +12,7 @@ parameters.PRESS_STD_MIN = 200; % compute pressure std for pressure greater tan
 parameters.PRESS_STD = 200; % Threshold for acceptable STD of parking pressure median estimate
 parameters.PRESS_PARK_DIFF_M = 30; % difference of pressure between estimated median pressure and metadata
 parameters.PRESS_PARK_DIFF_ISAS = 100; % difference of pressure between estimated pressure from ISAS temperature and estimated from measurements
-parameters.PRESS_PARK_DIFF_BATH = 30; % difference of measured parking pressure and bathymetry 
+parameters.PRESS_PARK_DIFF_BATH= 30; % difference of measured parking pressure and bathymetry
 parameters.TIME_DIFF_2LOCS = 10; % in hour % Threshold for acceptable difference between successive location
 parameters.TIME_DIFF_FLLOCS_AR = 24; % in hour % Thershold for acceptable differnce between first and last location for Argos transmission system (within one cycle)
 parameters.TIME_DIFF_FLLOCS_IR = 10; % in hour % Thershold for acceptable differnce between first and last location for Iridium transmission system (within one cycle)

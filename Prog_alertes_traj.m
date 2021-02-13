@@ -15,54 +15,28 @@ close all
 
 global PARAM;
 global P;
-global floatname;
-global TEMP_LONG;
-global TEMP_LAT;
-global TEMP_DEPTH;
-global TEMP_DEPTH_STD;
-global TEMP_TEMP;
-global TEMP_TEMP_STD;
-global PSAL_DEPTH_STD;
-global PSAL_PSAL;
-global PSAL_PSAL_STD;
-global I_psal_std;
-global I_psal;
-global I_temp_std;
-global I_temp;
-global DIR_BATHY % add cc 15/09/2020
+ % add cc 15/09/2020
 %%% fichier config - recuperation des path
-P= config;
-DIR_FTP = P.DIR_FTP;
-DAC = P.DAC;
-DIR_ISAS = P.DIR_ISAS;
-DIR_HOME = P.DIR_HOME;
-DIR_BATHY = P.DIR_BATHY;
-DIR_TOOL = P.DIR_TOOL;
-DIR_SOFT = P.DIR_SOFT;
-DIR_VISU = P.DIR_VISU;
-DIR_STAT = P.DIR_STAT;
-Wr_Err  = P.Wr_Err;
-Bathy = P.Bathy;
-map = P.map;
-Stat = P.Stat;
+%P= config_TEST;
+P=config;
 Liste_Float = P.Liste_Float
 
 
-addpath(DIR_TOOL);
-addpath([DIR_TOOL '/Lib_Argo/']);
-addpath([DIR_TOOL '/Lib_Argo/Plots']);
-addpath([DIR_TOOL 'Lib_Argo/Tests_TR']);
-addpath([DIR_TOOL '/Lib_Argo/RWnetcdf/R2008b']);
+addpath(P.DIR_TOOL);
+addpath([P.DIR_TOOL '/Lib_Argo/']);
+addpath([P.DIR_TOOL '/Lib_Argo/Plots']);
+addpath([P.DIR_TOOL 'Lib_Argo/Tests_TR']);
+addpath([P.DIR_TOOL '/Lib_Argo/RWnetcdf/R2008b']);
 
-addpath([DIR_SOFT '/decArgo_soft/soft/sub']);
-addpath([DIR_SOFT '/decArgo_soft/soft/util']);
-addpath([DIR_SOFT '/decArgo_soft/soft/util/sub']);
-addpath([DIR_SOFT '/decArgo_soft/soft/util2']);
-addpath([DIR_SOFT '/decArgo_soft/soft/misc']);
-addpath([DIR_SOFT '/decArgo_soft/soft/sub_foreign']);
-addpath([DIR_SOFT '/decArgo_soft/soft/m_map1.4e']);
+addpath([P.DIR_SOFT '/decArgo_soft/soft/sub']);
+addpath([P.DIR_SOFT '/decArgo_soft/soft/util']);
+addpath([P.DIR_SOFT '/decArgo_soft/soft/util/sub']);
+addpath([P.DIR_SOFT '/decArgo_soft/soft/util2']);
+addpath([P.DIR_SOFT '/decArgo_soft/soft/misc']);
+addpath([P.DIR_SOFT '/decArgo_soft/soft/sub_foreign']);
+addpath([P.DIR_SOFT '/decArgo_soft/soft/m_map1.4e']);
 
-addpath(DIR_VISU);
+addpath(P.DIR_VISU);
 
 % recuperation des parametres
 PARAM = param
@@ -75,46 +49,65 @@ fclose(flog);
 if ~exist([P.DIR_HOME '/logs/'])
 	mkdir([P.DIR_HOME '/logs/'])
 end
-%for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
-for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore teste que ca marche bien d'enchainer les listes!!
+for ilist=4:length(Liste_Float)   % add boucle cc 02/11/2020
+%for ilist=3:3 % cc pour le moment on ne prend que la premiere liste: pas encore teste que ca marche bien d'enchainer les listes!!
+%for ilist=1:1
     % Liste des flotteurs a tester
-    
-    fid1 = fopen(Liste_Float{ilist});
+    clearvars -except Liste_Float   ilist flog logfile PARAM P
+	global floatname;
+    global TEMP_LONG;
+	global TEMP_LAT;
+	global TEMP_DEPTH;
+	global TEMP_DEPTH_STD;
+	global TEMP_TEMP;
+	global TEMP_TEMP_STD;
+	global PSAL_DEPTH_STD;
+	global PSAL_PSAL;
+	global PSAL_PSAL_STD;
+	global I_psal_std;
+	global I_psal;
+	global I_temp_std;
+	global I_temp;
+	global DIR_BATHY
+	
+	DIR_BATHY = P.DIR_BATHY;
+
+	fid1 = fopen(Liste_Float{ilist});
     %allfloats=textscan(fid1,'%s','Delimiter',',','CommentStyle','#');
     allfloats=textscan(fid1,'%s%s%s','Delimiter',',','CommentStyle','#');
     fclose(fid1);
     
     %% Creation du répertoire /STAT s'il n'existe pas
-    if ~exist([DIR_STAT P.liste_rep_alerte{ilist}],'dir')
-        mkdir([DIR_STAT P.liste_rep_alerte{ilist}]);
+    if ~exist([P.DIR_STAT P.liste_rep_alerte{ilist}],'dir')
+        mkdir([P.DIR_STAT P.liste_rep_alerte{ilist}]);
     end
     %% Creation du répertoire /HOME/alerts/... s'il n'existe pas  % add cc 02/11/2020
-    if ~exist([DIR_HOME 'alerts/' P.liste_rep_alerte{ilist}],'dir')
-        mkdir([DIR_HOME 'alerts/' P.liste_rep_alerte{ilist}]);
+    if ~exist([P.DIR_HOME 'alerts/' P.liste_rep_alerte{ilist}],'dir')
+        mkdir([P.DIR_HOME 'alerts/' P.liste_rep_alerte{ilist}]);
     end
     
     
     %% Fichier log des alertes
     global file_alerte;
     
-    file_alerte = [DIR_HOME 'alerts/' P.liste_rep_alerte{ilist} '/RT_alertes.txt'];  % modif chemin alertes cc 02/11/2020
+    file_alerte = [P.DIR_HOME 'alerts/' P.liste_rep_alerte{ilist} '/RT_alertes.txt'];  % modif chemin alertes cc 02/11/2020
     fid_alerte =fopen(file_alerte,'wt');
     fclose(fid_alerte);
     %% Fichiers log des alertes par erreurs
-    if(Bathy==1)
-        file3=[DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_grounded_etopo.txt'];
+    if(P.Bathy==1)
+        file3=[P.DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_grounded_etopo.txt'];
         fid3=fopen(file3,'w+');
     else
-        file3=[DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_grounded_srtm_b.txt'];
+        file3=[P.DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_grounded_srtm_b.txt'];
         fid3=fopen(file3,'w+');
     end
-    file4=[DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_cycle_b.txt'];
-    file5=[DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_locdate_b.txt'];
-    file6=[DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_launchdate_b.txt'];
-    file7=[DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_pressure_b.txt'];
-    file8=[DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_locterre_b.txt'];
-    file9=[DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_locpos_b.txt'];
-    file10=[DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_metatrajcyc_b.txt'];
+    file4=[P.DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_cycle_b.txt'];
+    file5=[P.DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_locdate_b.txt'];
+    file6=[P.DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_launchdate_b.txt'];
+    file7=[P.DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_pressure_b.txt'];
+    file8=[P.DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_locterre_b.txt'];
+    file9=[P.DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_locpos_b.txt'];
+    file10=[P.DIR_HOME 'alerts/'  P.liste_rep_alerte{ilist} '/Alertes_metatrajcyc_b.txt'];
     
     
     fid4 = fopen(file4,'w+');
@@ -140,7 +133,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
     Ncvar.psal='PSAL';
     icounterfloat = 0;
     
-    if(map==1)
+    if(P.map==1)
         % Affichage d'une carte du monde pour localiser les aberrations
         figure(1)
         zone_visu=[-80 80 -179 180];
@@ -166,9 +159,9 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
     
     %% Lecture des parametres temperature et salinite de la climatologie ISAS13
     
-    disp('lecture clim isas')
-    isas_temp_std_file=[DIR_ISAS 'ISAS13_CLIM_ann_STD_TEMP.nc'];
-    isas_temp_file=[DIR_ISAS 'ISAS13FD_ann_TEMP.nc'];
+    disp('READING ISAS CLIMATOLOGY ...')
+    isas_temp_std_file=[P.DIR_ISAS 'ISAS13_CLIM_ann_STD_TEMP.nc'];
+    isas_temp_file=[P.DIR_ISAS 'ISAS13FD_ann_TEMP.nc'];
     I_temp_std=read_netcdf_allthefile(isas_temp_std_file);
     I_temp=read_netcdf_allthefile(isas_temp_file);
     TEMP_LONG=I_temp.longitude.data;
@@ -177,15 +170,15 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
     TEMP_TEMP=I_temp.temp.data;
     TEMP_DEPTH_STD=I_temp_std.depth.data;
     TEMP_TEMP_STD=I_temp_std.temp_std.data;
-    isas_psal_std_file=[DIR_ISAS 'ISAS13_CLIM_ann_STD_PSAL.nc'];
-    isas_psal_file=[DIR_ISAS 'ISAS13FD_ann_PSAL.nc'];
+    isas_psal_std_file=[P.DIR_ISAS 'ISAS13_CLIM_ann_STD_PSAL.nc'];
+    isas_psal_file=[P.DIR_ISAS 'ISAS13FD_ann_PSAL.nc'];
     I_psal_std=read_netcdf_allthefile(isas_psal_std_file);
     I_psal=read_netcdf_allthefile(isas_psal_file);
     PSAL_PSAL=I_psal.psal.data;
     PSAL_DEPTH_STD=I_psal_std.depth.data;
     PSAL_PSAL_STD=I_psal_std.psal_std.data;
-    disp('fin lecture clim isas')
-    
+    disp('... END READING CLIMATOLOGY')
+    disp(' ')
     % Initialisation des listes de flotteurs impactes par les differentes alertes
     alerte1=[];alerte2=[];alerte3={};alerte4={};alerte5={};alerte6={};alerte7={};alerte8={};
     alerte9={};alerte10=[];alerte11={};alerte12={};alerte13=[];alerte14=[];alerte15=[];
@@ -228,12 +221,12 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
         doneM=0;
         ii=0;
         elev_all = [];
-        %while ~doneT&&~doneM&& ii<=length(DAC)
-        while ~doneT&&~doneM&& ii<=length(DAC)-1
+        %while ~doneT&&~doneM&& ii<=length(P.DAC)
+        while ~doneT&&~doneM&& ii<=length(P.DAC)-1
             % lecture des traj
             ii=ii+1;
-            traj_fileName_R = [DIR_FTP DAC{ii} '/' floatname '/' floatname '_Rtraj.nc'];
-            traj_fileName_D = [DIR_FTP DAC{ii} '/' floatname '/' floatname '_Dtraj.nc'];
+            traj_fileName_R = [P.DIR_FTP P.DAC{ii} '/' floatname '/' floatname '_Rtraj.nc'];
+            traj_fileName_D = [P.DIR_FTP P.DAC{ii} '/' floatname '/' floatname '_Dtraj.nc'];
             if exist(traj_fileName_D,'file');
                 [T,DimT,GlobT]=read_netcdf_allthefile(traj_fileName_D);
                 traj_fileName_final=[floatname '_Dtraj.nc'];
@@ -243,8 +236,8 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                 doneT=1;
                 traj_fileName_final=[floatname '_Rtraj.nc'];
             end
-            meta_fileName=[DIR_FTP DAC{ii} '/' floatname '/' floatname '_meta.nc'];
-            prof_fileName=[DIR_FTP DAC{ii} '/' floatname '/' floatname '_prof.nc'];
+            meta_fileName=[P.DIR_FTP P.DAC{ii} '/' floatname '/' floatname '_meta.nc'];
+            prof_fileName=[P.DIR_FTP P.DAC{ii} '/' floatname '/' floatname '_prof.nc'];
             if exist(meta_fileName,'file');doneM=1;end
         end
         
@@ -281,9 +274,9 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
             if isfield(T,'measurement_code')==0
                 idLoc =   find(~isnan(T.longitude.data)& ~isnan(T.latitude.data));
                 fid_alerte=fopen(file_alerte,'a');
-                fprintf(fid_alerte,'%s\n',[ floatname ', , Attention pas de measurement_code dans le fichier Traj.'])
+                fprintf(fid_alerte,'%s\n',[ floatname ', , Warning, No measurement code in Traj file.'])
                 fclose(fid_alerte);
-                fprintf('%s\n',[ floatname ' Attention pas de measurement_code dans le fichier Traj.'])
+                fprintf('%s\n',[ floatname ' Warning, No measurement code in Traj file.'])
             else
                 idLoc =   find(T.measurement_code.data==703);     %%%ne prend pas la première loca en surface car launch
             end
@@ -296,27 +289,13 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
             
             idDrift=find(T.measurement_code.data==290|T.measurement_code.data==296|T.measurement_code.data==299|T.measurement_code.data==300|T.measurement_code.data==297|T.measurement_code.data==298);
             
-            %         if isempty(find(T.measurement_code.data==290, 1)) & isempty(find(T.measurement_code.data==296))==0
-            %             idDrift=find(T.measurement_code.data==296);% prend la moyenne des mesures de parking
-            %         elseif isempty(find(T.measurement_code.data==290))==0
-            %             idDrift=find(T.measurement_code.data==290);% prend l'ensemble des mesures de parking si existe
-            %         else
-            %             idDrift=find(T.measurement_code.data==299);
-            %             if(isempty(idDrift)==0)
-            %                  fid_alerte=fopen(file_alerte,'a');
-            %                 fprintf(fid_alerte,'%s\n',[floatname ' PAS DE MEASUREMENT_CODE 290 ou 296 (MESURES DE PARKING), RECUPERE ID POUR MEASUREMENT_CODE 299.']);
-            %                 fprintf('%s\n',[floatname 'PAS DE MEASUREMENT_CODE 290 ou 296 (MESURES DE PARKING), RECUPERE ID POUR MEASUREMENT_CODE 299.']);
-            %                 fclose(fid_alerte);
-            %             end
-            %         end
+          
             
             if(isempty(idDrift)==1)
                 fid_alerte=fopen(file_alerte,'a');
-                % correction cc 21/09/2020
-                %fprintf(fid_alerte,'%s\n',[floatname ' !!!PAS DE MEASUREMENT_CODE 290 ou 296 (MESURES DE PARKING) OU 299.']);
-                %fprintf('%s\n',[floatname '!!!PAS DE MEASUREMENT_CODE 290 ou 296 (MESURES DE PARKING), OU 299.']);
-                fprintf(fid_alerte,'%s\n',[floatname ',, !!!PAS DE MEASUREMENT_CODE ASSOCIEE AUX MESURES DE PARKING (290/296/300/297/298)']);
-                fprintf('%s\n',[floatname ' !!!PAS DE MEASUREMENT_CODE ASSOCIEE AUX MESURES DE PARKING (290/296/300/297/298)']);
+               
+                fprintf(fid_alerte,'%s\n',[floatname ',, Warning, No measurement code 290 296 300 297 or 298']);
+                fprintf('%s\n',[floatname ',, Warning, No measurement code 290 296 300 297 or 298']);
                 fclose(fid_alerte);
             end
             if isempty(idLoc)==0
@@ -371,15 +350,19 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                     duree_cycle(1)=NaN;
                 end
                 
-                
+                wrong_miss=0;
                 for m = 1:length(missions)
                     
                     if(isnan(missions(m))==0)
                         
                         idcMis = find(T.config_mission_number.data==missions(m));
-                        Tcycun  = unique(T.cycle_number.data);Tcycun = Tcycun(Tcycun>=0);  %%%ne prend pas les cycles -1
-                        idcMisok  = find(ismember(cycles,Tcycun(idcMis))==1);                %% prend en compte les cas où le numéro de cycle est dans T.config_number mais pas dans cycles car pas de MC=703
-                        
+                        % Tcycun  = unique(T.cycle_number.data);Tcycun = Tcycun(Tcycun>=0);
+						% %%%ne prend pas les cycles -1
+                        % idcMisok  = find(ismember(cycles,Tcycun(idcMis))==1);                %% prend en compte les cas où le numéro de cycle est dans T.config_number mais pas dans cycles car pas de MC=703
+                        % correction cc 26/01/2021
+						Tcycun  = T.cycle_number_index.data(idcMis);Tcycun = Tcycun(Tcycun>=0);
+						idcMisok  = find(ismember(cycles,Tcycun)==1);
+						
                         if(~isempty(idcMisok))
                             cycles_m{m}= cycles(idcMisok);
                             
@@ -406,16 +389,17 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             end_cycles_m = end_cycles(find(ismember(cycles,cycles_m{m})==1));
                             
                             %% calcul de la mediane des durees de cycles
-                            
+                             
                             if length(duree_cycle_m)==1
                                 dureeMedianCycle(m)=duree_cycle_m;
                                 %elseif length(duree_cycle_m)~=1 & mynanstd(duree_cycle_m)<100
-                            elseif length(duree_cycle_m)~=1 & mynanstd(duree_cycle_m)<PARAM.TIME_STD_DUREE_CYCLE_M
+                            elseif length(duree_cycle_m)~=1 & mynanstd(duree_cycle_m)<PARAM.TIME_STD_DUREE_CYCLE_M %cc rem 18/01/2021 peut etre plus en pourcentage de duree de cycle?
                                 dureeMedianCycle(m)=medianoutnan(duree_cycle_m);
-                            elseif isnan(duree_cycle_m)==1
+                            %elseif isnan(duree_cycle_m)==1
+                            else % cc correction 28/01/2021
                                 dureeMedianCycle(m) = NaN;
-                            elseif isempty(duree_cycle_m)==1
-                                dureeMedianCycle(m) = NaN;
+                            %elseif isempty(duree_cycle_m)==1
+                             %   dureeMedianCycle(m) = NaN;
                             end
                         else
                             duree_cycle_m = NaN;
@@ -423,17 +407,21 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             dureeMedianCycle(m) = NaN;
                             
                         end
-                        
-                        
-                        if length(missions)<=length(M.CycleTime)
-                            
+                        if dureeMedianCycle(m) <=0|dureeMedianCycle(m)>=100
+						dureeMedianCycle(m)=NaN;
+						end
+                        %
+						
+						id_mission_meta=(find(M.config_mission_number==missions(m)));
+						if isempty(id_mission_meta)==0  % correction cc 12/02/2021
+                        %if length(missions)<=length(M.CycleTime)   
                             %if abs(dureeMedianCycle(m)-M.CycleTime(missions(m)))>0.1
-                            if abs(dureeMedianCycle(m)-M.CycleTime(missions(m)))>PARAM.TIME_DIFF_CYCLE
+                            if abs(dureeMedianCycle(m)-M.CycleTime(id_mission_meta))>PARAM.TIME_DIFF_CYCLE
                                 fid_alerte=fopen(file_alerte,'a');
-                                fprintf(fid_alerte,'%s\n',[ floatname ', , INCOHERENCE DUREE CYCLE ENTRE META, (', num2str(M.CycleTime(m)),' j) ET TRAJ (',num2str(dureeMedianCycle(m)), ' j)']);
+                                fprintf(fid_alerte,'%s\n',[ floatname ', ,warning, CYCLE DURATION in Meta and Traj files are not consitent, (Meta:', num2str(M.CycleTime(m)),' days and Traj:',num2str(dureeMedianCycle(m)), ' days)']);
                                 fclose(fid_alerte);
-                                fprintf('%s\n',[ floatname ', INCOHERENCE DUREE CYCLE ENTRE META (',num2str(M.CycleTime(m)),' j) ET TRAJ (',num2str(dureeMedianCycle(m)), ' j)']);
-                                if(Stat==1)
+                                fprintf('%s\n',[ floatname ', ,warning, CYCLE DURATION in Meta and Traj files are not consitent, (Meta: ', num2str(M.CycleTime(m)),' days and Traj: ',num2str(dureeMedianCycle(m)), ' days)']);
+                                if(P.Stat==1)
                                     alertCyc_e10 = [alertCyc_e10 cycles_m{m}];
                                     alerte1(k)=str2double(floatname);
                                     
@@ -442,12 +430,12 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             
                             %%%pour STATS
                             ite = ite+1;
-                            Diff_Medcyc_Mcyc(k,m) = dureeMedianCycle(m)-M.CycleTime(missions(m));
+                            Diff_Medcyc_Mcyc(k,m) = dureeMedianCycle(m)-M.CycleTime(id_mission_meta);
                             
                             idLoc(T.cycle_number.data(idLoc)==cycles(cm));
                         else
                             Diff_Medcyc_Mcyc(k,m)=NaN;
-                            
+                            wrong_miss=1;
                         end
                         
                     else
@@ -456,14 +444,14 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                     end      %%fin de la boucle sur la condition isnan
                     
                 end   %%% fin de la boucle sur les missions
-                
-                if length(missions)>length(M.CycleTime)
-                    
+				
+                %if length(missions)>length(M.CycleTime)
+                 if wrong_miss==1   
                     fid_alerte=fopen(file_alerte,'a');
-                    fprintf(fid_alerte,'%s\n',[ floatname ',, INCOHERENCE META & TRAJ,: Nbre de  MISSIONS DANS META (', num2str(length(M.CycleTime)),' ) < a celui dans TRAJ (', num2str(length(missions)), ' ). Ne peut pas correctement verifier la coherence ni pour la duree des cycles ni pour P_park.']);
+                    fprintf(fid_alerte,'%s\n',[ floatname ',,warning,  MISSIONS NUMBERS in Meta and Traj files are not consistent, (Meta: ', num2str(M.config_mission_number),' and Traj: ', num2str(missions) ')']);
                     fclose(fid_alerte);
-                    fprintf('%s\n',[ floatname ', INCOHERENCE META & TRAJ: Nbre de MISSIONS DANS META (',num2str(length(M.CycleTime)),' ) < a celui dans TRAJ (', num2str(length(missions)), ' ). Ne peut pas correctement verifier la coherence ni pour la duree des cycles ni pour P_park.']);
-                    if (Stat==1)
+                    fprintf('%s\n',[ floatname ',,warning,  MISSIONS NUMBERS in Meta and Traj files are not consistent, (Meta: ', num2str(M.config_mission_number),' and Traj: ', num2str(missions) ')']);
+                    if (P.Stat==1)
                         alertCyc_e10 = [alertCyc_e10 999];
                     end
                 end
@@ -476,13 +464,18 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                 % - double de cycles
                 % - pb croissance cycle
                 % - mauvaise duree du cycle
+				
                 
                 [cycles_sorted,idCyc_sorted]= sort(cycles);
-                
-                
+				disp(' ')
+                disp('---------------- TEST_CYCLES ------------------------------------------------- ')
+                disp(' ')
                 [o_alerte3, o_alerte4, o_alerte5,...
                     o_alerte6,o_alertCyc_e4, o_alertCyc_e5,idCycprec]= Test_cycles_new(idLoc, cycles, cycles_1,cycles_sorted,duree_cycle, ...
                     missions, dureeMedianCycle);
+					% [o_alerte3, o_alerte4, o_alerte5,...
+                    % o_alerte6,o_alertCyc_e4, o_alertCyc_e5,idCycprec]= Test_cycles_new(idLoc, cycles, cycles_1,cycles_sorted,duree_cycle, ...
+                    % missions, M.CycleTime);% cc 18/01/2021 
                 if(isempty(o_alerte3)==0)  alerte3{k} = o_alerte3;end;
                 if(isempty(o_alerte4)==0)  alerte4{k}  = o_alerte4; end;
                 if(isempty(o_alerte5)==0)  alerte5{k} = o_alerte5;end;
@@ -502,8 +495,10 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                 LaunchDate=T.juld.data(iLaunch);
                 LaunchLat=T.latitude.data(iLaunch);
                 LaunchLon=T.longitude.data(iLaunch);
-                
-                [o_alerte7, o_alerte8, o_alerte9, o_alertCyc_e5,o_alertCyc_e6, o_alertCyc_e9, o_Diff_LaunchD,...
+				disp(' ')
+                disp('---------------- TEST_LOCS --------------------------------------------------- ')
+                disp(' ')
+				[o_alerte7, o_alerte8, o_alerte9, o_alertCyc_e5,o_alertCyc_e6, o_alertCyc_e9, o_Diff_LaunchD,...
                     o_Diff_LaunchLat, o_Diff_LaunchLon] =Test_locs(idLoc,...
                     cycles_sorted, iLaunch, LaunchDate, LaunchLat, LaunchLon);
                 
@@ -564,10 +559,11 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                 proche_surface=0; % add cc 09/11/2020
                 elev_end_all = [];
                 pres_drift_mes=[];
+				max_pres_drift_mes=[]; % add cc 21/01/2021
                 pres_drift_th=[];
                 elev_end_all = [];
                 elev_all = [];
-                
+                maxvoisins=[];
                 
                 % on convertit les classes Argos en numérique pour Grounded
                 GroundedNum = ones(length(T.grounded.data), 1)*-1;
@@ -578,10 +574,12 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                 i_rpp=0;
                 itemp=0;
                 ipsal=0;
-                
+				disp(' ')
+                disp('---------------- TEST_PTS_ISAS, COMPUTE_RPP ---------------------------------- ')
+				disp(' ')
                 for id=1:length(cycles_sorted)
                     istat=istat+1;
-                    
+                    clear elev_last_prec
                     idCyc=(1);
                     
                     %temp_drift_mes=[]; % cc comment 01/10/2020
@@ -599,33 +597,38 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                     it=0;
                     
                     
-                    
-                    
+                   
                     %istat=istat+1; % cc dejà incrementé ligne 570??
                     % numero du cycle
                     numCycle = cycles_sorted(id);
+					
                     numMis=T.config_mission_number.data(id);
+					idCycleTraj=find(T.cycle_number_index.data==numCycle);
+					
                     % id des mesures associees  a ce cycle
                     isCyc = (T.cycle_number.data(idLoc) == numCycle);
                     isCyc_drift = (T.cycle_number.data(idDrift) == numCycle);
-                    idCyc = idLoc(isCyc);
+					%idCyc = idLoc(isCyc);
+                    idCyc = idLoc(isCyc&~isnan(T.longitude.data(idLoc))&~isnan(T.latitude.data(idLoc))); %correction cc 12/02/2021 ajout condition sur lon et lat
+					
                     idCyc_drift=idDrift(isCyc_drift);
                     
                     locDate = T.juld.data(idCyc);
                     locLon = T.longitude.data(idCyc);
                     locLat = T.latitude.data(idCyc);
                     locQc = T.position_accuracy.data(idCyc);
-                    locTemp = T.temp.data(idCyc);
+                    %locTemp = T.temp.data(idCyc);
                     locDate_qc=T.juld_qc.data(idCyc);
                     locPosition_qc=T.position_qc.data(idCyc);
+					
                     
-                    pres_drift_mes2(id)=abs(mynanmean(T.pres.data(idCyc_drift)));   %%a supprimer
-                    temp_drift_mes2(id)=mynanmean(T.temp.data(idCyc_drift));
+                    %pres_drift_mes2(id)=abs(mynanmean(T.pres.data(idCyc_drift)));   %%a supprimer
+                    %temp_drift_mes2(id)=mynanmean(T.temp.data(idCyc_drift));
                     
                     
                     %if ~isempty(idCyc_drift)&~isnan(T.pres.data(idCyc_drift))  % cc voir comment ca se passe si length(idCyc_drift)>1 attention ca ne passe pas dans boucle si un de pres est NaN
                     %if ~isempty(idCyc_drift)&sum(~isnan(T.pres.data(idCyc_drift)))>0       % correction cc 18/09/2020
-                    if ~isempty(idCyc)  % correction cc 03/11/2020 : on ne passe  pas si pas de LOC
+                    if ~isempty(idCyc) 
                         i_rpp=i_rpp+1;
                         %                 long_first_curr = locLon(1);
                         %                 lat_first_curr = locLat(1);
@@ -644,16 +647,14 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         latprec = T.latitude.data(idCycprec{id});
                         latprec = latprec(isortprec);
                         lat_last_prec = latprec(max(find(~isnan(latprec)))) ;
-                        
                         % cc: correction :21/09/2020 remplace les noms "pres_long"
                         % peu  explicites par les "long_first_curr",
                         % "lat_first_curr" etc
                         
                         
                         %pres_drift_mes(i_rpp)=abs(mynanmean(T.pres.data(idCyc_drift)));
-                        [tabFinalParkPres,tabFinalParkTemp,tabFinalParkEtat]= compute_rpp(T,M,idCyc_drift,idCyc,prof_fileName); %add cc 29/09/2020 add a function to compute rpp
+                        [tabFinalParkPres,tabFinalParkTemp,tabFinalParkEtat,tabFinalMaxParkPres]= compute_rpp(T,M,idCyc_drift,idCyc,prof_fileName,0); %add cc 29/09/2020 add a function to compute rpp
                         pres_drift_mes(i_rpp)=tabFinalParkPres;
-                        
                         %%   DETERMINE l'elevation a la derniere loc du cycle precedent et premiere loc du cycle courant
                         %   elev_all et elev_end_all
                         
@@ -688,12 +689,25 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                 end
                                 elev_last_prec = ELEV(ilat_end,ilong_end);    %%%altitude de la derniere pos du cycle precedent.
                             end
-                            
+                        maxvoisins(i_rpp)=NaN;    
                         else
                             %%% recupere la bathy de la premiere pos du cycle
                             
                             [o_elev, o_lon, o_lat] = get_srtm_elev(long_first_curr, long_first_curr,...
-                                lat_first_curr, lat_first_curr);
+                                lat_first_curr, lat_first_curr); 
+							
+%CC							
+                            % [o_elev2, o_lon2, o_lat2] = get_srtm_elev(long_first_curr-0.01, long_first_curr+0.01,...
+                                        % lat_first_curr-0.01, lat_first_curr+0.01);
+							% [mini,ilong] = min(abs(o_lon2-long_first_curr));
+                            % [mini,ilat] = min(abs(o_lat2-lat_first_curr));
+                            % voisin1=o_elev2(ilat-1,ilong);
+                            % voisin2=o_elev2(ilat+1,ilong);
+                            % voisin3=o_elev2(ilat,ilong-1);
+                            % voisin4=o_elev2(ilat,ilong+1);
+							% maxvoisins(i_rpp)=max([voisin1 voisin2 voisin3 voisin4]);
+ % %CC                                       
+								
                             
                             if(length(o_lon)>1 & length(o_lat)>1 & abs(long_first_curr)<max(abs(o_lon)) ...
                                     & abs(long_first_curr)>min(abs(o_lon)))
@@ -705,7 +719,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             end
                             
                             
-                            if(id>1 & isempty(idCycprec{id})==0)
+                            if(id>1 & isempty(idCycprec{id})==0&~isempty(long_last_prec)&~isempty(lat_last_prec))
                                 %%%recupere la bathy de la derniere pos du cycle
                                 %%%precedent s'il existe
                                 [o_elev_end, o_lon_end, o_lat_end] = get_srtm_elev(long_last_prec, long_last_prec,...
@@ -752,37 +766,30 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         
                         % On fait un premier check des pressions en cours de derive : Test_PTS_isas   add cc 29/09/2020
                         % et on recalcule pres_drift_mes en tenant compte des flags
+						
                         [o_alerte11, o_alerte12,one_isas_alert,one_isas_non_ref,one_proche_surface] = Test_PTS_isas(idCyc_drift, id, cycles_sorted,ilong_drift, ilat_drift,i_rpp);
                         isas_alert(i_rpp)=one_isas_alert;
                         isas_non_ref(i_rpp)=one_isas_non_ref;
                         proche_surface(i_rpp)=one_proche_surface;
                         % if unique(T.cycle_number.data(idCyc_drift))==111
-                        % keyboard
+                        % 
                         % end
                         % on recalcule rpp en tenant compte des flags
-                        [tabFinalParkPres,tabFinalParkTemp,tabFinalParkPsal,tabFinalParkEtat]= compute_rpp(T,M,idCyc_drift,idCyc,prof_fileName); %add cc 29/09/2020 add a function to compute rpp
+                        [tabFinalParkPres,tabFinalParkTemp,tabFinalParkPsal,tabFinalParkEtat,tabFinalMaxParkPres]= compute_rpp(T,M,idCyc_drift,idCyc,prof_fileName,1); %add cc 29/09/2020 add a function to compute rpp
+						if idCyc_sorted(id)==48
+						%keyboard
+						end
+						% i_rpp
+						% unique(T.cycle_number.data(idCyc_drift))
+						% tabFinalParkPres
                         pres_drift_mes(i_rpp)=tabFinalParkPres;
+						max_pres_drift_mes(i_rpp)=tabFinalMaxParkPres;
                         temp_drift_mes(i_rpp)=tabFinalParkTemp;
                         psal_drift_mes(i_rpp)=tabFinalParkPsal;
-						T.representative_park_pressure.data(idCyc_sorted(id))=tabFinalParkPres;
-                        T.representative_park_pressure_status.data(idCyc_sorted(id))=tabFinalParkEtat;
-						T.representative_park_temperature.data(idCyc_sorted(id))=tabFinalParkTemp; % stokage pour fichier yo
-                        %if ( isas_alert(i_rpp)==1)
-                        %keyboard
-                        % fid_alerte=fopen(file_alerte,'a');
-                        % fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', SOME DRIFT PRESSURE ARE FLAG 6  (from Test_P_ISAS)']);
-                        % fclose(fid_alerte);
-                        % fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', SOME DRIFT PRESSURE ARE FLAG 6  (from Test_P_ISAS)']);
-                        % T.pres.data(idCyc_drift)
-                        % T.pres_qc.data(idCyc_drift)
-                        % T.temp.data(idCyc_drift)
-                        % T.temp_qc.data(idCyc_drift)
+						T.representative_park_pressure.data(idCycleTraj)=tabFinalParkPres;
+                        T.representative_park_pressure_status.data(idCycleTraj)=tabFinalParkEtat;
+						T.representative_park_temperature.data(idCycleTraj)=tabFinalParkTemp; % stokage pour fichier yo
                         
-                        % tabFinalParkPres
-                        % tabFinalParkTemp
-                        % lat_first_curr
-                        % long_first_curr
-                        % end
                        
                         
                         
@@ -832,7 +839,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         
                         pres_drift_th(i_rpp)=-TEMP_DEPTH(idepth_drift);
                         pres_drift_mes(i_rpp)=-pres_drift_mes(i_rpp);
-                        
+                        max_pres_drift_mes(i_rpp)=-max_pres_drift_mes(i_rpp); % add cc 21/01/2021
                         
                         %                 if(pres_drift_mes(i_rpp)<=elev_first_curr-PARAM.PRESS_PARK_DIFF_BATHY_QC || pres_drift_mes(i_rpp) <-PARAM.PRESS_PARK_DUMB)
                         %                     T.pres_qc.data(idCyc_drift)=4;
@@ -859,6 +866,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             pres_ok(id) = NaN;
                         end
                         
+					
                     else
                         pres_ok(id)=NaN;   %%% si le cycle n'a pas de LOC
                     end
@@ -903,9 +911,10 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                     for m = 1:length(missions)
                         
                         idcMis=find(T.config_mission_number.data==missions(m));
-                        Tcycun  = unique(T.cycle_number.data);Tcycun = Tcycun(Tcycun>=0);  %%% ne prend pas les cycles -1
-                        idcMisok  = find(ismember(cycles,Tcycun(idcMis))==1);                %% prend en compte les cas où le numéro de cycle est dans T.config_number mais pas dans cycles car pas de MC=703
-                        
+                        % Tcycun  = unique(T.cycle_number.data);Tcycun = Tcycun(Tcycun>=0);  %%% ne prend pas les cycles -1
+                        % idcMisok  = find(ismember(cycles,Tcycun(idcMis))==1);                %% prend en compte les cas où le numéro de cycle est dans T.config_number mais pas dans cycles car pas de MC=703
+                        Tcycun  = T.cycle_number_index.data(idcMis);Tcycun = Tcycun(Tcycun>=0);
+						idcMisok  = find(ismember(cycles_sorted,Tcycun)==1);
                         % remarque cc: attention ici  idcMisok n'est pas un indice
                         % sur les cycles croissants, contrairement a pres_ok: voir
                         % si ca ne pose pas pb
@@ -917,23 +926,29 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         end
                         
                         pres = pres_ok_m{m};
-                        
+						
+                        id_mission_meta=(find(M.config_mission_number==missions(m)));
+
                         %% Calcul de la pression mediane par numero de mission
                         if(~isempty(idcMisok))
                             if sum(~isnan(cycles_m{m}))>=1    %% pour les cas ou cycles_m{m} ~= juste le cycle 0
                                 %%prise en compte du qc mis suite a� la verif avec la bathy
                                 %  cc 21/09/2020 : tester avec PARAM.PRESS_STD plus
                                 %  grand
-                                if mynanstd(pres(pres>PARAM.PRESS_STD_MIN&pres<PARAM.PRESS_STD_MAX))<PARAM.PRESS_STD
+                                if (mynanstd(pres(pres>PARAM.PRESS_STD_MIN&pres<PARAM.PRESS_STD_MAX))<PARAM.PRESS_STD)|isempty(id_mission_meta)
                                     %presMedianDrift(m)=-abs(median(pres_ok_m(pres_ok_m>500&pres_ok_m<1500),2));    %%qu'en est-il quand Ppark ~ 300m ?
                                     presMedianDrift(m)=-abs(median(pres(pres>PARAM.PRESS_STD_MIN&pres<PARAM.PRESS_STD_MAX),2));
                                 else
-                                    presMedianDrift(m)= -M.ParkPressure(missions(m));
+                                    presMedianDrift(m)= -M.ParkPressure(id_mission_meta);
                                 end
                                 
                                 
                             else
-                                presMedianDrift(m) = -M.ParkPressure(missions(m));
+							    if isempty(id_mission_meta)==0
+                                presMedianDrift(m) = -M.ParkPressure(id_mission_meta);
+								else
+								 presMedianDrift(m) = NaN;
+								 end
                             end
                         else
                             presMedianDrift(m) = NaN;
@@ -941,9 +956,9 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         
                         %%pour stats
                         presall_traj(icounterfloat,m) = presMedianDrift(m) ;
-                        if(isnan(missions(m))==0)
+                        if(isnan(missions(m))==0)&isempty(id_mission_meta)==0
                             if(length(missions)<=length(M.ParkPressure))
-                                ParkPress_all(icounterfloat,m) = -M.ParkPressure(missions(m));
+                                ParkPress_all(icounterfloat,m) = -M.ParkPressure(id_mission_meta);
                             end
                         else
                             ParkPress_all(icounterfloat,m) = NaN;
@@ -951,26 +966,29 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         
                         %%%Comparaison entre pression mediane et pression indiquee dans fichier meta
                         
-                        if length(missions)<=length(M.ParkPressure) & isnan(presMedianDrift(m))==0
+                        if ~isempty(id_mission_meta) && isnan(presMedianDrift(m))==0
                             
-                            if (abs(presMedianDrift(m)- (-M.ParkPressure(missions(m))))>PARAM.PRESS_PARK_DIFF_M) % NC laisser une marge d'erreur
+                            if (abs(presMedianDrift(m)- (-M.ParkPressure(id_mission_meta)))>PARAM.PRESS_PARK_DIFF_M) % NC laisser une marge d'erreur
                                 fid_alerte=fopen(file_alerte,'a');
-                                fprintf(fid_alerte,'%s\n',[ floatname ', ,INCOHERENCE ENTRE META ET TRAJ POUR P_park : |TPmed-MP| >30 db']);
+                                fprintf(fid_alerte,'%s\n',[ floatname ', ,warning, PARKING PRESSURE(mission) from Meta file is not consitent with the COMPUTED PARKING PRESSURE(mission) from Traj file, ']);
                                 fclose(fid_alerte);
-                                fprintf('%s\n',[ floatname ', ,INCOHERENCE ENTRE META ET TRAJ POUR P_park : |TPmed-MP| > 30 db']);
-                                if Stat==1
+                                fprintf('%s\n',[ floatname ', ,warning, PARKING PRESSURE(mission) from Meta file is not consitent with the COMPUTED PARKING PRESSURE(mission) from Traj file']);
+								fprintf('%s\n',['Meta: ', num2str(M.ParkPressure(id_mission_meta))])
+								fprintf('%s\n',['Traj: ', num2str(-presMedianDrift(m))])
+								
+                                if P.Stat==1
                                     alerte2(k)=str2double(floatname);
                                     
                                 end
                                 
                             end
                             %%%pour STATS
-                            if Stat==1
-                                presall_met(icounterfloat,m) = M.ParkPressure(missions(m));
-                                Diff_Ppark(icounterfloat,m) = abs(presMedianDrift(m) - (-M.ParkPressure(missions(m))));
+                            if P.Stat==1
+                                presall_met(icounterfloat,m) = M.ParkPressure(id_mission_meta);
+                                Diff_Ppark(icounterfloat,m) = abs(presMedianDrift(m) - (-M.ParkPressure(id_mission_meta)));
                             end
                         else
-                            if Stat==1
+                            if P.Stat==1
                                 Diff_Ppark(icounterfloat,m)= NaN;
                                 presall_met(icounterfloat,m) = NaN;
                             end
@@ -1000,20 +1018,26 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                 i_rpp=0;
                 istat=0;
                 ipres=0;
-                %keyboard
+				disp(' ')
+				disp('---------------- GROUNDED, LOC POSITION and DATE, LAUNCH_DATE, EOL ----------- ')
+				disp(' ')
+                %
                 for id=1:length(cycles_sorted)
                     
                     istat=istat+1;
                     % numero du cycle
                     numCycle = cycles_sorted(id);
-                    numMis=T.config_mission_number.data(id);
+                    
+					idCycleTraj=find(T.cycle_number_index.data==numCycle);
+					numMis=T.config_mission_number.data(idCycleTraj);
                     idMis = find(double(missions)==numMis);
                     % id des mesures associees  à ce cycle (et au cycle suivant
                     % pour utilisation ulterieure
                     isCyc = (T.cycle_number.data(idLoc) == numCycle);
                     isCyc_post = (T.cycle_number.data(idLoc) == numCycle+1);
                     isCyc_drift = (T.cycle_number.data(idDrift) == numCycle);
-                    idCyc = idLoc(isCyc);
+                    %idCyc = idLoc(isCyc);
+                    idCyc = idLoc(isCyc&~isnan(T.longitude.data(idLoc))&~isnan(T.latitude.data(idLoc))); %correction cc 12/02/2021 ajout condition sur lon et lat
                     idCyc_post = idLoc(isCyc_post);
                     idCyc_drift=idDrift(isCyc_drift);
                     
@@ -1057,30 +1081,30 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             cyc_wrong_pres(ipres)=i_rpp;
                             pres_wrong(ipres)=pres_drift_mes(i_rpp);
                             fid_alerte=fopen(file_alerte,'a');
-                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DIFF PRESSION / PROFONDEUR PARKING , ( ' num2str(pres_drift_mes(i_rpp)) 'm) ~= Mediane: ' num2str(presMedianDrift(idMis)) 'm.']);
+                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, PARKING PRESSURE(cycle) is not consistent with the computed PARKING PRESSURE (mission) , ( ' num2str(-pres_drift_mes(i_rpp)) ' db) ~= Mission: ' num2str(-presMedianDrift(idMis)) ' db.']);
                             fclose(fid_alerte);
-                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DIFF PRESSION / PROFONDEUR PARKING , (' num2str(pres_drift_mes(i_rpp)) 'm) ~= Mediane: ' num2str(presMedianDrift(idMis)) 'm.']);% NC test très large, teste l'ecart à la pression de derive mediane
-                            %keyboard
+                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, PARKING PRESSURE(cycle) is not consistent with the computed PARKING PRESSURE (mission) , ( ' num2str(-pres_drift_mes(i_rpp)) ' db) ~= Mission: ' num2str(-presMedianDrift(idMis)) ' db.']);% NC test très large, teste l'ecart à la pression de derive mediane
+                            %
                             pres_alert(i_rpp)=1;
-                            if Stat==1
+                            if P.Stat==1
                                 % alertCyc_e7 = [alertCyc_e7 cycles_sorted(id)];
                                 alerte10(k,cycles_sorted(id)+1)=str2double(floatname);
                             end
                         else
                             pres_alert(i_rpp)=0;
                             it = it+1;
-                            if Stat==1 & isempty(idMis)==0
+                            if P.Stat==1 & isempty(idMis)==0
                                 Diff_Pm_Pmed(it) =  pres_drift_mes(i_rpp)-presMedianDrift(idMis);
                             end
                         end
-                        %keyboard
+                        %
                         if  isas_alert(i_rpp)==1  % modif cc 26/10/2020
                             %if pres_alert(i_rpp)==1 & isas_alert(i_rpp)==1
                             %                     fid_alerte=fopen(file_alerte,'a');
                             %                     fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', PB CAPTEUR PRESSION ? pression non compatible avec pression de parking et temperature']);
                             %                     fclose(fid_alerte);
                             %                     fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', PB CAPTEUR PRESSION ? pression non compatible avec pression de parking et temperature']); % NC verifier si on doit garder cette alerte sous cette forme
-                            if Stat==1
+                            if P.Stat==1
                                 alertCyc_e7_temp = [alertCyc_e7_temp cycles_sorted(id)];
                                 alerte13(k,id)=str2double(floatname);
                             end
@@ -1089,10 +1113,13 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         if proche_surface(i_rpp)==1
                             cycle_proche_surface = [cycle_proche_surface cycles_sorted(id)];  % cc 09/11/2020 recuperation des cycles pour lesquels le flotteur reste en surface pour les ajouter aux alertes pression lors de la comparaison avec Altran.
                         end
-                        
-                        
-                        if  (elev_end_all(i_rpp)>=park_prof(idMis)+PARAM.PRESS_PARK_DIFF_BATH | elev_all(i_rpp)>=park_prof(idMis)+PARAM.PRESS_PARK_DIFF_BATH) ...
-                                | (isas_non_ref(i_rpp)==1 & pres_alert(i_rpp)==1)
+                        pente=elev_all(i_rpp)-elev_end_all(i_rpp);
+						seuil=pente;
+						seuil(pente<100)=100;
+						
+                        if  ((elev_end_all(i_rpp)>=park_prof(idMis)-PARAM.PRESS_PARK_DIFF_BATH | elev_all(i_rpp)>=park_prof(idMis)-PARAM.PRESS_PARK_DIFF_BATH)) ...
+                                  & ((isnan(pres_drift_mes(i_rpp))||pres_drift_mes(i_rpp)<-100)|| ((elev_end_all(i_rpp)>=pres_drift_mes(i_rpp)-seuil | elev_all(i_rpp)>=pres_drift_mes(i_rpp)-seuil)))  % modif condition cc 21/01/2021 pour ne pas prendre en compte les flotteurs qui ne peuvent pas plonger et restent près de la surface (pas mal de provor-arvor iridium dans ce cas)
+                       
                             %if(GroundedNum(id)~=2)    %%% 2 = 'N'	% correction cc 03/11/2020 Si le flotteur dit qu'il n'est pas grounded alors, pas d'alerte grounded
                             alerte_grounded = 1;
                             iground=iground+1;
@@ -1103,57 +1130,57 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             %float_groundedgrounded(ifloat) = str2double(floatname);
                             %CyclesGrounded(iground) = cycles_sorted(id);
                             fid_alerte=fopen(file_alerte,'a');
-                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', GROUNDED ?']);
+                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, GROUNDED according to the bathymetry test']);
                             fclose(fid_alerte);
-                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', GROUNDED ?']);
+                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, GROUNDED according to the bathymetry test']);
                             %%% appliquer flags ?
-                            if Stat==1
+                            if P.Stat==1
                                 alertCyc_e3_temp = [alertCyc_e3_temp cycles_sorted(id)];   % on elimine les locterrre pour comparaison avec altran
                                 alerte14(k,cycles_sorted(id)+1)=str2double(floatname);
                             end
                             %fprintf(fid3,'%s\n',[floatname ', [' num2str(cycles_sorted(id)) ']']);
                             
                             %T.grounded.data(id) = 'Y'; % add cc 05/10/2020
-                            T.grounded.data(idCyc_sorted(id)) = 'B'; % correction cc 08/01/2021
+                            T.grounded.data(idCycleTraj) = 'B'; % correction cc 08/01/2021
                             %else
-                            if(GroundedNum(idCyc_sorted(id))==2)
+                            if(GroundedNum(idCycleTraj)==2)
                                 fid_alerte=fopen(file_alerte,'a');
-                                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', grounded selon bathy mais incohérence avec la variable T.grounded =''N''.']);
+                                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, Grounded according to the bathymetry test but not consistent with the initial value of T.grounded =''N''.']);
                                 fclose(fid_alerte);
-                                fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', grounded selon bathy mais incohérence avec la variable T.grounded =''N''.']);                      %%% appliquer flags ?
+                                %fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', Grounded according to the bathymetry test, but not consistent with the initial value of T.grounded =''N''.']);                      %%% appliquer flags ?
                                 %%%mettre la variable grounded à 'Y' ??
                                 %T.grounded.data(id) = 'Y'; % remove cc 05/10/2020
                             end
                             
-                            if(map==1)
+                            if(P.map==1)
                                 m_plot(TEMP_LONG(ilong_drift,1),TEMP_LAT(ilat_drift,1),'color',[0.4660 0.6740 0.1880],'marker','p','markersize',8)
                             end
-                        elseif(GroundedNum(idCyc_sorted(id))==1)    %%%1 = 'Y'
+                        elseif(GroundedNum(idCycleTraj)==1)    %%%1 = 'Y'
                             % alertCyc_e3 = [alertCyc_e3 cycles_sorted(id)]; %
                             % remove cc 05/10/2020
                             % fid_alerte=fopen(file_alerte,'a');
                             % fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded alors que oui d''apres la variable T.grounded.']);
                             % fclose(fid_alerte);
                             % fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded alors que oui d''apres la variable T.grounded.']);                      %%% appliquer flags ?
-                            T.grounded.data(idCyc_sorted(id))='N';   %  cc 15/01/2021
-                        elseif(GroundedNum(idCyc_sorted(id))==2)    %%%2 = 'N'  % add cc 05/10/2020
-                            T.grounded.data(idCyc_sorted(id))='N';
+                            T.grounded.data(idCycleTraj)='N';   %  cc 15/01/2021
+                        elseif(GroundedNum(idCycleTraj)==2)    %%%2 = 'N'  % add cc 05/10/2020
+                            T.grounded.data(idCycleTraj)='N';
                         %elseif(GroundedNum(idCyc_sorted(id))==3)       %%%3 = 'U'
 						else       %%%'U' and all other
                             %                     fid_alerte=fopen(file_alerte,'a');
                             %                     fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded et ''U'' d''apres la variable T.grounded.']);
                             %                     fclose(fid_alerte);
                             % fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', pas d''alerte grounded et ''U'' d''apres la variable T.grounded.']);                      %%% appliquer flags ?
-                            T.grounded.data(idCyc_sorted(id))='N';
+                            T.grounded.data(idCycleTraj)='N';
                         end
                         
                         
                         
                     end   %% fin de la condition sur l'existence des LOC
                     
-                    if(isnan(T.config_mission_number.data(idCyc_sorted(id)))==0)
+                    if(isnan(T.config_mission_number.data(idCycleTraj))==0)
                         %%id mission du flotteur pour ce cycle
-                        numMis=T.config_mission_number.data(idCyc_sorted(id));   %%%attention pour id=1 peut etre = NaN;
+                        numMis=T.config_mission_number.data(idCycleTraj);   %%%attention pour id=1 peut etre = NaN;
                         idMis = find(missions==numMis);
                         % recuperation des durees de cycle
                         if idMis<=length(dureeMedianCycle)
@@ -1196,20 +1223,21 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         % nouveau parametre :PARAM.TIME_DIFF_DOUBLE_DATE_LOC=0
                         % pour pouvoir regler cette difference
                         
+                       % [isdouble_toremove,idDoublon_date,idDoublon_latlon] = ...
+                       %     find_doubles_datelatlon_30s(locDate, locLon, locLat, locQc, locTemp);   %%%recherche les doublons. Attention, il peut y avoir un double de date pas forcement associe à double de lon ou de lat
+                       
                         [isdouble_toremove,idDoublon_date,idDoublon_latlon] = ...
-                            find_doubles_datelatlon_30s(locDate, locLon, locLat, locQc, locTemp);   %%%recherche les doublons. Attention, il peut y avoir un double de date pas forcement associe à double de lon ou de lat
-                        
-                        
+                            find_doubles_datelatlon_30s(locDate, locLon, locLat, locQc);  % correction cc 12/02/2021 pas necessaire locTemp
                         
                         if isempty(isdouble_toremove)==0
                             
-                            %keyboard
+                            %
                             %
                             
                             fid_alerte=fopen(file_alerte,'a');
-                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DOUBLE DATES DE LOC']);
+                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, SOME LOCATION DATES are DUPLICATED']);
                             fclose(fid_alerte);
-                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DOUBLE DATES DE LOC']);
+                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, SOME LOCATION DATES are DUPLICATED']);
                             
                             %T.position_qc.data(idCyc(idDoublon_date(find(T.position_qc.data(idCyc(idDoublon_date)))>1)))=6;   %%flag à 6 les dates doublées dont le qc est >1
                             % correction cc 24/09/2020
@@ -1221,24 +1249,12 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             T.position_qc.data(idCyc(isdb&~isflag4))=6;
                             %T.position_qc.data(idCyc(idDoublon_date(find(T.position_qc.data(idCyc(idDoublon_date))>1))))=6;
                             
-                            if Stat==1
+                            if P.Stat==1
                                 %alertCyc_e9 = [alertCyc_e9 cycles_sorted(id)];  cc 06/11/2020 ce n'est pas dans les alertes locpos altran
                                 alerte15(k,cycles_sorted(id)+1)=str2double(floatname);
                             end
                             
-                            % comment cette partie cc 05/10/2020
-                            %                     if isequal(idDoublon_date,idDoublon_latlon)
-                            %                         fid_alerte=fopen(file_alerte,'a');
-                            %                         fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ' id LOC ' num2str(idDoublon_latlon(1)) '&' num2str(idDoublon_latlon(2))  ', DOUBLE DATES DE LOC ASSOCIE A DOUBLES LON-LAT']);
-                            %                         fclose(fid_alerte);
-                            %                         fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ' id LOC ' num2str(idDoublon_latlon(1)) '&' num2str(idDoublon_latlon(2)) ', DOUBLE DATES DE LOC ASSOCIE A DOUBLES LON-LAT']);
-                            %                         % T.position_qc.data(idCyc(idDoublon_latlon(find(T.position_qc.data(idCyc(idDoublon_latlon)))>1)))=6;   %%flag à 6 les lon-lat doublés dont le qc est >1
-                            %                         % correctio, cc 24/09/2020
-                            %                         T.position_qc.data(idCyc(idDoublon_latlon(find(T.position_qc.data(idCyc(idDoublon_latlon))>1))))=6;
-                            %                         if Stat==1
-                            %                             alertCyc_e9 = [alertCyc_e9 cycles_sorted(id)];
-                            %                         end
-                            %                     end
+                          
                             
                             % question cc 05/10/2020? si on a un doublon de position sans doublons de
                             % date pour un meme cycle?  que fait-on? => les
@@ -1265,10 +1281,10 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         [locDate_postok_sorted, idSorted_post] = sort(locDate_postok);% add cc 15/09/2020
                         if isequal(LocDateok_sorted,locDateok)==0
                             fid_alerte=fopen(file_alerte,'a');
-                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DATES DE LOC NON CROISSANTES']);
+                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, LOCATION DATE are not increasing']);
                             fclose(fid_alerte);
-                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DATES DE LOC NON CROISSANTES']);
-                            if Stat==1
+                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, LOCATION DATE are not increasing']);
+                            if P.Stat==1
                                 %alertCyc_e5 = [alertCyc_e5 cycles_sorted(id)];
                                 alerte16(k,cycles_sorted(id)+1)=str2double(floatname);
                             end
@@ -1301,11 +1317,11 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         if ecartMaxLocCycle(istat)>PARAM.TIME_DIFF_2LOCS %en heure
                             if numCycle==0|numCycle==1   % add cc 25/09/2020
                                 fid_alerte=fopen(file_alerte,'a');
-                                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', cycle DPF accolé, ECART MAX 2 LOC > 10h :' num2str(ecartMaxLocCycle(istat)) ' heures']);
+                                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', cycle discarded(for u&v), LOCATION DATES : a gap > ' num2str(PARAM.TIME_DIFF_2LOCS) 'h is found between two location dates, :' num2str(ecartMaxLocCycle(istat)) ' hours']);
                                 fclose(fid_alerte);
-                                fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', cycle DPF accolé, ECART MAX 2 LOC > 10h :' num2str(ecartMaxLocCycle(istat)) ' heures']);
+                                fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',cycle discarded(for u&v), LOCATION DATES : a gap > ' num2str(PARAM.TIME_DIFF_2LOCS) 'h is found between two location dates, :' num2str(ecartMaxLocCycle(istat)) ' hours']);
 								
-                                if Stat==1
+                                if P.Stat==1
                                     alertCyc_e4 = [alertCyc_e4 cycles_sorted(id)];
                                 end
 								
@@ -1322,12 +1338,12 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                 
                             else
                                 fid_alerte=fopen(file_alerte,'a');
-                                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ECART MAX 2 LOC > 10h, :' num2str(ecartMaxLocCycle(istat)) ' heures']);
+                                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, LOCATION DATES : a gap > ' num2str(PARAM.TIME_DIFF_2LOCS) 'h is found between two dates, :' num2str(ecartMaxLocCycle(istat)) ' hours']);
                                 fclose(fid_alerte);
-                                fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ECART MAX 2 LOC > 10h, :' num2str(ecartMaxLocCycle(istat)) ' heures']);
+                                fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, LOCATION DATES : a gap > ' num2str(PARAM.TIME_DIFF_2LOCS) 'h is found between two dates, :' num2str(ecartMaxLocCycle(istat)) ' hours']);
                             end
-                            %keyboard
-                            if Stat==1
+                            %
+                            if P.Stat==1
                                 %alertCyc_e5 = [alertCyc_e5 cycles_sorted(id)];
                                 % cc remove 26/10/2020 c'est une alerte pour DMOP
                                 alerte17(k,id)=str2double(floatname);
@@ -1336,7 +1352,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             
                         end
                         
-                        if Stat==1
+                        if P.Stat==1
                             ecartMaxLocCycle_fl(icounterfloat,istat) = ecartMaxLocCycle(istat);
                             ecartMeanLocCycle_fl(icounterfloat,istat) = ecartMeanLocCycle(istat);
                         end
@@ -1345,17 +1361,18 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         % CYCLE
                         %----------------------------------------------------------------
                         
-                        %keyboard
+                        %
                         %if (locDate_qc_sorted~=6|locDate_qc_sorted~=4);
+						%
                         if length(LocDate_sorted)>1 & ~(locDate_qc_sorted(1)>=4 &&  locDate_qc_sorted(end)>=4) % correction cc 24/09/2020 : si les premieres dates et dernieres dates sont bonnes
                             ecartFirstLastLoc(istat)= LocDate_sorted(end)-LocDate_sorted(1);
                             %if ecartFirstLastLoc(istat)*24 > ecartcycle & id<length(cycles_sorted) % on est pas sur le dernier cycle qui peut etre EOL
                             if ecartFirstLastLoc(istat)*24 > ecartcycle & ecartFirstLastLoc(istat)*24 < PARAM.TIME_DIFF_FLLOCS_EOL & id<length(cycles_sorted) % correction cc 24/09/2020
                                 fid_alerte=fopen(file_alerte,'a');
-                                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ECART FIRST LAST LOC >,' num2str(ecartcycle) 'h :' num2str(ecartFirstLastLoc(istat)) ' jours']);
+                                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, TIME SPENT AT SURFACE >' num2str(ecartcycle) 'h, :' num2str(ecartFirstLastLoc(istat)) ' days']);
                                 fclose(fid_alerte);
-                                fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ECART FIRST LAST LOC >,' num2str(ecartcycle) 'h :' num2str(ecartFirstLastLoc(istat)) ' jours']);
-                                if Stat==1
+                                fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, TIME SPENT AT SURFACE >' num2str(ecartcycle) 'h, :' num2str(ecartFirstLastLoc(istat)) ' days']);
+                                if P.Stat==1
                                     %alertCyc_e5 = [alertCyc_e5 cycles_sorted(id)];
                                     % cc remove 26/10/2020
                                     alerte18(k,id)=str2double(floatname);
@@ -1363,18 +1380,21 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                 %elseif ecartFirstLastLoc(istat)*24 > PARAM.TIME_DIFF_FLLOCS_EOL & id<length(cycles_sorted) % en heure
                             elseif (id>1&ecartFirstLastLoc(istat)*24) >= PARAM.TIME_DIFF_FLLOCS_EOL | (ecartFirstLastLoc(istat)*24 > ecartcycle & id==length(cycles_sorted))% en heure   % correction cc 24/09/2020
                                 fid_alerte=fopen(file_alerte,'a');
-                                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',? EOL ?']);
+                                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, END OF LIFE MODE ?, time spent at surface:' num2str(ecartFirstLastLoc(istat)) ' days']);
                                 fclose(fid_alerte);
                      
-                                fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',? EOL ?']); % peut-on considerer EOL à partir de 5 j à la surface ?
+                                fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, END OF LIFE MODE ?, time spent at surface:' num2str(ecartFirstLastLoc(istat)) ' days']); % peut-on considerer EOL à partir de 5 j à la surface ?
                                 fleet_EOF(k,id)=str2double(floatname);
-                                if Stat==1
-                                    alertCyc_e4 = [alertCyc_e4 cycles_sorted(id)];
+                                if P.Stat==1
+                             %       alertCyc_e4 = [alertCyc_e4 cycles_sorted(id)];
                                 end
 								
                             end
                             ecartFirstLastLoc(icounterfloat,istat) = ecartFirstLastLoc(istat);
-                        end
+                        else
+						 ecartFirstLastLoc(istat)=NaN;
+						end
+						 
                         
                         % faire des stats et definir un seuil, ARGOS VS IRIDIUM?,
                         
@@ -1400,15 +1420,15 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                 
                                 if is_ok == 0
                                     fid_alerte=fopen(file_alerte,'a');
-                                    fprintf(fid_alerte,'%s\n',[ floatname,', , PB LAUNCH DATE NON REALISTE, ', datestr(launch_date), '. FLAG LAUNCH MIS A 6.']);
+                                    fprintf(fid_alerte,'%s\n',[ floatname,', ,flagged, LAUNCH DATE is not possible, ', datestr(launch_date)]);
                                     fclose(fid_alerte);
-                                    fprintf('%s\n',[ floatname, ', ,PB LAUNCH DATE NON REALISTE, ', datestr(launch_date), '. FLAG LAUNCH MIS A 6.']);
+                                    fprintf('%s\n',[ floatname,', ,flagged, LAUNCH DATE is not possible, ', datestr(launch_date)]);
                                     %M.launch_qc = 6;
                                     M.launch_qc = '6';          %correction cc 15/09/2020
                                     if T.juld_qc.data(iLaunch)~=4;
                                         T.juld_qc.data(iLaunch)= 6; %add cc 15/09/2020
                                     end
-                                    if Stat==1
+                                    if P.Stat==1
                                         alertCyc_e6 = [alertCyc_e6 1];
                                         alerte19(k)=str2double(floatname);
                                     end
@@ -1430,24 +1450,24 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                                 T.juld_qc.data(iLaunch)= 6; %add cc 15/09/2020
                                             end
                                             fid_alerte=fopen(file_alerte,'a');
-                                            fprintf(fid_alerte,'%s\n',[ floatname,', , PB LAUNCH DATE ANTERIEURE A START DATE, DE ', num2str(Diff_LS), ' j. FLAG LAUNCH MIS A 6.']);
+                                            fprintf(fid_alerte,'%s\n',[ floatname,', ,warning, LAUNCH DATE is earlier than the START DATE, by  ', num2str(Diff_LS), ' days']);
                                             fclose(fid_alerte);
-                                            fprintf('%s\n',[ floatname, ', , PB LAUNCH DATE ANTERIEURE A START DATE DE ', num2str(Diff_LS), ' j. FLAG LAUNCH MIS A 6.']);
-                                            if Stat == 1
+                                            fprintf('%s\n',[ floatname,', ,warning, LAUNCH DATE is earlier than the START DATE, by  ', num2str(Diff_LS), ' days']);
+                                            if P.Stat == 1
                                                 alertCyc_e6 = [alertCyc_e6 1];
                                                 alerte20(k)=str2double(floatname);
                                             end
                                             
                                         elseif M.startup_date_qc=='1' && Diff_LS>1
                                             fid_alerte=fopen(file_alerte,'a');
-                                            fprintf(fid_alerte,'%s\n',[floatname, ', , ECART ENTRE LAUNCH DATE et START DATE > 1jour, PB LAUNCHDATE ?']);
+                                            fprintf(fid_alerte,'%s\n',[floatname, ', ,flagged, LAUNCH DATE is later than the START DATE, by  ', num2str(Diff_LS), ' days']);
                                             fclose(fid_alerte);
                                             M.launch_qc = '6';          %correction cc 9/10/2020
                                             if T.juld_qc.data(iLaunch)~=4;
                                                 T.juld_qc.data(iLaunch)= 6; %add cc 9/10/2020
                                             end
-                                            fprintf('%s\n',[ floatname,' ECART ENTRE LAUNCH DATE et START DATE > 1jour, PB LAUNCHDATE ?']);
-                                            if Stat == 1
+                                            fprintf('%s\n',[floatname, ', ,flagged, LAUNCH DATE is later than the START DATE, by  ', num2str(Diff_LS), ' days']);
+                                            if P.Stat == 1
                                                 alertCyc_e6 = [alertCyc_e6 1];
                                             end
                                         end
@@ -1473,15 +1493,15 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                         
                                         if sum(isbad)>0  & sum(isbad_post)== 0  % SI L'ERREUR NE VIENT PAS D'UNE LAUNCH DATE ERRONEE
                                             fid_alerte=fopen(file_alerte,'a');
-                                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DATES DE LOC DU 1er CYCLE ANTERIEURES A LAUNCH DATE > 3h']);
+                                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, LOCATION DATES are earlier than LAUNCH DATE']);
                                             fclose(fid_alerte);
-                                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DATES DE LOC DU 1er CYCLE ANTERIEURES A LAUNCH DATE > 3h']);
+                                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, LOCATION DATES are earlier than LAUNCH DATE']);
                                             %T.juld.data(idSorted(isbad))=2;                 %%%%FLAG � 2 les dates Loc du 1er cycle (douteuses)
 											
                                             notQC4=T.juld_qc.data(idCyc(idSorted))~=4;
                                             T.juld_qc.data(idCyc(idSorted(isbad&notQC4)))=6;   % correction cc 15/09/2020
                                             
-                                            if Stat == 1
+                                            if P.Stat == 1
                                                 alertCyc_e5 = [alertCyc_e5 cycles_sorted(id)];
                                                 alerte21(k,cycles_sorted(id)+1)=str2double(floatname);
                                                 
@@ -1491,12 +1511,12 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                     elseif isokLaunchDate(k) ==0 & str2double(M.launch_qc)~=6    %% L'ERREUR PEUT VENIR D'UNE LAUNCH DATE ERRONEE, NON DETECTEE PRECEDEMMENT    %  correction cc 15/09/2020
                                         % fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ? PB LAUNCH DATE POSTERIEURE à DATE DE LOC DE PLUS DE 3 h?']);
                                         fid_alerte=fopen(file_alerte,'a');
-                                        fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', PB LAUNCH DATE ? : POSTERIEURE à DATE DE LOC, DE PLUS DE ' num2str(PARAM.TIME_LAUNCH_FIRST_LOC) ' h']); % correction cc 15/09/2020
+                                        fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, LAUNCH DATE is more than ' num2str(PARAM.TIME_LAUNCH_FIRST_LOC) 'h after the first location date']); % correction cc 15/09/2020
                                         fclose(fid_alerte);
                                         %fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ? PB LAUNCH DATE POSTERIEURE à DATE DE LOC DE PLUS DE 3 h?']);
-                                        fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', PB LAUNCH DATE ? : POSTERIEURE à DATE DE LOC DE PLUS DE ' num2str(PARAM.TIME_LAUNCH_FIRST_LOC) ' h']);% correction cc 15/09/2020
+                                        fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, LAUNCH DATE is more than ' num2str(PARAM.TIME_LAUNCH_FIRST_LOC) 'h after the first location date']);% correction cc 15/09/2020
                                         
-                                        if Stat==1
+                                        if P.Stat==1
                                             %alertCyc_e5 = [alertCyc_e5
                                             %cycles_sorted(id)];  % cc 26/10/2020
                                             %ce n'est pas un pb de loc date
@@ -1511,11 +1531,11 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                         %fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ? PB ECART LAUNCH DATE ET DATE DE LOC DE PLUS DE 10.5 j. DPF sans PRELUDE ?']);
                                         %fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', ? PB ECART LAUNCH DATE ET DATE DE LOC DE PLUS DE 10.5 j. DPF sans PRELUDE ?']);
                                         fid_alerte=fopen(file_alerte,'a');
-                                        fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DPF sans PRELUDE ? : DATE FIRST LOC > LAUNCH DATE, DE PLUS DE '  num2str(PARAM.TIME_LAUNCH_FIRST_LOC_DPF)  'h.']);% correction cc 15/09/2020
+                                        fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, FIRST LOCATION DATE are more than '  num2str(PARAM.TIME_LAUNCH_FIRST_LOC_DPF)  'h after LAUNCH DATE.']);% correction cc 15/09/2020
                                         fclose(fid_alerte);
-                                        fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DPF sans PRELUDE ? : DATE FIRST LOC > LAUNCH DATE DE PLUS DE '  num2str(PARAM.TIME_LAUNCH_FIRST_LOC_DPF)  'h.']);% correction cc 15/09/2020
+                                        fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, FIRST LOCATION DATE are more than '  num2str(PARAM.TIME_LAUNCH_FIRST_LOC_DPF)  'h after LAUNCH DATE.']);% correction cc 15/09/2020
                                         
-                                        if Stat==1
+                                        if P.Stat==1
                                             %alertCyc_e4 = [alertCyc_e4 cycles_sorted(id)];
                                             alerte23(k,cycles_sorted(id)+1)=str2double(floatname);
                                             
@@ -1526,14 +1546,14 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                     % add cc 15/09/2020 : j'ajoute cette boucle
                                     if ecartLaunchDateFirstLoc(k)*24>PARAM.TIME_LAUNCH_FIRST_LOC_DUMB
                                         fid_alerte=fopen(file_alerte,'a');
-                                        fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', PB LAUNCH DATE ? : DATE FIRST LOC > LAUNCH DATE, DE PLUS DE '  num2str(PARAM.TIME_LAUNCH_FIRST_LOC_DUMB)  'h.']);
+                                        fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, LAUNCH DATE IS SUSPICIOUS : first location date are more than '  num2str(PARAM.TIME_LAUNCH_FIRST_LOC_DUMB)  'h after launch date.']);
                                         fclose(fid_alerte);
-                                        fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', PB LAUNCH DATE ? : DATE FIRST LOC > LAUNCH DATE DE PLUS DE '  num2str(PARAM.TIME_LAUNCH_FIRST_LOC_DUMB)  'h.']);
+                                        fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, LAUNCH DATE IS SUSPICIOUS : first location date are more than '  num2str(PARAM.TIME_LAUNCH_FIRST_LOC_DUMB)  'h after launch date.']);
                                         M.launch_qc = '6';          %correction cc 9/10/2020
                                         if T.juld_qc.data(iLaunch)~=4;
                                             T.juld_qc.data(iLaunch)= 6; %add cc 9/10/2020
                                         end
-                                        %                                 if Stat==1   % cc Alerte A definir
+                                        %                                 if P.Stat==1   % cc Alerte A definir
                                         %                                     %alertCyc_e4 = [alertCyc_e4 cycles_sorted(id)];
                                         %                                     alerte23(k,cycles_sorted(id)+1)=str2double(floatname);
                                         %
@@ -1542,70 +1562,19 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                     end
                                 end   % en isok
                                 
-                                
-                                %%%VERIFICATION PHASE DE PRELUDE (si pas agglomere avec cycle 1
-                                %%%dans le cas des Deep Profile First (DPF).
-                                
-                                %%%vérification de la présence du cycle 0 (prélude)
-                                
-                                % cc 15/09/2020 : je commente cette partie
-                                
-                                %                         if(isempty(find(cycles==0)))
-                                %                             if(T.measurement_code.data(2)==100) %%%DPF (Deep Profile first)
-                                %                                 %if ecartLaunchDateFirstLoc(k)*24>24
-                                %                                 fprintf(fid_alerte,'%s\n',[ floatname ', cycle '...
-                                %                                     num2str(cycles(id)) ', PAS DE CYCLE 0, DPF sans prelude']);
-                                %                                 fprintf('%s\n',[ floatname ', cycle '...
-                                %                                     num2str(cycles(id)) ', PAS DE CYCLE 0, DPF sans prelude']); % ', LOC plus d''un jour après => DPF sans prelude
-                                %                                 if Stat==1
-                                %                                     alertCyc_e4=[alertCyc_e4 cycles_sorted(id)];
-                                %                                     alerte24(k,cycles_sorted(id)+1)=str2double(floatname);
-                                %
-                                %                                 end
-                                %                             end
-                                %                         end
+                              
                             else % cc 15/09/2020 :si aucune date de loc valide pour cycle 0 ou 1
                                 ecartLaunchDateFirstLoc(k)=NaN;
                             end
                         elseif numCycle>1 & id==1
                             fid_alerte=fopen(file_alerte,'a');
-                            fprintf(fid_alerte, '%s\n',[ floatname ', Commence au cycle,  ', num2str(cycles(1)), ' ecartLaunchDateFirstLoc mis a NaN']);
+                            fprintf(fid_alerte, '%s\n',[ floatname ', ,warning, NO CYCLE before cycle,  ', num2str(cycles(1))]);
                             fclose(fid_alerte);
-                            fprintf('%s\n',[ floatname ', Commence au cycle  ', num2str(cycles(1)), ' ecartLaunchDateFirstLoc mis a NaN']);
+                            fprintf('%s\n',[ floatname ', ,warning, NO CYCLE before cycle,  ', num2str(cycles(1))]);
                             ecartLaunchDateFirstLoc(k)= NaN;
                         end
                         
-                        %                 else  % cc 15/09/2020 :si aucune date de loc valide pour cycle 0 ou 1
-                        %
-                        %                     %ecartLaunchDateFirstLoc(k)=LocDate_sorted(1)-LaunchDate;
-                        %                     ecartLaunchDateFirstLoc(k)=NaN;
-                        %
-                        %                     % remove cc 15/09/2020 : je commente cette boucle
-                        %                     %                     if(ecartLaunchDateFirstLoc(k)>PARAM.TIME_LAUNCH_FIRST_LOC_DUMB)
-                        %                     %
-                        %                     %                         fprintf(fid_alerte,'%s\n',[ floatname ', cycle '...
-                        %                     %                             num2str(cycles(id)) ', UNE SEULE LOC et DATE INCOHERENTE.']);
-                        %                     %                         fprintf('%s\n',[ floatname ', cycle '...
-                        %                     %                             num2str(cycles(id)) ', UNE SEULE LOC et DATE INCOHERENTE.']);
-                        %                     %                         if Stat == 1
-                        %                     %                             alertCyc_e4 = [alertCyc_e4 cycles_sorted(id)];
-                        %                     %
-                        %                     %                         end
-                        %                     %                     else
-                        %                     %                         fprintf(fid_alerte,'%s\n',[ floatname ', cycle '...
-                        %                     %                             num2str(cycles(id)) ', UNE SEULE LOC.']);
-                        %                     %                         fprintf('%s\n',[ floatname ', cycle '...
-                        %                     %                             num2str(cycles(id)) ', UNE SEULE LOC.']);
-                        %                     %                         if Stat == 1
-                        %                     %                             alertCyc_e4 = [alertCyc_e4 cycles_sorted(id)];
-                        %                     %                             alerte25(k,cycles_sorted(id)+1)=str2double(floatname);
-                        %                     %
-                        %                     %                         end
-                        %                     %                      end
-                        %                     %
-                        %                     %                     ecartLaunchDateFirstLoc(k) = NaN;
-                        %
-                        %                 end   %  fin de la condition sur locDateok_sorted
+                   
                         
                         
                         % CONTROLE DES POSITIONS
@@ -1641,7 +1610,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                 % cc 23/10/2020 remove condition on qc to get alert
                                 % for DM opertor
                                 %if (dlocPosition_qc_sorted<4)&(dlocPosition_qc_sortedend<4)% &(length(locLon_sorted)>1&length(locLat_sorted)>1); %on ne regarde que les flags corrects ou non traités (de la 1ère et dernière loc)
-                                if(Bathy==1)
+                                if(P.Bathy==1)
                                     ilong = round(mean(find(LONG(:,1)<=dlon+max(diff(LONG)/2) & LONG(:,1)>=dlon-max(diff(LONG)/2))));
                                     ilat = round(mean(find(LAT(:,1)<=dlat+max(diff(LAT)/2) & LAT(:,1)>=dlat-max(diff(LAT)/2))));
                                     elev_float = ELEV(ilat,ilong);
@@ -1663,7 +1632,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                     
                                     if ilat>1 & ilat<length(LAT(:,1)) & ilong>1 & ilong<length(LONG(:,1))
                                         
-                                        if(Bathy==1)
+                                        if(P.Bathy==1)
                                             voisin1=ELEV(ilat(1)-1,ilong(1));
                                             voisin2=ELEV(ilat(1)+1,ilong(1));
                                             voisin3=ELEV(ilat(1),ilong(1)-1);
@@ -1688,27 +1657,27 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                         if numel(find(voisins>0))>=4
                                             if (dlocPosition_qc_sorted<4)  % add cc 25/09/2020 fait une alerte que si flag pas deja a 4
                                                 fid_alerte=fopen(file_alerte,'a');
-                                                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', PB DE LOCALISATION SUR LE CONTINENT. FLAG POSITION MIS A 6.']);
+                                                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, LOCATION POSITION on land']);
                                                 fclose(fid_alerte);
-                                                fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', PB DE LOCALISATION SUR LE CONTINENT.FLAG POSITION MIS A 6.']);
-                                                if Stat == 1
+                                                fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, LOCATION POSITION on land']);
+                                                if P.Stat == 1
                                                     alertCyc_e8 = [alertCyc_e8 cycles_sorted(id)];
                                                     alerte26(k,cycles_sorted(id)+1)=str2double(floatname);
                                                 end
-                                                if(map==1)
+                                                if(P.map==1)
                                                     m_plot(LONG(ilong,1),LAT(ilat,1),'color','g','marker','o','markersize',5);
                                                 end
-												%keyboard
+												%
                                                 T.position_qc.data(idCyc(idSorted(iiloc)))=6; % correction cc 09/10/2020
                                                 %T.position_qc.data(idCyc)=4;
                                             end
                                         else
                                             if iscylocterre==0  % add cc 23/10/2020 1 alerte par cycle pour DM operator
                                                 fid_alerte=fopen(file_alerte,'a');
-                                                fprintf(fid_alerte,'%s\n',[floatname ', cycle ' num2str(cycles_sorted(id)) ' , LOC A TERRE: altitude du flotteur > 0, (' (num2str(elev_float)) 'm) , mais au moins 1 point voisin < 0. Peut être coincé dans un atoll ou récupéré et proche de la terre']);
+                                                fprintf(fid_alerte,'%s\n',[floatname ', cycle ' num2str(cycles_sorted(id)) ' ,cycle discarded(for u&v), LOCATION POSITION on land but close to sea, altitude: ' (num2str(elev_float)) 'm']);
                                                 fclose(fid_alerte);
-                                                fprintf('%s\n',[floatname ', cycle ' num2str(cycles_sorted(id)) ' , LOC A TERRE: altitude du flotteur > 0 (' (num2str(elev_float)) 'm) , mais au moins 1 point voisin < 0. Peut être coincé dans un atoll ou récupéré et proche de la terre']);
-                                                if Stat == 1
+                                                fprintf('%s\n',[floatname ', cycle ' num2str(cycles_sorted(id)) ' ,cycle discarded(for u&v), LOCATION POSITION on land but close to sea, altitude: ' (num2str(elev_float)) 'm']);
+                                                if P.Stat == 1
                                                     alertCyc_e8 = [alertCyc_e8 cycles_sorted(id)];
                                                     alerte27(k,cycles_sorted(id)+1)=str2double(floatname);
                                                     
@@ -1718,13 +1687,13 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                             
                                         end
                                         
-                                    elseif elev_float<0&elev_float>PARAM.ALT_GROUND_NEAR_COAST &isempty(find(voisins>0))==0    %%%si l'atitude du point est >-200 et l'altitude d'au moins un voisin >0 est probablement proche de la terre.
+                                    elseif elev_float<0&elev_float>PARAM.ALT_GROUND_NEAR_COAST &isempty(find(voisins>0))==0    %%%si l'atitude du point est >-200 et l'altitude d'au moins un voisin >0 est probablement proche de la terre=> cycle elimine du calcul des vitesse
                                         if isprocheterre==0
                                             fid_alerte=fopen(file_alerte,'a');
-                                            fprintf(fid_alerte,'%s\n',[floatname ', cycle ' num2str(cycles_sorted(id)) ' ,  altitude du flotteur proche de 0 ,(' (num2str(elev_float)) 'm) , et au moins 1 point voisin > 0. Probablement proche terre.']);
+                                            fprintf(fid_alerte,'%s\n',[floatname ', cycle ' num2str(cycles_sorted(id)) ' ,cycle discarded(for u&v), LOCATION POSITION on sea but close to land, altitude: ' (num2str(elev_float)) 'm']);
                                             fclose(fid_alerte);
-                                            fprintf('%s\n',[floatname ', cycle ' num2str(cycles_sorted(id)) ' ,  -20 < altitude du flotteur < 0 (' (num2str(elev_float)) 'm) , et au moins 1 point voisin > 0. Probablement proche terre.']);
-                                            if Stat == 1
+                                            fprintf('%s\n',[floatname ', cycle ' num2str(cycles_sorted(id)) ' ,cycle discarded(for u&v), LOCATION POSITION on sea but close to land, altitude: ' (num2str(elev_float)) 'm']);
+                                            if P.Stat == 1
                                                 alertCyc_e8 = [alertCyc_e8 cycles_sorted(id)];   
                                             end
                                             isprocheterre=1;
@@ -1732,15 +1701,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                                     end
                                     
                                     
-                                    %       if(elev_float>-150 & length(alerte28(k,cycles_sorted(id-15):end))>5 & mean(voisins)>-150)  %%%si elev_first_curr proche surface et plusieurs loc terre aux cycles précédents
-                                    %         fprintf(fid_alerte,'%s\n',[floatname ', cycle ' num2str(cycles_sorted(id)) ' ,  altitude du flotteur > -150 (' (num2str(elev_float)) 'm) , et au moins 5 cycles précédents en loc terre. Probablement proche terre.']);
-                                    %         fprintf('%s\n',[floatname ', cycle ' num2str(cycles_sorted(id)) ' ,  altitude du flotteur > -150 (' (num2str(elev_float)) 'm) , et au moins 5/15 cycles précédents en loc terre. Probablement proche terre.']);
-                                    %         if Stat == 1
-                                    %             alertCyc_e8 = [alertCyc_e8 cycles_sorted(id)];
-                                    %         end
-                                    %      end
-                                    
-                                    %end
+                                  
                                     
                                 end
                                 
@@ -1767,12 +1728,14 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         % dlatlas=dlat;
                         % dlonlas=dlon;
                         
-                        % keyboard
+                        % 
                         dlatlas=NaN; %add cc 09/10/2020
                         dlonlas=NaN; %add cc 09/10/2020
                         ddates=NaN;
                         distancederiveprof(1)=NaN; %add cc 12/11/2020
                         distancederivesurf(1)=NaN; %add cc 12/11/2020
+						%dlat=locLat_sorted(1);    %commentaire cc 25/09/2020 pourquoi ne controller que la 
+                        %dlon=locLon_sorted(1);
                         if  id>1 &  (dlocPosition_qc_sorted<4)&(dlocPosition_qc_sortedend<4) & ~isnan(dureeCycle) & sum(idCycprec{id})>0
                             dlatlas=T.latitude.data(idCycprec{id}(end));
                             dlonlas=T.longitude.data(idCycprec{id}(end));
@@ -1783,25 +1746,27 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             % calculee et il ne faut pas que la vitesse du
                             % profileur depasse 3m/s
                             
-                            
+                            %cc 04/02/2021: les tests sont fait plus tard , compute_velocities.m
                             %%%%EN PROFONDEUR
+							
                             if distanceprof> dureeCycle*(cycles_sorted(id)-cycles_sorted(id-1))*(24*60*60)*PARAM.SPEED_MAX % borne a adapter en fonction de la duree du cycle (vitesse maximale du flotteur : 3 m/s)
-                                fid_alerte=fopen(file_alerte,'a');
-                                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',DERIVE EN PROFONDEUR, > ' num2str(dureeCycle*(cycles(id)-cycles(id-1))*(24*60*60)*PARAM.SPEED_MAX/1000) 'km :' num2str(distanceprof/1000) ' km. Loc Argos probablement erronée.']);
-                                fclose(fid_alerte);
-                                fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',DERIVE EN PROFONDEUR > ' num2str(dureeCycle*(cycles(id)-cycles(id-1))*(24*60*60)*PARAM.SPEED_MAX/1000) 'km :' num2str(distanceprof/1000) ' km. Loc Argos probablement erronée.']);
-                                if Stat == 1
+							%cc 02/02/2021  en commentatire les test sont fait dans les calculs des vitesses en tenant compte des flag 4 et 6
+                                % fid_alerte=fopen(file_alerte,'a');
+                                % fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',DERIVE EN PROFONDEUR, > ' num2str(dureeCycle*(cycles(id)-cycles(id-1))*(24*60*60)*PARAM.SPEED_MAX/1000) 'km :' num2str(distanceprof/1000) ' km. Loc Argos probablement erronée.']);
+                                % fclose(fid_alerte);
+                                % fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',DERIVE EN PROFONDEUR > ' num2str(dureeCycle*(cycles(id)-cycles(id-1))*(24*60*60)*PARAM.SPEED_MAX/1000) 'km :' num2str(distanceprof/1000) ' km. Loc Argos probablement erronée.']);
+                                if P.Stat == 1
                                     %alertCyc_e9 = [alertCyc_e9 cycles_sorted(id)];  % cc remove 06/11/2020
                                     alerte28(k,cycles_sorted(id)+1)=str2double(floatname);
                                     
                                 end
-                                if(map==1)
+                                if(P.map==1)
                                     m_plot(dlon,dlat,'color','r','marker','^','markersize',5)
                                     m_plot(dlonlas,dlatlas,'color','r','marker','x','markersize',5)
                                     m_line([dlonlas,dlon],[dlatlas,dlat],'linewi',1,'color','b','linest','--');
                                 end
                             end
-                            
+                           
                             
                             %%%EN SURFACE
                             
@@ -1813,16 +1778,17 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             % pour ARGOS)
                             
                             if distancesurf>bornesurf % borne dependant du système de positionnement
-                                fid_alerte=fopen(file_alerte,'a');
-                                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DERIVE EN SURFACE ENTRE 1er et DERNIERE LOC D'' UN CYCLE, >' num2str(bornesurf/1000) 'km :' num2str(distancesurf/1000) ' km. Loc Argos probablement erronée.']);
-                                fclose(fid_alerte);
-                                fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DERIVE EN SURFACE ENTRE 1er et DERNIERE LOC D''UN CYCLE>' num2str(bornesurf/1000) 'km :' num2str(distancesurf/1000) ' km. Loc Argos probablement erronée.']);
-                                if Stat == 1
+							%cc 02/02/2021  en commentatire les test sont fait dans les calculs des vitesses en tenant compte des flag 4 et 6
+                                % fid_alerte=fopen(file_alerte,'a');
+                                % fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DERIVE EN SURFACE ENTRE 1er et DERNIERE LOC D'' UN CYCLE, >' num2str(bornesurf/1000) 'km :' num2str(distancesurf/1000) ' km. Loc Argos probablement erronée.']);
+                                % fclose(fid_alerte);
+                             %   fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DERIVE EN SURFACE ENTRE 1er et DERNIERE LOC D''UN CYCLE>' num2str(bornesurf/1000) 'km :' num2str(distancesurf/1000) ' km. Loc Argos probablement erronée.']);
+                                if P.Stat == 1
                                     alertCyc_e9 = [alertCyc_e9 cycles_sorted(id)];
                                     alerte29(k,cycles_sorted(id)+1)=str2double(floatname);
                                     
                                 end
-                                if(map==1)
+                                if(P.map==1)
                                     m_plot(dlonend,dlatend,'color','r','marker','^','markersize',5)
                                     m_plot(dlon,dlat,'color','r','marker','x','markersize',5)
                                     m_line([dlon,dlonend],[dlat,dlatend],'linewi',1,'color','c');
@@ -1831,7 +1797,11 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             
                             
                             
-                        end   %%fin de la condition sur les qc
+                        else
+						distancederivesurf(istat)=NaN;
+						end
+
+						%%fin de la condition sur les qc
                         %end       %%fin de la condition sur idCyc et idCycprec
                         
                         %%% Test de Koba et al. pour localiser les positions Argos
@@ -1839,8 +1809,8 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         %%% surface. (ne considere pas dans le resultat final les
                         %%% duplicata de dates/lon/lat).
                         %if(id>1 & sum(idCycprec{id})>0)
-                        %keyboard
-                        fid_koba = fopen([DIR_HOME,'log_koba.txt'],'wt');
+                        %
+                        fid_koba = fopen([P.DIR_HOME,'log_koba.txt'],'wt');
                         %locDate_prec = T.juld.data(idCycprec{id}); isok = find(locDate_prec(T.position_qc.data(idCycprec{id})<4));
                         
                         %if(isempty(isok)==0)
@@ -1856,11 +1826,11 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                             locLon_sorted, locLat_sorted, locQc_sorted, locPosition_qc_sorted, ...
                             ddates, dlonlas, dlatlas, fid_koba);
                         % cc 06/11/2020 add a test that verifie the distance between consecutive Argo LOC (same as the test use by altran to detec bad pos)
-                        idGoodPos = find((locQc_sorted == '1') | (locQc_sorted == '2') | (locQc_sorted == '3') | (locQc_sorted == 'G'));
+                        idGoodPos = find((locQc_sorted == '1') | (locQc_sorted == '2') | (locQc_sorted == '3') | (locQc_sorted == 'G')|(locQc_sorted == 'D')|(locQc_sorted == 'E')|(locQc_sorted == 'F')|(locQc_sorted == 'H'));
                         locLon = locLon_sorted(idGoodPos);
                         locLat = locLat_sorted(idGoodPos);
                         ranges = distance_lpo(locLat, locLon);
-                        ECART_MAX_LOC_ARGOS=30; % remarque pour altran, le seuil est 30km. Mais visualisation apres. On met donc un seuil plus grand pour flag auto
+                        ECART_MAX_LOC_ARGOS=30; % remarque pour altran, le seuil est 30km. 
                         idKo = find(ranges > ECART_MAX_LOC_ARGOS*1000);
 						% sauvegarde des resultats koba pour calcul des vitesses
                         T.position_qc_koba.data(idCyc(idSorted(o_idBadPos)))=6;
@@ -1868,65 +1838,56 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                         if  (~isempty(idKo))&~isempty(o_idBadPos) % if that test fail, use koba to flag bad positions => erreur locpos d'altran
                             
 							fid_alerte=fopen(file_alerte,'a');
-                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', LOC DISTANTES DE PLUS DE 30 km']);
+                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, LOCATION POSITIONS more than ' num2str(ECART_MAX_LOC_ARGOS) 'km away']);
                             fclose(fid_alerte);
-                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', LOC DISTANTE DE PLUS DE 30 km']);
-                            if Stat == 1
+                            fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, LOCATION POSITIONS more than ' num2str(ECART_MAX_LOC_ARGOS) 'km away']);
+                            if P.Stat == 1
                                 alertCyc_e9 = [alertCyc_e9 cycles_sorted(id)];
                             end
-                            
+                            o_idGoodPos=[];
+							% dans cas ou l'erreur est evidente (erreur de signe), on ratrappe une des deux positions
+							if length(o_idBadPos)==2
+								if (locLon(o_idBadPos(1))*locLon(o_idBadPos(2))<-1&locLon(o_idBadPos(1))*locLon(o_idBadPos(2))>-179^2 )|| (locLat(o_idBadPos(1))*locLat(o_idBadPos(2))<-1) % ie erreur de signe sur lon ou lat
+									if locLon(o_idBadPos(1))*dlonlas>1 && locLat(o_idBadPos(1))*dlatlas>1
+									o_idGoodPos=o_idBadPos(1);
+									end
+									if locLon(o_idBadPos(2))*dlonlas>1&&locLat(o_idBadPos(2))*dlatlas>1
+									o_idGoodPos=o_idBadPos(2);
+									end
+								end
+			
+							end
+							
+							
                             % if T.position_qc.data(idCyc(o_idBadPos))~=4;
                                 % T.position_qc.data(idCyc(o_idBadPos))=6;
                             % end
-							if T.position_qc.data(idCyc(idSorted(o_idBadPos)))~=4;  % correction cc 07/01/2021
-                                T.position_qc.data(idCyc(idSorted(o_idBadPos)))=6;
-                            end
+							
+							isnoQC4 = T.position_qc.data(idCyc(idSorted(o_idBadPos)))~=4;  % correction cc 07/01/2021
+                            T.position_qc.data(idCyc(idSorted(o_idBadPos(isnoQC4))))=6;
+							isnoQC4 = T.position_qc.data(idCyc(idSorted(o_idGoodPos)))~=4;
+							T.position_qc.data(idCyc(idSorted(o_idGoodPos(isnoQC4))))=1;
+							T.position_qc_koba.data(idCyc(idSorted(o_idGoodPos(isnoQC4))))=1;
+                            
                         end
-                        % [o_date, o_longitude, o_latitude, o_posAcc, o_posQcIn, o_posQcOut, ...
-                        % o_speed,o_idBadPos, Little_Time, Little_Time_Sp, deltaTime_Sp, normal_Time_Sp] = check_argos_positions_koba_all_gh(LocDate_sorted,...
-                        % locLon_sorted, locLat_sorted, locQc, locPosition_qc, ...
-                        % locDate_prec_ok(end), dlonlas, dlatlas, fid_koba);
-                        %if(o_posQcOut(find(o_speed==max(o_speed)))==1)
-                        %if(isempty(find(o_speed>76.88 & o_speed<76.90))==0)
-                        %keyboard
-                        %end
-                        
-                        
-                        % %%Pour l'affichage des vitesse brutes et flaguees
-                        
-                        % if(isempty(o_idBadPos)==0 & o_idBadPos~=length(o_date))
-                        % o_idBad_speed = [o_idBadPos, o_idBadPos+1];
-                        % else
-                        % o_idBad_speed = o_idBadPos;
-                        % end
-                        % o_speed_isok = o_speed;
-                        % if(isempty(o_idBad_speed)==0)
-                        % o_speed_isok(o_idBad_speed)=NaN;
-                        % end
-                        % speed_Cyc =  [speed_Cyc, o_speed_isok];
-                        % if(isempty(idDoublon_date)==0)
-                        % ppp = ppp+length(idDoublon_date);
-                        % Speed_doublon(ppp-(length(idDoublon_date)-1):ppp,:) = o_speed_isok(idDoublon_date);
-                        % end
-                        % o_speed_isok(idDoublon_date)=NaN;  %%car koba ne prend pas en compte les doublons de date si pas associés à doublons de lon/lat
-                        % o_speed_isokd = o_speed_isok;
+                      
                         
                         if(isempty(o_idBadPos)==0)&isequal(LocDateok_sorted,locDateok)==0
-						%keyboard
+						%
 						end
                         if(isempty(o_idBadPos)==0)
 						    
                             fid_alerte=fopen(file_alerte,'a');
-                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', LOCA ARGOS ERRONEE (d''apres test de Koba), Position ' num2str(o_idBadPos') ' ']);
+                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',positions discarded(for u&v), LOCATION POSITIONS failed KOBAYASHI Test, Positions: ' num2str(o_idBadPos') ]);
                             fclose(fid_alerte);
-                            %fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', LOCA ARGOS ERRONEE (d''apres test de Koba) Position '  num2str(o_idBadPos')  ' ']);
-                            if Stat == 1
+                            %fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', LOCATION POSITIONS failed KOBAYASHI Test, Positions: ' num2str(o_idBadPos') ]);
+                            if P.Stat == 1
                                 alerte30(k,cycles_sorted(id)+1)=str2double(floatname);
                                 
                             end
                             locPosition_qc(o_idBadPos)=6;   %%%flag à 6 les positions reperees comme erronees.
                             
-                            if(Stat == 1 & isempty(find(o_idBadPos==1))==0)
+                            if(P.Stat == 1 & isempty(find(o_idBadPos==1))==0)
                                 % alertCyc_e5 = [alertCyc_e5 cycles_sorted(id)] ; % cc remove 26/10/2020
                             end
                             %T.position_qc.data(idCyc(o_idBadPos))=6; % %
@@ -1957,7 +1918,7 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                 
                 %%%Ecriture des alertes dans un fichier txt pour STATS
                 
-                if(Wr_Err==1)
+                if(P.Wr_Err==1)
                     if(isempty(alertCyc_e3)==0)
                         fid3=fopen(file3,'a');
                         %fprintf(fid3,'%s\n',[floatname ', [' num2str((alertCyc_e3)) ']']);   %%% Grounded  cc 18/12/2020 : elimination des doubles dans les alertes
@@ -2044,6 +2005,9 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                 
                 % Sauvegarde des nouveaux fichiers traj contenant les flags et les vitesses (deep, surface , errors,...)
                 if P.save_traj_file==1
+				disp(' ')
+				disp('---------------- COMPUTE_VELOCITIES -------------------------------------------- ')
+
                     filename_new =[P.DIR_NEW_TRAJ_FILE traj_fileName_final];
                     if exist(P.DIR_NEW_TRAJ_FILE)==0
                         mkdir(P.DIR_NEW_TRAJ_FILE)
@@ -2069,26 +2033,27 @@ for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore 
                 end
             end  % condition existence de loc
         end % condition existence fichier traj
-        
+    disp('****************************************************************************** ')
+
+    
     end  %% fin de la boucle sur les flotteurs
-    
-    
-    disp('*****FIN DES TESTS******')
+
+disp(' ---------------- END OF TESTS -----------------------------------------------')  
     
     % fclose(fid3)
     % fclose(fid4);fclose(fid5); fclose(fid6);fclose(fid7); fclose(fid8);fclose(fid9);
     % fclose(fid10);
     
-    if Stat==1&isempty(idLoc)==0
+    if P.Stat==1&isempty(idLoc)==0
         Diff_Cyc = Diff_Medcyc_Mcyc(Diff_Medcyc_Mcyc>0);
-        Name_fileStat = [DIR_STAT P.liste_rep_alerte{ilist} '/variables_stat.mat'];   % modif chemin sauvegarde cc 02/11/2020
+        Name_fileStat = [P.DIR_STAT P.liste_rep_alerte{ilist} '/variables_stat.mat'];   % modif chemin sauvegarde cc 02/11/2020
         save(Name_fileStat,'Diff_Medcyc_Mcyc','Diff_Ppark','Diff_Cyc',...
             'Diff_LaunchD','Diff_LaunchLat','Diff_LaunchLon','ecartMaxLocCycle_fl',...
             'ecartMeanLocCycle_fl','ecartFirstLastLoc','ecartLaunchDateFirstLoc',...
             'ecartLaunchDateFirstLoc','distancederiveprof',...
             'distancederivesurf','pres_drift_mes','temp_drift_mes','psal_drift_mes');
         
-        Name_fileStat2 = [DIR_STAT P.liste_rep_alerte{ilist} '/alertes_stat.mat'];     % modif chemin sauvegarde cc 02/11/2020
+        Name_fileStat2 = [P.DIR_STAT P.liste_rep_alerte{ilist} '/alertes_stat.mat'];     % modif chemin sauvegarde cc 02/11/2020
         save(Name_fileStat2,'alerte1', 'alerte2', 'alerte3', 'alerte4', 'alerte5', 'alerte6', ...
             'alerte7', 'alerte8', 'alerte9', 'alerte10', 'alerte11', 'alerte12', 'alerte13', 'alerte14', ...
             'alerte15', 'alerte16', 'alerte17', 'alerte18','alerte19', 'alerte20', 'alerte21', ...

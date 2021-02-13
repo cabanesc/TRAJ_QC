@@ -137,7 +137,6 @@ for idCy_sorted = 1:length(yoCycle)
     cycleQc = T.position_qc.data(idCycle(idLoc));
     cycleQc_koba = T.position_qc_koba.data(idCycle(idLoc));
     
-    
     if (KOBA_CHECK == 1)
         idGood = find((cycleQc ~= 6) & (cycleQc ~= 4) & (cycleQc_koba ~= 6) & (cycleDateQc ~= 4)& (cycleDateQc ~= 6));
     else
@@ -232,6 +231,8 @@ for idCy_sorted = 1:length(yoCycle)
                 
                 fprintf(flog,'%d #%d: positions AGGLOMEREES, vitesse de surface forcée à 0, SurfStartUErr=SurfStartVErr=SurfEndUErr=SurfEndVErr=%.1f cm/s\n', ...
                     floatNum, numCycle, surfErr);
+			    %fprintf('%d #%d: positions AGGLOMEREES, vitesse de surface forcée à 0, SurfStartUErr=SurfStartVErr=SurfEndUErr=SurfEndVErr=%.1f cm/s\n', ...
+                %    floatNum, numCycle, surfErr);
             end
         end
         
@@ -251,6 +252,8 @@ for idCy_sorted = 1:length(yoCycle)
                 
                 fprintf(flog,'%d #%d: vitesse de surface à la remontée ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
                     floatNum, numCycle, surfStartVel);
+				fprintf('%d #%d: vitesse de surface à la remontée ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
+                    floatNum, numCycle, surfStartVel);	
                 %keyboard
             end
         end
@@ -266,6 +269,8 @@ for idCy_sorted = 1:length(yoCycle)
                 T.verr_last_surface_velocity.data(idCy) = NaN;
                 
                 fprintf(flog,'%d #%d: vitesse de surface avant la descente ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
+                    floatNum, numCycle, surfEndVel);
+				fprintf('%d #%d: vitesse de surface avant la descente ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
                     floatNum, numCycle, surfEndVel);
             end
         end
@@ -455,6 +460,8 @@ for idCy_sorted = 1:length(yoCycle)
                     abs(T.verr_deep_velocity.data(idCy)) > 9999.99)
                 
                 fprintf(flog,'%d #%d: valeur (uerr_deep_velocity, verr_deep_velocity)=(%f, %f) aberrante (forcée à la valeur par défaut)\n', ...
+                    floatNum, yoCycle(idCy), T.uerr_deep_velocity.data(idCy), T.verr_deep_velocity.data(idCy));
+				fprintf('%d #%d: valeur (uerr_deep_velocity, verr_deep_velocity)=(%f, %f) aberrante (forcée à la valeur par défaut)\n', ...
                     floatNum, yoCycle(idCy), T.uerr_deep_velocity.data(idCy), T.verr_deep_velocity.data(idCy));
                 
                 T.uerr_deep_velocity.data(idCy) = NaN;

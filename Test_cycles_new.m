@@ -46,11 +46,23 @@ cyc=NaN*zeros(length(a_cycles),maxocc);
 
 
 numMis = T.config_mission_number.data(1);
-isMis = find(M.config_mission_number == numMis);
+%isMis = find(M.config_mission_number == numMis);
 isCyc = (T.cycle_number.data(a_idLoc) == a_cycles(1));
 idCyc = a_idLoc(isCyc);
 cyc(1,1:length(T.juld.data(idCyc)))=T.juld.data(idCyc);  % add cc 18/12/2020 pour pouvoir tester duplication des donnees cycle 0-1 ou 1-2 
- 
+
+% VERIFICATION de la CROISSANCE DES NUMEROS DE CYCLE
+ if isequal(a_cycles_sorted,a_cycles)==0   % cc les cycles ne sont pas ranges dans l'ordre croissant            
+	o_alerte4=str2double(floatname);
+	%o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(id)];  
+	% cc26/10/2020 ne pas faire une alerte sur les cycles
+	fid_alerte=fopen(file_alerte,'a');
+	fprintf(fid_alerte,'%s\n',[ floatname  ',, warning,CYCLES NUMBERS are not increasing']);
+	fclose(fid_alerte);
+	fprintf('%s\n',[ floatname  ',,warning, CYCLES NUMBERS are not increasing']);
+end
+
+% VERIFICATION DE DUPLICATION des LOCATIONS DATES DANS 2 CYCLES DIFFERENTS
 for id=2:length(a_cycles)
     %idCyc_prec=idCyc;
     numCycle = a_cycles(id);
@@ -58,8 +70,8 @@ for id=2:length(a_cycles)
     isCyc = (T.cycle_number.data(a_idLoc) == numCycle);
     idCyc = a_idLoc(isCyc);
     numMis = T.config_mission_number.data(id);
-    isMis = find(M.config_mission_number == numMis);
-    idMis = find(double(a_mission)==numMis);
+    %isMis = find(M.config_mission_number == numMis);
+    %idMis = find(double(a_mission)==numMis);
     if(id>1)
         isCycprec = (T.cycle_number.data(a_idLoc)==(numCycle-1));
         idCycprec{id} = [a_idLoc(isCycprec)];
@@ -81,101 +93,16 @@ for id=2:length(a_cycles)
             %if ismember(cyc(1:id-1,:),cyc(id,:),'rows')>1 & id >1 % NC
             o_alerte3(a_cycles(id)+1)=str2double(floatname);
             fid_alerte=fopen(file_alerte,'a');
-            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(a_cycles(id)) ', ? DATE LOC DUPLIQUEE DANS DEUX CYCLES DIFFERENTS ?']);
+            fprintf(fid_alerte,'%s\n',[floatname ', cycle ' num2str(a_cycles(id)) ',discarded(for u&v), (LOCATION DATES are duplicated in two different cycles']);
             fclose(fid_alerte);
-            fprintf('%s\n',[ floatname ', cycle ' num2str(a_cycles(id)) ', ? DATE LOC DUPLIQUEE DANS DEUX CYCLES DIFFERENTS ?']);    %%parfois dû à erreur en fin de batterie, float qui reste en surface
+            fprintf('%s\n',[floatname ', cycle ' num2str(a_cycles(id)) ',discarded(for u&v), LOCATION DATES are duplicated in two different cycles']);    %%parfois dû à erreur en fin de batterie, float qui reste en surface
             o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(id)];
             %T.juld_qc.data(idCyc)=4;
             %T.position_qc.data(idCyc)=4;
             
         end
         
-        
-        if isequal(a_cycles_sorted,a_cycles)==0   % cc les cycles ne sont pas ranges dans l'ordre croissant
-            
-            o_alerte4(a_cycles(id)+1)=str2double(floatname);
-            %o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(id)];  
-            % cc26/10/2020 ne pas faire une alerte sur les cycles
-            fid_alerte=fopen(file_alerte,'a');
-            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(a_cycles_sorted(id)) ', CYCLES NON CROISSANTS']);
-            fclose(fid_alerte);
-            fprintf('%s\n',[ floatname ', cycle ' num2str(a_cycles_sorted(id)) ', CYCLES NON CROISSANTS']);
-        end
-        
-        
-        idMis = find(double(a_mission)==numMis);
-        % on ne va considerer que les cycles superieurs au 1 (possibilite de prelude qui fausse)
 		
-        if(length(a_mission)<=length(M.CycleTime) & a_cycles(id)~=0 & ~isnan(numMis))    %% cycles(id)~=0 sinon numMis pouvait etre = NaN et erreur sur conditions suivantes. conditions sur numMis car peut avoir numMis=Nan et cycles(1)=1 quand cycle 0 dans T.cycle_number mais pas de measurement_code 703.
-            %%date de la derniere loc du cycle donne - date de la
-            %%derniere loc du cycle precedent
-            %if id > 2 & ((T.juld.data(idCyc(end))-T.juld.data(idCyc_prec(end)))<=dureeMedianCycle(idMis)*(cycles_sorted(id)-cycles_sorted(id-1))-1 ...
-            %     |(T.juld.data(idCyc(end))-T.juld.data(idCyc_prec(end)))>=dureeMedianCycle(idMis)*(cycles_sorted(id)-cycles_sorted(id-1))+1)
-            
-			Cyct= T.juld.data(idCyc(end))-T.juld.data(idCycprec{id}(end));
-            
-            %            if id > 2 & (Cyct<=a_dureeMedianCycle(idMis)*(a_cycles_sorted(id)-a_cycles_sorted(id-1))-1 ...
-            %              | Cyct>=a_dureeMedianCycle(idMis)*(a_cycles_sorted(id)-a_cycles_sorted(id-1))+1) ...
-            %              | Cyct<M.CycleTime(numMis)-PARAM.TIME_DUREE_CYCLE_M | Cyct>M.CycleTime(numMis)+PARAM.TIME_DUREE_CYCLE_M
-            %keyboard
-            % correction  cc 15/09/2020 : PARAM.TIME_DUREE_CYCLE_M  : faire un pourcentage de la duree de cycle?
-            
-%             if id > 2 & (Cyct<=a_dureeMedianCycle(idMis)*(a_cycles_sorted(id)-a_cycles_sorted(id-1))-1 ...
-%                     | Cyct>=a_dureeMedianCycle(idMis)*(a_cycles_sorted(id)-a_cycles_sorted(id-1))+1) ...
-%                     | abs(Cyct-M.CycleTime(numMis))./M.CycleTime(numMis)*100>PARAM.TIME_DUREE_CYCLE_M
-            if  ~isnan(a_dureeMedianCycle(idMis))
-                if id > 2 & abs(Cyct -a_dureeMedianCycle(idMis))./a_dureeMedianCycle(idMis)*100>PARAM.TIME_DUREE_CYCLE_M
-
-
-                    o_alerte5(a_cycles(id)+1)=str2double(floatname);    %%%ne suffit pas quand il n'y a qu'un seul cycle.
-
-                    fid_alerte=fopen(file_alerte,'a');
-                    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(a_cycles_sorted(id)) ', PB DUREE CYCLE, Date derniere loc: ' datestr(T.juld.data(idCyc(end))+datenum('01011950','ddmmyyyy')) ', Date derniere loc précédente:' datestr(T.juld.data(idCycprec{id}(end))+datenum('01011950','ddmmyyyy')) '. Avec Median CycleTime=' num2str(a_dureeMedianCycle(idMis)) 'j']);
-                    fclose(fid_alerte);
-                    fprintf('%s\n',[ floatname ', cycle ' num2str(a_cycles_sorted(id)) ', PB DUREE CYCLE. Date derniere loc: ' datestr(T.juld.data(idCyc(end))+datenum('01011950','ddmmyyyy')) ', Date derniere loc précédente:' datestr(T.juld.data(idCycprec{id}(end))+datenum('01011950','ddmmyyyy')) '. Avec  Median CycleTime=' num2str(a_dureeMedianCycle(idMis)) 'j']);
-
-                    %o_alertCyc_e4 =  [o_alertCyc_e4 a_cycles_sorted(id)];
-
-
-                end
-            else
-                if id > 2 & abs(Cyct -M.CycleTime(numMis))./M.CycleTime(numMis)*100>PARAM.TIME_DUREE_CYCLE_M
-
-
-                    o_alerte5(a_cycles(id)+1)=str2double(floatname);    %%%ne suffit pas quand il n'y a qu'un seul cycle.
-
-                    fid_alerte=fopen(file_alerte,'a');
-                    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(a_cycles_sorted(id)) ', PB DUREE CYCLE, Date derniere loc: ' datestr(T.juld.data(idCyc(end))+datenum('01011950','ddmmyyyy')) ', Date derniere loc précédente:' datestr(T.juld.data(idCycprec{id}(end))+datenum('01011950','ddmmyyyy')) '. Avec M.CycleTime=' num2str(M.CycleTime(numMis)) 'j']);
-                    fclose(fid_alerte);
-                    fprintf('%s\n',[ floatname ', cycle ' num2str(a_cycles_sorted(id)) ', PB DUREE CYCLE. Date derniere loc: ' datestr(T.juld.data(idCyc(end))+datenum('01011950','ddmmyyyy')) ', Date derniere loc précédente:' datestr(T.juld.data(idCycprec{id}(end))+datenum('01011950','ddmmyyyy')) '. Avec  M.CycleTime=' num2str(M.CycleTime(numMis)) 'j']);
-
-                    %o_alertCyc_e4 =  [o_alertCyc_e4 a_cycles_sorted(id)];
-
-
-                end
-            end
-            
-            clear Cyct;
-            
-            dureeCycle=M.CycleTime(isMis);
-			
-			
-           % cc 26/10/2020 a voir si on garde ce test ici, dans la boucle
-           % sur cycle ??? 
-            if abs(a_dureeMedianCycle(isMis)-M.CycleTime(isMis))<0.1 & ((unique(floor(a_duree_cycle)))>2 ...
-                    & isempty(a_duree_cycle(a_duree_cycle<0))==0)
-                fid_alerte=fopen(file_alerte,'a');
-                fprintf(fid_alerte,'%s\n',[ floatname,', PB DUREE CYCLE PROVIENT PROBABLEMENT D''UN MAUVAIS ARRANGEMENT DES TRANSMISSIONS ARGOS']);
-                fclose(fid_alerte);
-                fprintf('%s\n',[ floatname, ' PB DUREE CYCLE PROVIENT PROBABLEMENT D''UN MAUVAIS ARRANGEMENT DES TRANSMISSIONS ARGOS']);
-            end
-            
-        elseif(length(M.CycleTime)<isMis)                      %%% Cas où M.CycleTime mal renseigné.
-            fid_alerte=fopen(file_alerte,'a');
-            fprintf(fid_alerte,'%s\n',[ floatname, ',  cycle ' num2str(a_cycles_sorted(id)) ', NE PEUT PAS COMPARER LA VALEUR MEDIANE DE LA DUREE DU CYCLE AVEC LA DUREE FOURNIE PAR LE FICHIER META CAR INFO MANQUANTE POUR N° DE MISSION ' num2str(m)]);
-            fclose(fid_alerte);
-            fprintf('%s\n',[ floatname, ' , cycle ' num2str(a_cycles_sorted(id)) ', NE PEUT PAS COMPARER LA VALEUR MEDIANE DE LA DUREE DU CYCLE AVEC LA DUREE FOURNIE PAR LE FICHIER META CAR INFO MANQUANTE POUR N° DE MISSION ' num2str(m)]);
-        end
         
     end
 end           %%%fin de la boucle sur les cycles
@@ -183,133 +110,157 @@ end           %%%fin de la boucle sur les cycles
 
 
 % VERIFICATION DU DECOUPAGE DES CYCLES
+% modif cc 12/11/2020
+% On calcule une duree cumulee (dureeCumulee)  en multipliant la duree du cycle par le (numero de cycle -1)
+% Pour chaque cycle on tient compte du numero de mission pour avoir la  duree de cycle correspondante => dureeCycleTh
+% On trouve une date "modulo le nombre de cycle"  => dateMod  ie JULD -dureeCumulee
+% Sur le diagramme nc_trace_times les dateMod doivent être alignés
+% Pour chaque cycle on calcule d'abord une valeur mediane de dateMod => dateModMed, on verifie alors qu'il n'y a pas de date erronée au sein du cycle
+% Si c'est le cas elle est flagguée à 6 (o_alertCyc_e5)
+% Ensuite on verifie que les dateModMed sont alignés (ou presque ex: derive horloge ). Si ce n'est pas le cas, on identifie les cycles avec un pb de numerotation de cycle
 
-%modif cc 12/11/2020
 dureeCumulee= zeros(length(a_cycles),1);
-dureeModMed= NaN*zeros(length(a_cycles),1);
-durreCycleTh= NaN*zeros(length(a_cycles),1);
+dateModMed= NaN*zeros(length(a_cycles),1);
+dureeCycleTh= NaN*zeros(length(a_cycles),1);
+
+
+% calcul en utilisant M.CycleTime comme duree de cycle
+a_config_mission_number=M.config_mission_number;
+[dureeCumuleeMeta,dateModMedMeta,dureeCycleThMeta,o_alertCyc_e5Meta] = calcule_dureeCumulee(a_cycles,a_cycles_sorted,M.CycleTime,a_config_mission_number,a_idLoc,o_alertCyc_e5);
+
+% calcul en utilisant a_dureeMedianCycle comme duree de cycle
+a_config_mission_number=unique(T.config_mission_number.data(~isnan(T.config_mission_number.data)),'stable')';
+[dureeCumulee,dateModMed,dureeCycleTh,o_alertCyc_e5] = calcule_dureeCumulee(a_cycles,a_cycles_sorted,a_dureeMedianCycle,a_config_mission_number,a_idLoc,o_alertCyc_e5);
+
+r=floor(length(dateModMedMeta)/2);
+
+% indicateur pour determiner si on va se baser sur a_dureeMedianCycle ou M.CycleTime 
+drift=abs(meanoutnan(dateModMed(1:r))-meanoutnan(dateModMed(end-r:end)));
+driftMeta=abs(meanoutnan(dateModMedMeta(1:r))-meanoutnan(dateModMedMeta(end-r:end)));
+
+if (driftMeta<drift)|isnan(drift)
+dureeCumulee=dureeCumuleeMeta;
+dateModMed=dateModMedMeta;
+dureeCycleTh=dureeCycleThMeta;
+o_alertCyc_e5=o_alertCyc_e5Meta;
+end
+
+% Date de loc erronées au sein du cycle
+ if isempty(o_alertCyc_e5)==0
+ 
+		     fid_alerte=fopen(file_alerte,'a');
+			 fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(unique(o_alertCyc_e5)) ',warning, SOME LOCATION DATES are suspicious']);
+			 fclose(fid_alerte);
+			 fprintf('%s\n',[ floatname ', ' num2str(unique(o_alertCyc_e5)) ',warning, SOME LOCATION DATES are suspicious']);
+
+end
+
+% Pb de duree de cycle:
+diffdateModMed(1)=NaN;
+diffdateModMed(2:length(dateModMed))=dateModMed(2:end)-dateModMed(1:end-1);
+
+isok=abs(diffdateModMed)'<dureeCycleTh*0.5;
+isok(a_cycles_sorted==0|a_cycles_sorted==1)=1; % ne tient pas compte des duree de cycle 0 ou 1
+
+ if sum(isok==0)>1
+		     fid_alerte=fopen(file_alerte,'a');
+			 fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(~isok)) ',warning, CYCLE TIME is not consistent with the expected cycle time ']);
+			 fclose(fid_alerte);
+			 fprintf('%s\n', [ floatname ', ' num2str(a_cycles_sorted(~isok)) ',warning, CYCLE TIME is not consistent with the expected cycle time']);
+			 o_alerte6= [o_alerte6 a_cycles_sorted(~isok)];
+end
+
+
+
+% Pb numerotation de cycle % uniquement pour des flotteurs mono-mission
+
+if max(M.CycleTime)<=2   % TODO test à ameliorer
+	if sum(isok)>=1
+	iserrcycl=abs(dateModMed-medianoutnan(dateModMed(isok)))>dureeCycleTh*0.5;
+	else
+	iserrcycl=[];
+	end
+
+	iserrcycl(1)=0;
+
+
+	if ~isempty(iserrcycl)&sum(iserrcycl)>0 
+		fid_alerte=fopen(file_alerte,'a');
+		fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ',discarded(for u&v), CYCLE NUMBER could be wrong ']);
+		fclose(fid_alerte);
+		fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ',discarded(for u&v), CYCLE NUMBER could be wrong']);
+		o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(iserrcycl)];
+		%o_alertCyc_e5 = [o_alertCyc_e5 a_cycles_sorted(iserrcycl)];
+	elseif isempty(iserrcycl)
+		fid_alerte=fopen(file_alerte,'a');
+		fprintf(fid_alerte, '%s\n',[ floatname ',warning, Can''t check cycle number ']);
+		fclose(fid_alerte);
+		fprintf('%s\n',[ floatname ',warning, Can''t check cycle number ']);
+	end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+function [dureeCumulee,dateModMed,dureeCycleTh,o_alertCyc_e5] = calcule_dureeCumulee(a_cycles,a_cycles_sorted,a_dureeMedianCycle,a_config_mission_number,a_idLoc,o_alertCyc_e5)
+global PARAM;
+global T;
+global M;
+global file_alerte;
+global floatname;
+
+dureeCumulee= zeros(length(a_cycles),1);
+dateModMed= NaN*zeros(length(a_cycles),1);
+dureeCycleTh= NaN*zeros(length(a_cycles),1);
 isCyc = find(a_cycles == a_cycles_sorted(1));
 numMis = unique(T.config_mission_number.data(isCyc));
 
-
 if ~isnan(numMis)
-	isMis = find(M.config_mission_number == numMis);
-	dureeCumulee(1)=a_dureeMedianCycle(isMis)*(a_cycles_sorted(1)-1);
+	isMis = find(a_config_mission_number == numMis);
+	%dureeCumulee(1)=a_dureeMedianCycle(isMis)*(a_cycles_sorted(1)-1);
 	idCyc = a_idLoc(T.cycle_number.data(a_idLoc) == a_cycles_sorted(1));
-	dureeMod=T.juld.data(idCyc)-dureeCumulee(1);
-	% detection de date erronnée au sein du cycle
-	iserr=abs(dureeMod-median(dureeMod))>a_dureeMedianCycle(isMis);
-	if sum(iserr)>0
-	   fid_alerte=fopen(file_alerte,'a');
-		fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(1)) ', DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
-		fclose(fid_alerte);
-		fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(1)) ', DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
-		o_alertCyc_e5 = [o_alertCyc_e5 a_cycles_sorted(1)];
-	end
-	dureeModMed(1)=median(dureeMod)-dureeCumulee(1);
-	durreCycleTh(1)=a_dureeMedianCycle(isMis);
+	
+		dureeCumulee(1)=T.juld.data(idCyc(1));
+		dureeMod=T.juld.data(idCyc)-dureeCumulee(1);
+		% detection de date erronnée au sein du cycle
+		iserr=abs(dureeMod-median(dureeMod))>a_dureeMedianCycle(isMis);
+		 if sum(iserr)>0
+		   % fid_alerte=fopen(file_alerte,'a');
+			% fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(1)) ', DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
+			% fclose(fid_alerte);
+			% fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(1)) ', DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
+			 o_alertCyc_e5 = [o_alertCyc_e5 a_cycles_sorted(1)];
+		 end
+	
+	
+	dateModMed(1)=median(dureeMod);
+	dureeCycleTh(1)=a_dureeMedianCycle(isMis);
 else
     dureeCumulee(1)=0;
 end
 
-for id=2:length(a_cycles)
+for id=2:length(a_cycles_sorted)
 	isCyc = find(a_cycles == a_cycles_sorted(id));
 	numMis = unique(T.config_mission_number.data(isCyc));
-	if ~isnan(numMis)&length(a_dureeMedianCycle)>=numMis
-		isMis = find(M.config_mission_number == numMis);
+	isMis = find(a_config_mission_number == numMis);
+	if ~isnan(numMis)&~isempty(isMis)		
 		dureeCumulee(id)=dureeCumulee(id-1)+a_dureeMedianCycle(isMis)*(a_cycles_sorted(id)-a_cycles_sorted(id-1));
 		idCyc = a_idLoc(T.cycle_number.data(a_idLoc) == a_cycles_sorted(id));
 		dureeMod=T.juld.data(idCyc)-dureeCumulee(id);
 		stdDureeMod=std(dureeMod);
 		% detection de date erronnée au sein du cycle
 		iserr=abs(dureeMod-median(dureeMod))>a_dureeMedianCycle(isMis);
-		if sum(iserr)>0 & stdDureeMod<1
-		   fid_alerte=fopen(file_alerte,'a');
-			fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(id)) ', DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
-			fclose(fid_alerte);
-			fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(id)) ',DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
-			o_alertCyc_e5 = [o_alertCyc_e5 a_cycles_sorted(id)];
+		 if sum(iserr)>0 & stdDureeMod<a_dureeMedianCycle(isMis)
+		   % fid_alerte=fopen(file_alerte,'a');
+			% fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(id)) ', DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
+			% fclose(fid_alerte);
+			% fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(id)) ',DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
+            o_alertCyc_e5 = [o_alertCyc_e5 a_cycles_sorted(id)];
 
-		end
-		dureeModMed(id)=median(dureeMod);	
-		durreCycleTh(id)=a_dureeMedianCycle(isMis);
+		 end
+		dateModMed(id)=median(dureeMod);	
+		dureeCycleTh(id)=a_dureeMedianCycle(isMis);
 	end
 end
 
-dureeModMed(1)=0;
-iserrcycl=abs(dureeModMed-medianoutnan(dureeModMed))>durreCycleTh*0.5;
-iserrcycl(1)=0;
-if sum(iserrcycl)>0
-	   fid_alerte=fopen(file_alerte,'a');
-		fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ', MAUVAISE NUMEROTATION DE CYCLE ']);
-		fclose(fid_alerte);
-		fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ', MAUVAISE NUMEROTATION DE CYCLE ']);
-		o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(iserrcycl)];
-		o_alertCyc_e5 = [o_alertCyc_e5 a_cycles_sorted(iserrcycl)];
-end
-
-% if isequal(a_cycles_1,a_cycles_sorted)==0
-    % cycles_missing=setdiff(a_cycles_1,a_cycles_sorted);
-    % ipre = 1;
-    % ipost = 1;
-    % cycles_pre_missing = [];
-    % cycles_post_missing=[];
-	% cycles_post_missing_to_end=[]; % add cc 06/11/2020
-	
-    % for ic=1:length(cycles_missing)% on veut retrouver les cycles precedents et suivants le cycle manquant
-        % %sans qu'ils soient eux-memes
-        % %manquants pour estimer la duree ecoulee
-        % if isempty(find(cycles_missing==cycles_missing(ic)-1, 1))
-            % cycles_pre_missing(ipre)=a_cycles_1(a_cycles_1==cycles_missing(ic)-1);
-            % ipre=ipre+1;
-        % end
-        % if isempty(find(cycles_missing==cycles_missing(ic)+1, 1))
-            % cycles_post_missing(ipost)=a_cycles_1(a_cycles_1==cycles_missing(ic)+1);
-            % ipost=ipost+1;
-        % end
-    % end
-    % fid_alerte=fopen(file_alerte,'a');
-    % fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(length(cycles_missing)) ', cycles manquants, :(', num2str(cycles_missing), ') ']);
-    % fclose(fid_alerte);
-    % fprintf('%s\n',[ floatname ', ' num2str(length(cycles_missing)) ' cycles manquants']);
-    
-    % % Calcul de la duree entre les deux cycles encadrants le ou les
-    % % cycles manquants pour determiner si coherent ou probleme de
-    % % decoupage
-    % %for im=1:length(cycles_pre_missing)-1 % correction cc 26/10/2020
-     % for im=1:length(cycles_pre_missing)
-        % isCycmpre = (T.cycle_number.data(a_idLoc) == cycles_pre_missing(im));    %indices correspondant aux cycles pre missing
-        % idCycmpre = a_idLoc(isCycmpre);
-        % isCycmpost = (T.cycle_number.data(a_idLoc) == cycles_post_missing(im));   %%indices correspondant aux cycles post missing
-        % idCycmpost = a_idLoc(isCycmpost);
-        % numMismpost = T.config_mission_number.data(a_cycles==cycles_post_missing(im));
-        % isMismpost = find(a_mission == numMismpost);
-        % dureeCyclem = a_dureeMedianCycle(isMismpost);
-        % if ~isnan(dureeCyclem) & (T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))>(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem+PARAM.TIME_DUREE_CYCLE_JUMP) ...
-                % |T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))<(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem-PARAM.TIME_DUREE_CYCLE_JUMP))
-            % o_alerte6=str2double(floatname);
-            % fid_alerte=fopen(file_alerte,'a');
-            % fprintf(fid_alerte,'%s\n',[ floatname ', cycles ' num2str(cycles_pre_missing(im)) ' - ' num2str(cycles_post_missing(im)) ', MAUVAISE NUMEROTATION CYCLE CONSECUTIVE A CYCLE MANQUANT']);
-            % fclose(fid_alerte);
-            % fprintf('%s\n',[ floatname ', cycles ' num2str(cycles_pre_missing(im)) ' - ' num2str(cycles_post_missing(im)) ', MAUVAISE NUMEROTATION CYCLE CONSECUTIVE A CYCLE MANQUANT']);
-            % %o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(id)]; %
-            % %correction cc 26/10/2020
-            % o_alertCyc_e4 = [o_alertCyc_e4 cycles_post_missing(im)];
-			% % on regarde si le decalage est present juqu'a la fin  add cc 06/11/2020
-			% ipost=find(unique_cyc==cycles_post_missing(im));
-			% allpost=unique_cyc(ipost+1:end);
-			
-			% for kipost=1:length(allpost)
-			    % isCycmpost = (T.cycle_number.data(a_idLoc) == allpost(kipost));   
-				% idCycmpost = a_idLoc(isCycmpost);
-				% numMismpost = T.config_mission_number.data(a_cycles==cycles_post_missing(im));
-				% isMismpost = find(a_mission == numMismpost);
-				% dureeCyclem = a_dureeMedianCycle(isMismpost);
-				% if ~isnan(dureeCyclem) & (T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))>(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem+PARAM.TIME_DUREE_CYCLE_JUMP) |T.juld.data(idCycmpost(end))-T.juld.data(idCycmpre(end))<(cycles_post_missing(im)-cycles_pre_missing(im))*(dureeCyclem-PARAM.TIME_DUREE_CYCLE_JUMP))
-				% o_alertCyc_e4 = [o_alertCyc_e4 allpost(kipost)];
-				% end
-			% end
-        % end
-    % end
-% end
-
+dateModMed(1)=0;

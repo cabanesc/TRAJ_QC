@@ -1,23 +1,37 @@
 % cc 29/09/2020 add a function that compute pres_drift_mes from
 % pressure at park (take flag into account).
 % from JP RANNOU code dep_compute_park_mes.m
-function [tabFinalParkPres,tabFinalParkTemp,tabFinalParkPsal,tabFinalParkEtat]= compute_rpp(T,M,idCyc_drift,idCyc_loc,prof_fileName)
+% cc 21/01/2021 ajout de tabFinalMaxParkPres (valeur max de la pression en derive)
+function [tabFinalParkPres,tabFinalParkTemp,tabFinalParkPsal,tabFinalParkEtat,tabFinalMaxParkPres]= compute_rpp(T,M,idCyc_drift,idCyc_loc,prof_fileName,verbose)
 
 global file_alerte;
 global floatname;
 
 
 depPres=T.pres.data(idCyc_drift);
-depTemp=T.temp.data(idCyc_drift);
-depPsal=T.psal.data(idCyc_drift);
-depType=T.measurement_code.data(idCyc_drift);
 depPres_qc=T.pres_qc.data(idCyc_drift);
+if isfield(T,'temp')
+depTemp=T.temp.data(idCyc_drift);
 depTemp_qc=T.temp_qc.data(idCyc_drift);
+else
+depTemp=NaN*depPres;
+depTemp_qc=NaN*depPres_qc;
+end
+if isfield(T,'psal')
+depPsal=T.psal.data(idCyc_drift);
 depPsal_qc=T.psal_qc.data(idCyc_drift);
+else
+depPsal=NaN*depPres;
+depPsal_qc=NaN*depPres_qc;
+end
 depType=T.measurement_code.data(idCyc_drift);
-idPresKo = (depPres_qc==6|depPres_qc==4|isnan(depPres_qc));
-idTempKo = (depTemp_qc==6|depTemp_qc==4|isnan(depTemp_qc));
-idPsalKo = (depPsal_qc==6|depPsal_qc==4|isnan(depPsal_qc));
+depType=T.measurement_code.data(idCyc_drift);
+idPresKo = (depPres_qc==6|depPres_qc==4|depPres_qc==3|isnan(depPres_qc));
+idTempKo = (depTemp_qc==6|depTemp_qc==4|depTemp_qc==3|isnan(depTemp_qc));
+idPsalKo = (depPsal_qc==6|depPsal_qc==4|depPsal_qc==3|isnan(depPsal_qc));
+idPresNaN = (isnan(depPres_qc));
+idTempNaN = (isnan(depTemp_qc));
+idPsalNaN = (isnan(depPsal_qc));
 
 depPres(idPresKo)=NaN;
 depTemp(idTempKo)=NaN;
@@ -39,6 +53,7 @@ g_etatFromDec = 4;
 g_etatFromTxt = 5;
 finalOk = 0;
 tabFinalParkPres=NaN;
+tabFinalMaxParkPres=NaN;
 tabFinalParkTemp=NaN;
 tabFinalParkPsal=NaN;
 tabFinalParkEtat=' ';
@@ -48,6 +63,7 @@ tabFinalParkEtat=' ';
 % derive toutes les 6h => moyenne ponderee de ces mesures
 % Priorite 2: cas ou l'on dispose de mesures en derive
 %keyboard
+
 if (finalOk == 0)
     
     tabPresAdjPark = [];
@@ -112,6 +128,7 @@ if (finalOk == 0)
     if ((nbAdjPark > 0) || (nbDriftMes > 0))
         tabFinalParkPres = sum(tabPresAdjPark)*1.5 + sum(tabPresDriftMes)*6;
         tabFinalParkPres = tabFinalParkPres/(nbAdjPark*1.5+nbDriftMes*6);
+		tabFinalMaxParkPres = max([max(tabPresDriftMes),max(tabPresAdjPark)]);
         if ((length(tabTempAdjPark) > 0) || (length(tabTempDriftMes) > 0))
             tabFinalParkTemp = sum(tabTempAdjPark)*1.5 + sum(tabTempDriftMes)*6;
             tabFinalParkTemp = tabFinalParkTemp/(length(tabTempAdjPark)*1.5+length(tabTempDriftMes)*6);
@@ -122,6 +139,7 @@ if (finalOk == 0)
         end
         tabFinalParkEtat = '1';
         finalOk = 1;
+		
     end
     
     
@@ -135,6 +153,13 @@ if (finalOk == 0)
             tabFinalParkPsal = mean(depPsal((idCycleMeanParkMes)));
             tabFinalParkEtat = '2';
             finalOk = 1;
+			
+			idCycleMaxPresAtParkPres = find(depType == g_typeMaxPresAtParkPres & idPresKo==0);
+			if (~isempty(idCycleMaxPresAtParkPres))
+			tabFinalMaxParkPres =depPres((idCycleMaxPresAtParkPres));
+			else
+			tabFinalMaxParkPres =tabFinalParkPres;
+			end
         end
     end
     
@@ -148,6 +173,12 @@ if (finalOk == 0)
             tabFinalParkPsal = NaN;
             tabFinalParkEtat = '3';
             finalOk = 1;
+			idCycleMaxPresAtParkPres = find(depType == g_typeMaxPresAtParkPres & idPresKo==0);
+			if (~isempty(idCycleMaxPresAtParkPres))
+			tabFinalMaxParkPres =depPres((idCycleMaxPresAtParkPres));
+			else
+			tabFinalMaxParkPres =tabFinalParkPres;
+			end
         end
     end
     
@@ -161,7 +192,14 @@ if (finalOk == 0)
             tabFinalParkPsal = depPsal((idCycleParkMes));
             tabFinalParkEtat = '4';
             finalOk = 1;
+			idCycleMaxPresAtParkPres = find(depType == g_typeMaxPresAtParkPres & idPresKo==0);
+			if (~isempty(idCycleMaxPresAtParkPres))
+			tabFinalMaxParkPres =depPres((idCycleMaxPresAtParkPres));
+			else
+			tabFinalMaxParkPres =tabFinalParkPres;
+			end
         end
+		
     end
     if (finalOk == 0)
         idCycleParkMes = find(depType == g_typeParkMes2 & idPresKo==0);
@@ -171,6 +209,12 @@ if (finalOk == 0)
             tabFinalParkPsal = depPsal((idCycleParkMes));
             tabFinalParkEtat = '4';
             finalOk = 1;
+			idCycleMaxPresAtParkPres = find(depType == g_typeMaxPresAtParkPres & idPresKo==0);
+			if (~isempty(idCycleMaxPresAtParkPres))
+			tabFinalMaxParkPres =depPres((idCycleMaxPresAtParkPres));
+			else
+			tabFinalMaxParkPres =tabFinalParkPres;
+			end
         end
     end
     
@@ -185,12 +229,18 @@ if (finalOk == 0)
             
             
                 tabFinalParkPres = mean([presMin presMax]);
+				tabFinalMaxParkPres =presMax;
                 tabFinalParkTemp = NaN;
                 tabFinalParkPsal = NaN;
                 tabFinalParkEtat = '5';
                 finalOk = 1;
             
-        end
+        else
+			if (~isempty(idCycleMaxPresAtParkPres))
+			presMax = depPres((idCycleMaxPresAtParkPres));
+			tabFinalMaxParkPres =presMax;
+			end
+		end
     end
     
 %     % Priorite 6: cas d'un cycle BOUNCE
@@ -241,7 +291,7 @@ if (finalOk == 0)
     if (finalOk == 0)
         % on ne le fait que si le cycle a au moins une position Argos et si
         % il n'y a pas de mesure en derive disponible
-        if (~isempty(idCyc_loc))&isempty(idCyc_drift)
+        if (~isempty(idCyc_loc))&(isempty(idCyc_drift)||sum(idPresNaN)==length(idPresNaN))
             % on verifie en plus que le flotteur a bien fait un profil  qui a atteint au moins  ParkPressure pour ce cycle
 			if exist(prof_fileName)
 
@@ -252,23 +302,45 @@ if (finalOk == 0)
 				pres_prof = P.pres.data(idcycleProf,:);
 				pres_prof_qc = P.pres_qc.data(idcycleProf,:);
 				isok_pres=find(~isnan(pres_prof)&pres_prof_qc<3);
+				if ~isempty (isok_pres)
 				max_pres_prof = max(pres_prof(isok_pres));
+				else
+				max_pres_prof =0;
+				end
+				
 				theidMis = find(M.config_mission_number==T.config_mission_number.data(T.cycle_number_index.data==unique(T.cycle_number.data(idCyc_loc))));
 				meta_park_pressure = M.ParkPressure(theidMis);
 				if isempty(theidMis)==0&meta_park_pressure<=max_pres_prof;
-				    fid_alerte=fopen(file_alerte,'a');
-                    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(P.cycle_number.data(idcycleProf)) ', RPP == META, : ' num2str(meta_park_pressure)]);
-                    fclose(fid_alerte);
-                    fprintf('%s\n',[ floatname ', cycle ' num2str(P.cycle_number.data(idcycleProf)) ', RPP == META, : ' num2str(meta_park_pressure)]); 
-                    
+				    if verbose==1
+						fid_alerte=fopen(file_alerte,'a');
+						fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, RPP == META, : ' num2str(meta_park_pressure)]);
+						fclose(fid_alerte);
+						fprintf('%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, RPP == META, : ' num2str(meta_park_pressure)]); 
+                    end
 					tabFinalParkPres = M.ParkPressure(theidMis);
+					tabFinalMaxParkPres =NaN;
 					tabFinalParkEtat = '6';
 
+				else
+					if verbose==1&unique(T.cycle_number.data(idCyc_loc))~=0
+						fid_alerte=fopen(file_alerte,'a');
+						fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, RPP == FILLVALUE, NO PROFILE']);
+						fclose(fid_alerte);
+						fprintf('%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, RPP == FILLVALUE, NO PROFILE']); 
+					end
 				end
             
-				tabFinalParkTemp = NaN;
-				tabFinalParkPsal = NaN;
+			
+		    else
+			        if verbose==1&unique(T.cycle_number.data(idCyc_loc))~=0
+						fid_alerte=fopen(file_alerte,'a');
+						fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, RPP == FILLVALUE, NO pROFILE']);
+						fclose(fid_alerte);
+						fprintf('%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, RPP == FILLVALUE, NO PROFILE']); 
+					end
 			end
-        end
+			
+     
+		end
     end
 end
