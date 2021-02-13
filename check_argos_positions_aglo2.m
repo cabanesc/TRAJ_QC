@@ -46,12 +46,33 @@ precision(1) = 1000;
 precision(2) = 350;
 precision(3) = 150;
 
-% precision affectée à une position GPS
+
+% precision affectée à une position GPS/Beidou/GLONASS /GALILEO/GNSS 
 precision(4) = 30;
 a_posQc(find(a_posQc == 'G')) = '4';
-% on affecte la plus mauvaise précision si pas de classe % cc corection
-% 29/01/2021
-a_posQc(find(a_posQc == '0')) = '1';
+
+% modif ccabanes 04/02/2021 pour essayer prendre en compte les autres valeurs
+% possible du flag accuracy (table 5 du user manual), sinon ca buggue
+a_posQc(find(a_posQc == 'D')) = '4';
+a_posQc(find(a_posQc == 'E')) = '4';
+a_posQc(find(a_posQc == 'F')) = '4';
+a_posQc(find(a_posQc == 'H')) = '4';
+
+
+precision(5)= 1500;
+a_posQc(find(a_posQc == '0')) = '5';
+
+precision(6)= 5000;
+a_posQc(find(a_posQc == 'A')) = '6';
+a_posQc(find(a_posQc == 'B')) = '6';
+a_posQc(find(a_posQc == 'Z')) = '6';
+a_posQc(find(a_posQc == 'I')) = '6';
+
+% precision affecte à positionnement RAFOS (1km)
+a_posQc(find(a_posQc == 'R')) = '1';
+
+%undetermined = 5km
+a_posQc(find(a_posQc == 'U')) = '6';
 
 
 % distance maximale acceptable
