@@ -46,11 +46,11 @@ T.juld_qc.data(idLoc(~isok&~isflag4))=6;   % A voir si on met un qc special ('6'
 
 if sum(~isok)>0
     fid_alerte=fopen(file_alerte,'a');
-    fprintf(fid_alerte, [ floatname ', cycle ' num2str(sum(~isok)) ',flagged, LOCATION DATES are not realistic']);
-    fprintf('%s\n',[ floatname ', cycle ' num2str(sum(~isok)) ',flagged, LOCATION DATES are not realistic']);
+    fprintf(fid_alerte, [ floatname ', cycle ' num2str(T.cycle_number.data(idLoc(isok==0))') ',flagged, LOCATION DATES are not realistic']);
+    fprintf('%s\n',[ floatname ', cycle ' num2str(T.cycle_number.data(idLoc(isok==0))') ',flagged, LOCATION DATES are not realistic']);
     fclose(fid_alerte);
     if(P.Stat==1)
-        o_alertCyc_e5 = [o_alertCyc_e5 T.cycle_number.data(idLoc(isok==0))];
+        o_alertCyc_e5 = [o_alertCyc_e5 T.cycle_number.data(idLoc(isok==0))'];
         o_alerte7=str2double(floatname);
     end
     
@@ -80,11 +80,11 @@ T.position_qc.data(idLoc((~isoklat|~isoklon)&~isflag4))=6;%
 if(sum (~isoklat)>0)
     %if sum(~isoklat)>0|sum(~isoklon)>0
     fid_alerte=fopen(file_alerte,'a');
-    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(sum(~isoklat|~isoklon)) ',flagged, LOCATION DATES are not realistic.']);
+    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(T.cycle_number.data(idLoc(isoklat==0))') ',flagged, LOCATION POSITIONS are not realistic.']);
     fclose(fid_alerte);
-    fprintf('%s\n',[ floatname ', cycle ' num2str(sum(~isoklat|~isoklon)) ',flagged, LOCATION DATES are not realistic.']);
+    fprintf('%s\n',[ floatname ', cycle ' num2str(T.cycle_number.data(idLoc(isoklat==0))') ',flagged, LOCATION POSITIONS are not realistic.']);
     if P.Stat==1
-        o_alertCyc_e9 = [o_alertCyc_e9 T.cycle_number.data(idLoc(isoklat==0))];
+        o_alertCyc_e9 = [o_alertCyc_e9 T.cycle_number.data(idLoc(isoklat==0))'];
         o_alerte8=str2double(floatname);
     end
     
