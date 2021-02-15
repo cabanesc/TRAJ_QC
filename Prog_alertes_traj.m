@@ -18,7 +18,8 @@ global P;
  % add cc 15/09/2020
 %%% fichier config - recuperation des path
 %P= config_TEST;
-P=config;
+P= config_ALL;
+%P=config;
 Liste_Float = P.Liste_Float
 
 addpath('/home1/homedir5/perso/ccabanes/matlab/libs_cc/Myfun/')
@@ -50,9 +51,10 @@ fclose(flog);
 if ~exist([P.DIR_HOME '/logs/'])
 	mkdir([P.DIR_HOME '/logs/'])
 end
+
 for ilist=11:length(Liste_Float)   % add boucle cc 02/11/2020
-%for ilist=3:3 % cc pour le moment on ne prend que la premiere liste: pas encore teste que ca marche bien d'enchainer les listes!!
-%for ilist=1:1
+%for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore teste que ca marche bien d'enchainer les listes!!
+%for ilist=1:22
     % Liste des flotteurs a tester
     clearvars -except Liste_Float   ilist flog logfile PARAM P
 	global floatname;
@@ -1396,7 +1398,7 @@ for ilist=11:length(Liste_Float)   % add boucle cc 02/11/2020
 								end
 								ecartFirstLastLoc(icounterfloat,istat) = ecartFirstLastLoc(istat);
 							else
-							 ecartFirstLastLoc(istat)=NaN;
+							 ecartFirstLastLoc(icounterfloat,istat)=NaN;
 							end
 							 
 							
