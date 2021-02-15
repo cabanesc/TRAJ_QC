@@ -107,31 +107,37 @@ proche_surface=0;
 pres_mes = T.pres.data(idCyc_drift);
 pres_noqc4 = T.pres_qc.data(idCyc_drift)<4;
 pres_qc0 = T.pres_qc.data(idCyc_drift)==0;
+
+
+if isfield(T,'temp')==0
+temp_mes = NaN*pres_mes;
+temp_noqc4 =0*pres_noqc4;
+temp_qc0 =0*pres_noqc4;
+else
+temp_mes = T.temp.data(idCyc_drift);
+temp_noqc4 = T.temp_qc.data(idCyc_drift)<4;
+temp_qc0 = T.temp_qc.data(idCyc_drift)==0;
+T.temp_qc.data(idCyc_drift(temp_qc0))=1;
+end
+
+if isfield(T,'psal')==0
+psal_mes = NaN*pres_mes;
+psal_noqc4 =0*pres_noqc4;
+psal_qc0 =0*pres_noqc4;
+else
+psal_mes = T.psal.data(idCyc_drift);
+psal_noqc4 = T.psal_qc.data(idCyc_drift)<4;
+psal_qc0 = T.psal_qc.data(idCyc_drift)==0;
+T.psal_qc.data(idCyc_drift(psal_qc0))=1;
+end
+
 %  1ere verification: par rapport à des bornes
 % on fait au moins 1 test donc on passe  le flag 0 a 1 pour PRES,TEMP et PSAL %
 % si la verif par rapport aux bornes echoue => flag 6
 % cc 14/01/2021
+
 T.pres_qc.data(idCyc_drift(pres_qc0))=1;
 bad_pres=(pres_mes>PARAM.PRESS_PARK_DUMB|pres_mes<-5);
-
-
-if isfield(T,'temp')==1
-
-
-temp_mes = T.temp.data(idCyc_drift);
-psal_mes = T.psal.data(idCyc_drift);
-temp_noqc4 = T.temp_qc.data(idCyc_drift)<4;
-psal_noqc4 = T.psal_qc.data(idCyc_drift)<4;
-
-%  1ere verification: par rapport à des bornes
-% on fait au moins 1 test donc on passe  le flag 0 a 1 pour PRES,TEMP et PSAL %
-% si la verif par rapport aux bornes echoue => flag 6
-% cc 14/01/2021
-temp_qc0 = T.temp_qc.data(idCyc_drift)==0;
-psal_qc0 = T.psal_qc.data(idCyc_drift)==0;
-T.temp_qc.data(idCyc_drift(temp_qc0))=1;
-T.psal_qc.data(idCyc_drift(psal_qc0))=1;
-
 bad_pres=(pres_mes>PARAM.PRESS_PARK_DUMB|pres_mes<-5|(pres_mes==0&temp_mes==0));
 bad_temp=(temp_mes<I_temp_min|temp_mes>I_temp_max);
 bad_psal=(psal_mes<I_psal_min|psal_mes>I_psal_max);
@@ -200,13 +206,16 @@ imes=0;
 imes2=0;
 %on verifie les couples (P,T),(P,S) quand c'est possible
 for i=1:length(T.temp.data(idCyc_drift))
-    if unique(T.cycle_number.data(idCyc_drift))==226
+    %if unique(T.cycle_number.data(idCyc_drift))==226
          %keyboard
-    end
+    %end
 
-    temp_mes_i = T.temp.data(idCyc_drift(i));
-    pres_mes_i = T.pres.data(idCyc_drift(i));
-    psal_mes_i = T.psal.data(idCyc_drift(i));
+    %temp_mes_i = T.temp.data(idCyc_drift(i));
+    %pres_mes_i = T.pres.data(idCyc_drift(i));
+    %psal_mes_i = T.psal.data(idCyc_drift(i));
+	temp_mes_i = temp_mes(i);
+    pres_mes_i = pres_mes(i);
+    psal_mes_i = psal_mes(i);
 	
 	% isas commence à 1m, si le flotteur est proche de la surface, on cherche la temperature de surface correspondante
 	if pres_mes_i<1&pres_mes_i>=-5
@@ -371,7 +380,10 @@ for i=1:length(T.temp.data(idCyc_drift))
 		if isnan(temp_mes_i)  % pas de comparaison a la clim possible
 			% test des bornes plus strict pour P si ProfilePressure renseigné
 			bad_pres(i)=0;
-			if isfield(M,'ProfilePressure')
+			idcy=find(T.cycle_number_index.data==cycles_sorted(id));
+			mission=(T.config_mission_number.data(idcy));
+            idmis=find(M.config_mission_number==mission);
+			if isempty(idmis)==0&& M.ProfilePressure(idmis) > M.ParkPressure(idmis)
 			bad_pres(i)=(pres_mes_i>max(M.ProfilePressure));
 			end
 			if pres_noqc4(i)==1 & bad_pres(i)==1
@@ -382,12 +394,13 @@ for i=1:length(T.temp.data(idCyc_drift))
 				fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD PRESSURE DETECTED (NO TEMP) '])
 				pres_alert=1;
 			end
+			
 		end
 	end
 end
 
     %keyboard
-end
+%end
 if pres_alert==1
     if P.Stat==1
         o_alerte11(cycles_sorted(id)+1)=str2double(floatname);

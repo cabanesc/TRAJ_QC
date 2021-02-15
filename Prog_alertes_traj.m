@@ -17,10 +17,11 @@ global PARAM;
 global P;
  % add cc 15/09/2020
 %%% fichier config - recuperation des path
-%P= config_TEST;
-P=config;
+P= config_TEST;
+%P=config;
 Liste_Float = P.Liste_Float
 
+addpath('/home1/homedir5/perso/ccabanes/matlab/libs_cc/Myfun/')
 
 addpath(P.DIR_TOOL);
 addpath([P.DIR_TOOL '/Lib_Argo/']);
@@ -37,7 +38,7 @@ addpath([P.DIR_SOFT '/decArgo_soft/soft/sub_foreign']);
 addpath([P.DIR_SOFT '/decArgo_soft/soft/m_map1.4e']);
 
 addpath(P.DIR_VISU);
-
+addpath('./lib/lib_ext')
 % recuperation des parametres
 PARAM = param
 
@@ -49,9 +50,9 @@ fclose(flog);
 if ~exist([P.DIR_HOME '/logs/'])
 	mkdir([P.DIR_HOME '/logs/'])
 end
-for ilist=4:length(Liste_Float)   % add boucle cc 02/11/2020
+%for ilist=4:length(Liste_Float)   % add boucle cc 02/11/2020
 %for ilist=3:3 % cc pour le moment on ne prend que la premiere liste: pas encore teste que ca marche bien d'enchainer les listes!!
-%for ilist=1:1
+ for ilist=1:1
     % Liste des flotteurs a tester
     clearvars -except Liste_Float   ilist flog logfile PARAM P
 	global floatname;
@@ -2027,6 +2028,7 @@ for ilist=4:length(Liste_Float)   % add boucle cc 02/11/2020
 					% remove temporary variable
                     T=rmfield(T,'position_qc_koba');
 					T=rmfield(T,'representative_park_temperature');
+					T=format_flags_num2char(T);
 					% save new netcdf files 
                     create_netcdf_allthefile(T,DimT,filename_new,GlobT)
                     
