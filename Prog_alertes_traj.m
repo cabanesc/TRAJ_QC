@@ -11,7 +11,7 @@
 %%  version Matlab: 2016b
 %%----------------------------------------------------------------------
 clear all
-close all
+%close all
 
 global PARAM;
 global P;
@@ -50,9 +50,9 @@ fclose(flog);
 if ~exist([P.DIR_HOME '/logs/'])
 	mkdir([P.DIR_HOME '/logs/'])
 end
-%for ilist=4:length(Liste_Float)   % add boucle cc 02/11/2020
+%for ilist=7:length(Liste_Float)   % add boucle cc 02/11/2020
 %for ilist=3:3 % cc pour le moment on ne prend que la premiere liste: pas encore teste que ca marche bien d'enchainer les listes!!
- for ilist=1:1
+for ilist=1:1
     % Liste des flotteurs a tester
     clearvars -except Liste_Float   ilist flog logfile PARAM P
 	global floatname;
@@ -91,7 +91,7 @@ end
     %% Fichier log des alertes
     global file_alerte;
     
-    file_alerte = [P.DIR_HOME 'alerts/' P.liste_rep_alerte{ilist} '/RT_alertes.txt'];  % modif chemin alertes cc 02/11/2020
+    file_alerte = [P.DIR_HOME 'alerts/' P.liste_rep_alerte{ilist} '/RT_alertes.csv'];  % modif chemin alertes cc 02/11/2020
     fid_alerte =fopen(file_alerte,'wt');
     fclose(fid_alerte);
     %% Fichiers log des alertes par erreurs
@@ -1848,11 +1848,13 @@ end
                             o_idGoodPos=[];
 							% dans cas ou l'erreur est evidente (erreur de signe), on ratrappe une des deux positions
 							if length(o_idBadPos)==2
-								if (locLon(o_idBadPos(1))*locLon(o_idBadPos(2))<-1&locLon(o_idBadPos(1))*locLon(o_idBadPos(2))>-179^2 )|| (locLat(o_idBadPos(1))*locLat(o_idBadPos(2))<-1) % ie erreur de signe sur lon ou lat
-									if locLon(o_idBadPos(1))*dlonlas>1 && locLat(o_idBadPos(1))*dlatlas>1
+							
+							
+								if (locLon_sorted(o_idBadPos(1))*locLon_sorted(o_idBadPos(2))<-1&locLon_sorted(o_idBadPos(1))*locLon_sorted(o_idBadPos(2))>-179^2 )|| (locLat_sorted(o_idBadPos(1))*locLat_sorted(o_idBadPos(2))<-1) % ie erreur de signe sur lon ou lat
+									if locLon_sorted(o_idBadPos(1))*dlonlas>1 && locLat_sorted(o_idBadPos(1))*dlatlas>1
 									o_idGoodPos=o_idBadPos(1);
 									end
-									if locLon(o_idBadPos(2))*dlonlas>1&&locLat(o_idBadPos(2))*dlatlas>1
+									if locLon_sorted(o_idBadPos(2))*dlonlas>1&&locLat_sorted(o_idBadPos(2))*dlatlas>1
 									o_idGoodPos=o_idBadPos(2);
 									end
 								end

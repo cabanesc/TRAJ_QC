@@ -138,7 +138,8 @@ for idCy_sorted = 1:length(yoCycle)
     cycleQc_koba = T.position_qc_koba.data(idCycle(idLoc));
     
     if (KOBA_CHECK == 1)
-        idGood = find((cycleQc ~= 6) & (cycleQc ~= 4) & (cycleQc_koba ~= 6) & (cycleDateQc ~= 4)& (cycleDateQc ~= 6) & (cycleAccuracy ~= 'I') & (cycleAccuracy ~= 'I') & (cycleAccuracy ~= 'A') & (cycleAccuracy ~= 'B')& (cycleAccuracy ~= 'Z')& (cycleAccuracy ~= 'U'));
+	    %idGood = find((cycleQc ~= 6) & (cycleQc ~= 4) & (cycleQc_koba ~= 6) & (cycleDateQc ~= 4)& (cycleDateQc ~= 6))
+        idGood = find((cycleQc ~= 6) & (cycleQc ~= 4) & (cycleQc_koba ~= 6) & (cycleDateQc ~= 4)& (cycleDateQc ~= 6) & (cycleAccuracy ~= 'I')  & (cycleAccuracy ~= 'A') & (cycleAccuracy ~= 'B')& (cycleAccuracy ~= 'Z')& (cycleAccuracy ~= 'U'));
     else
         idGood = find((cycleQc ~= 6) & (cycleQc ~= 4)  & (cycleDateQc ~= 4)& (cycleDateQc ~= 6) & (cycleAccuracy ~= 'I') & (cycleAccuracy ~= 'A') & (cycleAccuracy ~= 'B')& (cycleAccuracy ~= 'Z')& (cycleAccuracy ~= 'U'));
     end
@@ -254,7 +255,7 @@ for idCy_sorted = 1:length(yoCycle)
                     floatNum, numCycle, surfStartVel);
 				fprintf('%d #%d: vitesse de surface à la remontée ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
                     floatNum, numCycle, surfStartVel);	
-                %keyboard
+                
             end
         end
         if (~isnan(T.u_last_surface_velocity.data(idCy) )) && (~isnan(T.v_last_surface_velocity.data(idCy) ))
