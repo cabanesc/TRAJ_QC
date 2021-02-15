@@ -64,14 +64,20 @@ MAX_VEL = 3;
 % on convertit les classes Argos en numérique
 posAccNum = ones(length(a_posAcc), 1)*-1;
 posAccNum(find(a_posAcc == 'G')) = 1;
+posAccNum(find(a_posAcc == 'D')) = 1;
+posAccNum(find(a_posAcc == 'E')) = 1;
+posAccNum(find(a_posAcc == 'F')) = 1;
+posAccNum(find(a_posAcc == 'H')) = 1;
 posAccNum(find(a_posAcc == '3')) = 2;
 posAccNum(find(a_posAcc == '2')) = 3;
 posAccNum(find(a_posAcc == '1')) = 4;
 posAccNum(find(a_posAcc == '0')) = 5;
 posAccNum(find(a_posAcc == 'A')) = 6;
-posAccNum(find(a_posAcc == 'B')) = 7;
-posAccNum(find(a_posAcc == 'Z')) = 8;
-
+posAccNum(find(a_posAcc == 'B')) = 6;
+posAccNum(find(a_posAcc == 'Z')) = 6;
+posAccNum(find(a_posAcc == 'I')) = 6;  % iridium
+posAccNum(find(a_posAcc == 'R')) = 4;  % rafos
+posAccNum(find(a_posAcc == 'U')) = 6;
 % on associe à chaque classe de localisation, la précision estimée en latitude
 % et longitude fournie (en m) par Argos
 precision(4) = 1000;
@@ -83,9 +89,7 @@ precision(1) = 30;
 
 % precision affectée aux positions "0", "A", "B" ou "Z"
 precision(5) = 1500;
-precision(6) = 1500;
-precision(7) = 1500;
-precision(8) = 1500;
+precision(6) = 5000;
 
 % classement temporel des données
 [date, idSort] = sort(a_date);
