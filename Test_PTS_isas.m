@@ -205,7 +205,7 @@ istocheck(~ismean)=1;
 imes=0;
 imes2=0;
 %on verifie les couples (P,T),(P,S) quand c'est possible
-for i=1:length(T.temp.data(idCyc_drift))
+for i=1:length(temp_mes)
     %if unique(T.cycle_number.data(idCyc_drift))==226
          %keyboard
     %end
