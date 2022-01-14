@@ -80,7 +80,7 @@ I_psal_profile_all_max = max(max(max(I_psal_profile_all)));
 
 ii=find(I_temp.depth.data(idmax)==I_temp_std.depth.data);
 if isempty(ii); ii=length(I_temp_std.depth.data);end
-I_temp_max=I_temp_profile_all_max+PARAM.T_N_STD*I_temp_std_profile(ii);
+I_temp_max=I_temp_profile_all_max+2*PARAM.T_N_STD*I_temp_std_profile(ii);
 ii=find(I_temp.depth.data(idmin)==I_temp_std.depth.data);
 if isempty(ii); ii=length(I_temp_std.depth.data);end
 I_temp_min=max(I_temp_profile_all_min-PARAM.T_N_STD*I_temp_std_profile(ii),-2.5);
@@ -139,33 +139,33 @@ end
 T.pres_qc.data(idCyc_drift(pres_qc0))=1;
 bad_pres=(pres_mes>PARAM.PRESS_PARK_DUMB|pres_mes<-5);
 bad_pres=(pres_mes>PARAM.PRESS_PARK_DUMB|pres_mes<-5|(pres_mes==0&temp_mes==0));
-bad_temp=(temp_mes<I_temp_min|temp_mes>I_temp_max);
-bad_psal=(psal_mes<I_psal_min|psal_mes>I_psal_max);
+bad_temp=(temp_mes<I_temp_min|temp_mes>I_temp_max)|(pres_mes==0&temp_mes==0);
+bad_psal=(psal_mes<I_psal_min|psal_mes>I_psal_max)|(pres_mes==0&temp_mes==0&psal_mes==0);
 
 if sum(bad_temp&temp_noqc4)>=1
     T.temp_qc.data(idCyc_drift(bad_temp&temp_noqc4))=6;
     T.psal_qc.data(idCyc_drift(bad_temp&psal_noqc4))=6;
     fid_alerte=fopen(file_alerte,'a');
-    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD TEMPERATURE DETECTED ']);
+    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD TEMPERATURE DETECTED, ' num2str(T.temp.data(idCyc_drift(bad_temp&temp_noqc4))')]);
     fclose(fid_alerte);
-    fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD TEMPERATURE DETECTED '])
+    fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD TEMPERATURE DETECTED, ' num2str(T.temp.data(idCyc_drift(bad_temp&temp_noqc4))')])
     temp_alert=1;
 end
 if sum(bad_pres&pres_noqc4)>=1
     T.pres_qc.data(idCyc_drift(bad_pres&pres_noqc4))=6;
     T.psal_qc.data(idCyc_drift(bad_pres&psal_noqc4))=6;
     fid_alerte=fopen(file_alerte,'a');
-    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD PRESSURE DETECTED ']);
+    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD PRESSURE DETECTED,' num2str(T.pres.data(idCyc_drift(bad_pres&pres_noqc4))') ]);
     fclose(fid_alerte);
-    fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD PRESSURE DETECTED '])
+    fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD PRESSURE DETECTED,' num2str(T.pres.data(idCyc_drift(bad_pres&pres_noqc4))') ])
     pres_alert=1;
 end
 if sum(bad_psal&psal_noqc4)>=1
     T.psal_qc.data(idCyc_drift(bad_psal&psal_noqc4))=6;
     fid_alerte=fopen(file_alerte,'a');
-    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD SALINITY DETECTED ']);
+    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD SALINITY DETECTED, ' num2str(T.psal.data(idCyc_drift(bad_psal&psal_noqc4))')]);
     fclose(fid_alerte);
-    fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD SALINITY DETECTED '])
+    fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD SALINITY DETECTED, ' num2str(T.psal.data(idCyc_drift(bad_psal&psal_noqc4))')])
     psal_alert=1;
 end
 
@@ -219,12 +219,15 @@ for i=1:length(temp_mes)
 	
 	% isas commence à 1m, si le flotteur est proche de la surface, on cherche la temperature de surface correspondante
 	if pres_mes_i<1&pres_mes_i>=-5
-	   imes=imes+1;
+	   
 	   if imes==1
+	   if bad_pres(i)==0
 	   fid_alerte=fopen(file_alerte,'a');
        fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, The float is close to the surface, (PRES=' num2str(pres_mes_i)  ')']);
        fclose(fid_alerte);
        fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, The float is close to the surface, (PRES=' num2str(pres_mes_i)  ')'])
+	   imes=imes+1;
+	   end
 	   end
        pres_mes_i=1;   
        proche_surface=1;	   
@@ -282,12 +285,17 @@ for i=1:length(temp_mes)
     
     if ~isnan(temp_mes_i)&~isnan(pres_mes_i)
         if ~isnan(temp_th_i) % valeur referencee dans isas
-            % if ismean(i) & presstd>100& presstd<1000
-             % delta= 10*PARAM.T_N_STD; % on est plus tolerant sur la coherence quand c'est la moyenne et que le flotteur n'a pas derive a pression ~constante
-            % else
+            if proche_surface==1
+			
+            delta= 2*PARAM.T_N_STD; %  on est plus tolérant sur la coherence quand le flotteur est tout proche de la surface (cycle diurne de T)
+            else
             delta= PARAM.T_N_STD;
-            %end
+            end
+			if PARAM.ISDEEP==1&pres_mes_i>2000  % cc 31/05/2021  : plus tolerant au fond (si c'est un deep) car STD ISAS sont peut etre trop faibles (moins de données)
+			   delta= 2*PARAM.T_N_STD;
+			end
             if ~(isminmax(i)) % on ne flaggue pas la non coherence pour les min, max
+			    %temp_std_th_i
                 if (abs(temp_mes_i-temp_th_i) > delta*temp_std_th_i)
                     
                     if bad_temp(i)==0 & bad_pres(i)==0 &istocheck(i)==1% aucune des donnees n'est vraiment mauvaise par le 1er test, sinon elles ont deja ete flagguees
