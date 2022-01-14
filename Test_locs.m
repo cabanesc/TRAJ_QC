@@ -37,7 +37,7 @@ o_alertCyc_e9= [];
 
 
 thedate = T.juld.data(idLoc)+datenum('01011950','ddmmyyyy');
-isok = (thedate >= datenum('01011997','ddmmyyyy')) & (thedate < datenum(date));
+isok = (thedate >= datenum('01011997','ddmmyyyy')) & (thedate <= datenum(datetime('now', 'Format','yyyy MM dd HH mm ss', 'TimeZone','Z')));  % cc 31/05/2021 use UTC
 % trouve les flags 0
 isflag0 = T.juld_qc.data(idLoc)==0;
 isflag4 = T.juld_qc.data(idLoc)==4; % add cc 05/10/2020
