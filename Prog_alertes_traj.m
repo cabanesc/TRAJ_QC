@@ -17,8 +17,9 @@ global PARAM;
 global P;
  % add cc 15/09/2020
 %%% fichier config - recuperation des path
-%P= config_TEST;
-P= config_ALL;
+%P = config_TEST;
+P = config_SAGA_2021;
+%P= config_SELECT2021;
 %P=config;
 Liste_Float = P.Liste_Float
 
@@ -52,9 +53,17 @@ if ~exist([P.DIR_HOME '/logs/'])
 	mkdir([P.DIR_HOME '/logs/'])
 end
 
-for ilist=11:length(Liste_Float)   % add boucle cc 02/11/2020
-%for ilist=1:1 % cc pour le moment on ne prend que la premiere liste: pas encore teste que ca marche bien d'enchainer les listes!!
-%for ilist=1:22
+% Initialisation fichier Atlas pour les vitesses
+% yoFileName = P.ATLAS_FILE;
+% fidOut = fopen(yoFileName, 'wt');
+% if (fidOut == -1)
+   % fprintf('Erreur ouverture fichier : %s\n', yoFileName);
+% end
+% fclose(fidOut)
+
+for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
+%for ilist=3:3 % cc pour le moment on ne prend que la premiere liste: pas encore teste que ca marche bien d'enchainer les listes!!
+%for ilist=1:1
     % Liste des flotteurs a tester
     clearvars -except Liste_Float   ilist flog logfile PARAM P
 	global floatname;
@@ -120,6 +129,7 @@ for ilist=11:length(Liste_Float)   % add boucle cc 02/11/2020
     fid8 = fopen(file8,'w+');
     fid9 = fopen(file9,'w+');
     fid10 = fopen(file10,'w+');
+	
     
     fclose(fid3);
     fclose(fid4);fclose(fid5); fclose(fid6);fclose(fid7); fclose(fid8);fclose(fid9);
@@ -210,8 +220,9 @@ for ilist=11:length(Liste_Float)   % add boucle cc 02/11/2020
     %% BOUCLE SUR LES FLOTTEURS
     
     for k=1:length(allfloats{1})
-        
-        
+        disp(' ')
+		disp(['LIST: ' fliplr(strtok( fliplr(Liste_Float{ilist}),'/')) ' :' num2str(k) '/' num2str(length(allfloats{1}))])
+        disp(' ')
         alertCyc_e1 = []; alertCyc_e2 = []; alertCyc_e3 = []; alertCyc_e4 = []; alertCyc_e5 = [];
         alertCyc_e6 = [];alertCyc_e7 = [];alertCyc_e8 = [];alertCyc_e9 = []; alertCyc_e10=[];
         alertCyc_e3_temp = []; %add cc 06/11/2020
@@ -258,7 +269,16 @@ for ilist=11:length(Liste_Float)   % add boucle cc 02/11/2020
             
             if isfield(M,'ProfilePressure')
                PARAM.PRESS_PARK_DUMB=max(max(M.ProfilePressure)+400, PARAM.PRESS_PARK_DUMB);
+			   PARAM.PRESS_STD_MAX=PARAM.PRESS_PARK_DUMB;
             end
+			PARAM.ISDEEP=0;
+			if isfield(M,'ProfilePressure')& isfield(M,'ParkPressure')
+			   if M.ProfilePressure>2000 & M.ParkPressure>2000
+			   PARAM.ISDEEP=1;
+			   end
+			end
+			PARAM.ISDEEP   
+			   
             % RECUPERATION des indices de localisation (idLoc) et de derive en profondeur (idDrift)
             % -------------------------------------------------------------------------------------
             icounterfloat=icounterfloat+1;
@@ -280,9 +300,9 @@ for ilist=11:length(Liste_Float)   % add boucle cc 02/11/2020
 				if isfield(T,'measurement_code')==0
 					idLoc =   find(~isnan(T.longitude.data)& ~isnan(T.latitude.data));
 					fid_alerte=fopen(file_alerte,'a');
-					fprintf(fid_alerte,'%s\n',[ floatname ', , Warning, No measurement code in Traj file.'])
+					fprintf(fid_alerte,'%s\n',[ floatname ', , warning, No measurement code in Traj file.'])
 					fclose(fid_alerte);
-					fprintf('%s\n',[ floatname ' Warning, No measurement code in Traj file.'])
+					fprintf('%s\n',[ floatname ' warning, No measurement code in Traj file.'])
 				else
 					idLoc =   find(T.measurement_code.data==703);     %%%ne prend pas la première loca en surface car launch
 				end
@@ -300,8 +320,8 @@ for ilist=11:length(Liste_Float)   % add boucle cc 02/11/2020
 				if(isempty(idDrift)==1)
 					fid_alerte=fopen(file_alerte,'a');
 				   
-					fprintf(fid_alerte,'%s\n',[floatname ',, Warning, No measurement code 290 296 300 297 or 298']);
-					fprintf('%s\n',[floatname ',, Warning, No measurement code 290 296 300 297 or 298']);
+					fprintf(fid_alerte,'%s\n',[floatname ',, warning, No measurement code 290 296 300 297 or 298']);
+					fprintf('%s\n',[floatname ',, warning, No measurement code 290 296 300 297 or 298']);
 					fclose(fid_alerte);
 				end
 				if isempty(idLoc)==0
@@ -910,7 +930,7 @@ for ilist=11:length(Liste_Float)   % add boucle cc 02/11/2020
 					%%%%%  TRAJ/META POUR LA PRESSION.
 					
 					presMedianDrift=[];
-					
+					clear pres_ok_m  park_prof  % correction cc 27/05/2021
 					%if ~isempty(idDrift)& isempty(find(~isnan(T.pres.data(idDrift)), 1))==0  %% si dispose de mesure en profondeur et si au moins une valeur nonNan parmi les pressions
 					if ~isempty(idLoc) % correction cc 03/11/2020 on ne passe pas si pas de loc
 						% par nunero de mission
@@ -936,11 +956,12 @@ for ilist=11:length(Liste_Float)   % add boucle cc 02/11/2020
 							id_mission_meta=(find(M.config_mission_number==missions(m)));
 
 							%% Calcul de la pression mediane par numero de mission
-							if(~isempty(idcMisok))
+							if(~isempty(idcMisok))& sum(~isnan(pres))>0   % correction cc 27/05/2021
 								if sum(~isnan(cycles_m{m}))>=1    %% pour les cas ou cycles_m{m} ~= juste le cycle 0
 									%%prise en compte du qc mis suite a� la verif avec la bathy
 									%  cc 21/09/2020 : tester avec PARAM.PRESS_STD plus
 									%  grand
+									%keyboard
 									if (mynanstd(pres(pres>PARAM.PRESS_STD_MIN&pres<PARAM.PRESS_STD_MAX))<PARAM.PRESS_STD)|isempty(id_mission_meta)
 										%presMedianDrift(m)=-abs(median(pres_ok_m(pres_ok_m>500&pres_ok_m<1500),2));    %%qu'en est-il quand Ppark ~ 300m ?
 										presMedianDrift(m)=-abs(median(pres(pres>PARAM.PRESS_STD_MIN&pres<PARAM.PRESS_STD_MAX),2));
@@ -1006,8 +1027,9 @@ for ilist=11:length(Liste_Float)   % add boucle cc 02/11/2020
 							%%%aussi cette derniere dans le cas ou la valeur de la
 							%%%pression mediane est bien differente de la valeur indiquee dans
 							%%%les meta.
-							
-							if m<=length(M.ParkPressure) & abs(presMedianDrift(m) - -M.ParkPressure(m)) <  PARAM.PRESS_PARK_DIFF_M    %%si nbre de mission dans meta et traj est <= et si la mediane de la pression est proche de celle indiquee dans les meta
+							%if (m<=length(M.ParkPressure) & abs(presMedianDrift(m) - -M.ParkPressure(m)) <  PARAM.PRESS_PARK_DIFF_M)
+							if m<=length(M.ParkPressure) & ( abs(presMedianDrift(m) - -M.ParkPressure(m)) <  PARAM.PRESS_PARK_DIFF_M||isnan(presMedianDrift(m)))% correction cc 27/05/2021    
+							%%si nbre de mission dans meta et traj est <= et si la mediane de la pression est proche de celle indiquee dans les meta
 								park_prof(m) = -M.ParkPressure(m);
 							elseif m>length(M.ParkPressure) || presMedianDrift(m)<-M.ParkPressure(m)-PARAM.PRESS_PARK_DIFF_M ...  %%%si nbre de mission dans meta manquant ou si la mediane de la pression trop eloignee de celle indiquee dans les meta
 									|| presMedianDrift(m)>-M.ParkPressure(m)+PARAM.PRESS_PARK_DIFF_M
@@ -1323,7 +1345,7 @@ for ilist=11:length(Liste_Float)   % add boucle cc 02/11/2020
 							if ecartMaxLocCycle(istat)>PARAM.TIME_DIFF_2LOCS %en heure
 								if numCycle==0|numCycle==1   % add cc 25/09/2020
 									fid_alerte=fopen(file_alerte,'a');
-									fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', cycle discarded(for u&v), LOCATION DATES : a gap > ' num2str(PARAM.TIME_DIFF_2LOCS) 'h is found between two location dates, :' num2str(ecartMaxLocCycle(istat)) ' hours']);
+									fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',cycle discarded(for u&v), LOCATION DATES : a gap > ' num2str(PARAM.TIME_DIFF_2LOCS) 'h is found between two location dates, :' num2str(ecartMaxLocCycle(istat)) ' hours']);
 									fclose(fid_alerte);
 									fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',cycle discarded(for u&v), LOCATION DATES : a gap > ' num2str(PARAM.TIME_DIFF_2LOCS) 'h is found between two location dates, :' num2str(ecartMaxLocCycle(istat)) ' hours']);
 									
@@ -2028,7 +2050,6 @@ for ilist=11:length(Liste_Float)   % add boucle cc 02/11/2020
 						
 						% Compute velocities and write in netcdf file
 						T= compute_velocities(T,P,unique([alertCyc_e4 alertCyc_e8] ));
-						
 						% Compute velocities and write in andro file
 						compute_velocities_to_yo(T,P,unique([alertCyc_e4 alertCyc_e8]));
 						
