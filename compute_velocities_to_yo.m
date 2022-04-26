@@ -43,7 +43,7 @@ global g_yoProfNumDef;
 % initialisation des valeurs par défaut
 init_valdef;
 
-global g_typeArgosLoc 
+global g_typeArgosLoc
 
 % initialisation des valeurs de codes
 g_typeArgosLoc=703;
@@ -89,15 +89,15 @@ fidOut = fopen(yoFileName, 'at');
 %fidOut = fopen(yoFileName, 'wt');
 
 if (fidOut == -1)
-   fprintf('Erreur ouverture fichier : %s\n', yoFileName);
+    fprintf('Erreur ouverture fichier : %s\n', yoFileName);
 end
 
 % format de sortie
 outputFormat = ['%9.4f %8.4f %6.1f %7.3f %7.3f %9.3f %7.2f %7.2f %7.2f %7.2f' ...
-' %9.4f %8.4f %9.3f %7.2f %7.2f %7.2f %7.2f' ...
-' %9.4f %8.4f %9.3f %7.2f %7.2f %7.2f %7.2f' ...
-' %9.4f %8.4f %9.3f %9.4f %8.4f %9.3f %9.4f %8.4f %9.3f %5d' ...
-' %7d %3d %3d\n'];
+    ' %9.4f %8.4f %9.3f %7.2f %7.2f %7.2f %7.2f' ...
+    ' %9.4f %8.4f %9.3f %7.2f %7.2f %7.2f %7.2f' ...
+    ' %9.4f %8.4f %9.3f %9.4f %8.4f %9.3f %9.4f %8.4f %9.3f %5d' ...
+    ' %7d %3d %3d\n'];
 
 
 
@@ -161,19 +161,21 @@ latSurfPrev = g_latDef;
 GroundedNum = ones(length(T.grounded.data), 1)*-1;
 GroundedNum(find(T.grounded.data == 'B')) = 1;
 
-  % récupération des localisations Argos et détermination des vitesses de
-  % surface
+% récupération des localisations Argos et détermination des vitesses de
+% surface
 for  idCy_sorted = 1:length(yoCycle)
-	idCy = id_sorted(idCy_sorted);
-	numCycle = yoCycle(idCy_sorted);
-	g_cycleNumber = numCycle;
+    %idCy = id_sorted(idCy_sorted);
+    idCy = idCy_sorted;
+    numCycle = yoCycle(idCy_sorted);
+    g_cycleNumber = numCycle;
     idCycle = find(T.cycle_number.data == numCycle);
-
-	 % on ne prend pas en compte les cycles #0 des flotteurs ni les cycles avec Alerte
-    
+    idCyT = find(T.cycle_number_index.data == numCycle);  % cc 08/04/2022
+%     if isequal(idCyT,idCy)==0
+%         keyboard
+%     end
+    % on ne prend pas en compte les cycles #0 des flotteurs ni les cycles avec Alerte
     if (numCycle == 0)| (ismember(numCycle,alertes_cycle))
-        
-		continue;
+        continue;
     end
     
     
@@ -183,8 +185,8 @@ for  idCy_sorted = 1:length(yoCycle)
     else
         idArgosLocCycle =   find(T.measurement_code.data(idCycle)== g_typeArgosLoc);     %%%ne prend pas la première loca en surface car launch
     end
-	
-
+    
+    
     cycleDate = T.juld.data(idCycle(idArgosLocCycle));
     cycleDateQc = T.juld_qc.data(idCycle(idArgosLocCycle));
     cycleLon = T.longitude.data(idCycle(idArgosLocCycle));
@@ -195,7 +197,7 @@ for  idCy_sorted = 1:length(yoCycle)
     if (KOBA_CHECK == 1)
         idGood = find((cycleQc ~= 6) & (cycleQc ~= 4) & (cycleQc_koba ~= 6) & (cycleDateQc ~= 4)& (cycleDateQc ~= 6) & (cycleAccuracy ~= 'I') & (cycleAccuracy ~= 'A') & (cycleAccuracy ~= 'B')& (cycleAccuracy ~= 'Z')& (cycleAccuracy ~= 'U'));
     else
-         idGood = find((cycleQc ~= 6) & (cycleQc ~= 4)  & (cycleDateQc ~= 4)& (cycleDateQc ~= 6) & (cycleAccuracy ~= 'I') & (cycleAccuracy ~= 'A') & (cycleAccuracy ~= 'B')& (cycleAccuracy ~= 'Z')& (cycleAccuracy ~= 'U'));
+        idGood = find((cycleQc ~= 6) & (cycleQc ~= 4)  & (cycleDateQc ~= 4)& (cycleDateQc ~= 6) & (cycleAccuracy ~= 'I') & (cycleAccuracy ~= 'A') & (cycleAccuracy ~= 'B')& (cycleAccuracy ~= 'Z')& (cycleAccuracy ~= 'U'));
     end
     
     cycleDate = cycleDate(idGood);
@@ -204,13 +206,13 @@ for  idCy_sorted = 1:length(yoCycle)
     cycleQc = cycleQc(idGood);
     cycleAccuracy = cycleAccuracy(idGood);
     cycleQc_koba = cycleQc_koba(idGood);
-	
-	 
-   if (numCycle ~= cyNumPrev + 1)
-               cyNumPrev = -1;
-               juldSurfPrev = g_dateDef;
-               longSurfPrev = g_lonDef;
-               latSurfPrev = g_latDef;
+    
+    
+    if (numCycle ~= cyNumPrev + 1)
+        cyNumPrev = -1;
+        juldSurfPrev = g_dateDef;
+        longSurfPrev = g_lonDef;
+        latSurfPrev = g_latDef;
     end
     
     if (~isempty(cycleDate))
@@ -220,307 +222,313 @@ for  idCy_sorted = 1:length(yoCycle)
         latSurfPrev = cycleLat(end);
     end
     
-
     
-    %if (GroundedNum(idCy) == -1)
-		if (~isempty(cycleLon))
-           % if numCycle==252
-		   % keyboard
-		   % end
-		   % estimation de la vitesse de surface
-		   [yoJuldSurfStartVel(idCy), yoLonSurfStartVel(idCy), yoLatSurfStartVel(idCy), ...
-			  yoSurfStartU(idCy), yoSurfStartV(idCy), ...
-			  yoSurfStartUErr(idCy), yoSurfStartVErr(idCy), ...
-			  yoJuldSurfEndVel(idCy), yoLonSurfEndVel(idCy), yoLatSurfEndVel(idCy), ...
-			  yoSurfEndU(idCy), yoSurfEndV(idCy), ...
-			  yoSurfEndUErr(idCy), yoSurfEndVErr(idCy)] = ...
-			  compute_surf_vel_start_end(cycleDate-JUL_CONVERT, cycleLon, cycleLat, SURF_VEL_MAX_DURATION);
+    
+    %if (GroundedNum(idCyT) == -1)
+    if (~isempty(cycleLon))
+        % if numCycle==252
+        % keyboard
+        % end
+        % estimation de la vitesse de surface
+        [yoJuldSurfStartVel(idCy), yoLonSurfStartVel(idCy), yoLatSurfStartVel(idCy), ...
+            yoSurfStartU(idCy), yoSurfStartV(idCy), ...
+            yoSurfStartUErr(idCy), yoSurfStartVErr(idCy), ...
+            yoJuldSurfEndVel(idCy), yoLonSurfEndVel(idCy), yoLatSurfEndVel(idCy), ...
+            yoSurfEndU(idCy), yoSurfEndV(idCy), ...
+            yoSurfEndUErr(idCy), yoSurfEndVErr(idCy)] = ...
+            compute_surf_vel_start_end(cycleDate-JUL_CONVERT, cycleLon, cycleLat, SURF_VEL_MAX_DURATION);
+        
+        % test sur les positions agglomérées
+        % on estime que, pour une trajectoire Argos de surface de plus de 3h
+        % dont toutes les localisations peuvent être contenues dans un
+        % cercle de R m de rayon centré sur le barycentre des
+        % localisations, la vitesse de surface peut être considérée comme
+        % nulle et l'erreur associée fournie par les précisions Argos
+        % relatives aux première et dernière localisations
+        % pour les flotteurs Argos on choisit, selon la classe de loc des
+        % première et dernière position de surface:
+        % - classe 1 vs classe 1: R = 500 m
+        % - classe 1 vs classe 2 ou 3: R = 375 m
+        % - classe 2 ou 3 vs classe 2 ou 3: R = 175 m
+        % pour les flotteurs Iridium/GPS on choisit R = 50 m
+        radius = [500; 375; 175; 50];
+        
+        if ((cycleDate(end)-cycleDate(1))*24 > 3)
+            % on vérifie que les localisations ne sont pas agglomérées
+            [testAgloOk, lonBary, latBary, lonCirclePts, latCirclePts] = ...
+                check_argos_positions_aglo2(cycleLon', cycleLat', cycleAccuracy', radius);
+            if (testAgloOk == 0)
+                yoSurfStartU(idCy) = 0;
+                yoSurfStartV(idCy) = 0;
+                yoSurfEndU(idCy) = 0;
+                yoSurfEndV(idCy) = 0;
+                
+                cycleAccuracy(find(cycleAccuracy == 'G')) = '4';
+                firstLocErr = precision(str2num(cycleAccuracy(1)))*100;
+                lastLocErr = precision(str2num(cycleAccuracy(end)))*100;
+                surfErr = sqrt(firstLocErr*firstLocErr + lastLocErr*lastLocErr);
+                surfErr = surfErr/((cycleDate(end)-cycleDate(1))*86400);
+                
+                yoSurfStartUErr(idCy) = surfErr;
+                yoSurfStartVErr(idCy) = surfErr;
+                yoSurfEndUErr(idCy) = surfErr;
+                yoSurfEndVErr(idCy) = surfErr;
+                
+                fprintf('%d #%d: positions AGGLOMEREES, vitesse de surface forcée à 0, SurfStartUErr=SurfStartVErr=SurfEndUErr=SurfEndVErr=%.1f cm/s\n', ...
+                    floatNum, numCycle, surfErr);
+            end
+        end
+        
+        % contrôle de vitesses aberrantes (module de la vitesse > 3 m/s)
+        if ((yoSurfStartU(idCy) ~= g_yoUVDef) && (yoSurfStartV(idCy) ~= g_yoUVDef))
+            surfStartVel = sqrt(yoSurfStartU(idCy)*yoSurfStartU(idCy) + yoSurfStartV(idCy)*yoSurfStartV(idCy));
+            %				[numCycle,surfStartVel];
+            
+            if (surfStartVel > 300)
+                yoJuldSurfStartVel(idCy) = g_yoJuldDef;
+                yoLonSurfStartVel(idCy) = g_yoLonDef;
+                yoLatSurfStartVel(idCy) = g_yoLatDef;
+                yoSurfStartU(idCy) = g_yoUVDef;
+                yoSurfStartV(idCy) = g_yoUVDef;
+                yoSurfStartUErr(idCy) = g_yoDeepUVErrDef;
+                yoSurfStartVErr(idCy) = g_yoDeepUVErrDef;
+                %keyboard
+                fprintf('%d #%d: vitesse de surface à la remontée ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
+                    floatNum, numCycle, surfStartVel);
+            end
+        end
+        if ((yoSurfEndU(idCy) ~= g_yoUVDef) && (yoSurfEndV(idCy) ~= g_yoUVDef))
+            surfEndVel = sqrt(yoSurfEndU(idCy)*yoSurfEndU(idCy) + yoSurfEndV(idCy)*yoSurfEndV(idCy));
+            if (surfEndVel > 300)
+                yoJuldSurfEndVel(idCy) = g_yoJuldDef;
+                yoLonSurfEndVel(idCy) = g_yoLonDef;
+                yoLatSurfEndVel(idCy) = g_yoLatDef;
+                yoSurfEndU(idCy) = g_yoUVDef;
+                yoSurfEndV(idCy) = g_yoUVDef;
+                yoSurfEndUErr(idCy) = g_yoDeepUVErrDef;
+                yoSurfEndVErr(idCy) = g_yoDeepUVErrDef;
+                
+                fprintf('%d #%d: vitesse de surface avant la descente ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
+                    floatNum, numCycle, surfEndVel);
+            end
+        end
+        
+        % contrôle des valeurs aberrantes (hors format)
+        if ((yoSurfStartU(idCy) < g_yoUVDef) || (yoSurfStartU(idCy) > 9999.99) || ...
+                (yoSurfStartV(idCy) < g_yoUVDef) || (yoSurfStartV(idCy) > 9999.99))
+            
+            fprintf('%d #%d: valeur (USurfStart, VSurfStart)=(%f, %f) HORS FORMAT (forcée à la valeur par défaut)\n', ...
+                floatNum, numCycle, yoSurfStartU(idCy), yoSurfStartV(idCy));
+            
+            yoJuldSurfStartVel(idCy) = g_yoJuldDef;
+            yoLonSurfStartVel(idCy) = g_yoLonDef;
+            yoLatSurfStartVel(idCy) = g_yoLatDef;
+            yoSurfStartU(idCy) = g_yoUVDef;
+            yoSurfStartV(idCy) = g_yoUVDef;
+            yoSurfStartUErr(idCy) = g_yoDeepUVErrDef;
+            yoSurfStartVErr(idCy) = g_yoDeepUVErrDef;
+        end
+        if ((yoSurfEndU(idCy) < g_yoUVDef) || (yoSurfEndU(idCy) > 9999.99) || ...
+                (yoSurfEndV(idCy) < g_yoUVDef) || (yoSurfEndV(idCy) > 9999.99))
+            
+            fprintf('%d #%d: valeur (USurfEnd, VSurfEnd)=(%f, %f) HORS FORMAT (forcée à la valeur par défaut)\n', ...
+                floatNum, numCycle, yoSurfEndU(idCy), yoSurfEndV(idCy));
+            
+            yoJuldSurfEndVel(idCy) = g_yoJuldDef;
+            yoLonSurfEndVel(idCy) = g_yoLonDef;
+            yoLatSurfEndVel(idCy) = g_yoLatDef;
+            yoSurfEndU(idCy) = g_yoUVDef;
+            yoSurfEndV(idCy) = g_yoUVDef;
+            yoSurfEndUErr(idCy) = g_yoDeepUVErrDef;
+            yoSurfEndVErr(idCy) = g_yoDeepUVErrDef;
+        end
+        
+        % contrôle des valeurs aberrantes (hors format)
+        if ((yoSurfStartUErr(idCy) < g_yoDeepUVErrDef) || (yoSurfStartUErr(idCy) > 9999.99) || ...
+                (yoSurfStartVErr(idCy) < g_yoDeepUVErrDef) || (yoSurfStartVErr(idCy) > 9999.99))
+            
+            fprintf('%d #%d: valeur (USurfStartErr, VSurfStartErr)=(%f, %f) HORS FORMAT (forcée à la valeur par défaut)\n', ...
+                floatNum, numCycle, yoSurfStartUErr(idCy), yoSurfStartVErr(idCy));
+            
+            yoSurfStartUErr(idCy) = g_yoDeepUVErrDef;
+            yoSurfStartVErr(idCy) = g_yoDeepUVErrDef;
+        end
+        if ((yoSurfEndUErr(idCy) < g_yoDeepUVErrDef) || (yoSurfEndUErr(idCy) > 9999.99) || ...
+                (yoSurfEndVErr(idCy) < g_yoDeepUVErrDef) || (yoSurfEndVErr(idCy) > 9999.99))
+            
+            fprintf('%d #%d: valeur (USurfEndErr, VSurfEndErr)=(%f, %f) HORS FORMAT (forcée à la valeur par défaut)\n', ...
+                floatNum, numCycle, yoSurfEndUErr(idCy), yoSurfEndVErr(idCy));
+            
+            yoSurfEndUErr(idCy) = g_yoDeepUVErrDef;
+            yoSurfEndVErr(idCy) = g_yoDeepUVErrDef;
+        end
+        
+        % première loc du cycle courant
+        yoLonFirstLocCur(idCy) = cycleLon(1);
+        yoLatFirstLocCur(idCy) = cycleLat(1);
+        yoJuldFirstLocCur(idCy) = cycleDate(1)-JUL_CONVERT;
+        
+        % dernière loc du cycle courant
+        yoLonLastLocCur(idCy) = cycleLon(end);
+        yoLatLastLocCur(idCy) = cycleLat(end);
+        yoJuldLastLocCur(idCy) = cycleDate(end)-JUL_CONVERT;
+        
+        % nombre de (bonnes) localisations Argos (ayant passé avec succès le
+        % critère de Kobayashi)
+        yoNbLoc(idCy) = length(idGood) ;
+    end
+    
+    % numéro de cycle
+    yoCycleNum(idCy) = numCycle;
+    
+    if ~isnan(T.representative_park_pressure.data(idCyT))   % cc 08/04/2022 idCy-> idCyT
+        yoParkPres(idCy) = T.representative_park_pressure.data(idCyT);	 % cc 08/04/2022 idCy-> idCyT
+    end
+    if ~isnan(T.representative_park_temperature.data(idCyT)) % cc 08/04/2022 idCy-> idCyT
+        yoParkTemp(idCy) =  T.representative_park_temperature.data(idCyT); % cc 08/04/2022 idCy-> idCyT
+    end
+    %yoParkSal(idCy) = depSal(idCycle(idMeanParkMesCycle));
+    
+    
+    % numéro du profil NetCDF
+    %yoProfNum(idCy) = unique(depProfNum(idCycle));
+    % end
+    
+    if (~isempty(cycleLon))
+        % même lorsque le cycle est GROUNDED, il faut stocker la dernière
+        % localisation Argos
+        idNextCycle = find(yoCycle == numCycle+1);
+        if (~isempty(idNextCycle))
+            yoLonLastLocPrev(idNextCycle) = cycleLon(end);
+            yoLatLastLocPrev(idNextCycle) = cycleLat(end);
+            yoJuldLastLocPrev(idNextCycle) = cycleDate(end)-JUL_CONVERT;
+        end
+    end
+    
+end
 
-		   % test sur les positions agglomérées
-		   % on estime que, pour une trajectoire Argos de surface de plus de 3h
-		   % dont toutes les localisations peuvent être contenues dans un
-		   % cercle de R m de rayon centré sur le barycentre des
-		   % localisations, la vitesse de surface peut être considérée comme
-		   % nulle et l'erreur associée fournie par les précisions Argos
-		   % relatives aux première et dernière localisations
-		   % pour les flotteurs Argos on choisit, selon la classe de loc des
-		   % première et dernière position de surface:
-		   % - classe 1 vs classe 1: R = 500 m
-		   % - classe 1 vs classe 2 ou 3: R = 375 m
-		   % - classe 2 ou 3 vs classe 2 ou 3: R = 175 m
-		   % pour les flotteurs Iridium/GPS on choisit R = 50 m
-		   radius = [500; 375; 175; 50];
+% changement de valeur par défaut entre DEP et ANDRO
+yoParkPres(find(yoParkPres == g_presDef)) = g_yoPresDef;
+yoParkTemp(find(yoParkTemp == g_tempDef)) = g_yoTempDef;
+%yoParkSal(find(yoParkSal == g_salDef)) = g_yoSalDef;
+yoParkSal(1:end) = g_yoSalDef;
 
-		   if ((cycleDate(end)-cycleDate(1))*24 > 3)
-			  % on vérifie que les localisations ne sont pas agglomérées
-			  [testAgloOk, lonBary, latBary, lonCirclePts, latCirclePts] = ...
-				 check_argos_positions_aglo2(cycleLon', cycleLat', cycleAccuracy', radius);
-			  if (testAgloOk == 0)
-				 yoSurfStartU(idCy) = 0;
-				 yoSurfStartV(idCy) = 0;
-				 yoSurfEndU(idCy) = 0;
-				 yoSurfEndV(idCy) = 0;
+yoProfNum(find(yoProfNum == g_profNumDef)) = g_yoProfNumDef;
 
-				 cycleAccuracy(find(cycleAccuracy == 'G')) = '4';
-                 firstLocErr = precision(str2num(cycleAccuracy(1)))*100;
-                 lastLocErr = precision(str2num(cycleAccuracy(end)))*100;
-				 surfErr = sqrt(firstLocErr*firstLocErr + lastLocErr*lastLocErr);
-				 surfErr = surfErr/((cycleDate(end)-cycleDate(1))*86400);
+% estimation des vitesses en profondeur
+for  idCy_sorted = 1:length(yoCycle)
+    %idCy = id_sorted(idCy_sorted);
+    idCy = idCy_sorted;
+    numCycle = yoCycle(idCy_sorted);
+    g_cycleNumber = numCycle;
+    idCycle = find(T.cycle_number.data == numCycle);
+    idCyT = find(T.cycle_number_index.data == numCycle);  % cc 08/04/2022
+%for idCy = 1:length(yoCycle)
+    if ((yoLonLastLocPrev(idCy) ~= g_yoLonDef) && ...
+            (yoLonFirstLocCur(idCy) ~= g_yoLonDef) && ...
+            (GroundedNum(idCyT) == -1))
+        
+        % gestion du passage de la ligne de changement de date
+        yoLonStart = yoLonLastLocPrev(idCy);
+        yoLonEnd = yoLonFirstLocCur(idCy);
+        if ((abs(yoLonStart-yoLonEnd) > 180))
+            if (yoLonStart < 0)
+                yoLonStart = yoLonStart + 360;
+            else
+                yoLonEnd = yoLonEnd + 360;
+            end
+        end
+        
+        yoLonDeepVel(idCy) = yoLonStart + (yoLonEnd-yoLonStart)/2;
+        if (yoLonDeepVel(idCy) >= 180)
+            yoLonDeepVel(idCy) = yoLonDeepVel(idCy) - 360;
+        end
+        yoLatDeepVel(idCy) = yoLatLastLocPrev(idCy) + (yoLatFirstLocCur(idCy)-yoLatLastLocPrev(idCy))/2;
+        yoJuldDeepVel(idCy) = yoJuldLastLocPrev(idCy) + (yoJuldFirstLocCur(idCy)-yoJuldLastLocPrev(idCy))/2;
+        
+        % composante en U de la vitesse en profondeur
+        locLat(1) = yoLatDeepVel(idCy);
+        locLat(2) = locLat(1);
+        locLon(1) = yoLonStart;
+        locLon(2) = yoLonEnd;
+        rangeLon = dist(locLat, locLon);
+        yoDeepU(idCy) = (rangeLon*100)/((yoJuldFirstLocCur(idCy)-yoJuldLastLocPrev(idCy))*24*3600);
+        if (yoLonEnd < yoLonStart)
+            yoDeepU(idCy) = yoDeepU(idCy)*-1;
+        end
+        
+        % estimation de l'erreur sur U
+        numCycle = yoCycle(idCy);
+        idPrevCycle = find(yoCycle == numCycle-1);
+        if (~isempty(idPrevCycle))
+            if ((yoSurfEndU(idPrevCycle) ~= g_yoUVDef) && (yoSurfStartU(idCy) ~= g_yoUVDef) && ...
+                    (yoDeepU(idCy) ~= g_yoUVDef) && (yoParkPres(idCy) ~= g_presDef) && ...
+                    (yoJuldLastLocPrev(idCy) ~= g_yoJuldDef) && (yoJuldFirstLocCur(idCy) ~= g_yoJuldDef))
+                [yoDeepUErr(idCy)] = ...
+                    compute_deep_vel_err(yoSurfEndU(idPrevCycle), yoSurfStartU(idCy), ...
+                    yoDeepU(idCy), yoParkPres(idCy), ...
+                    yoJuldLastLocPrev(idCy), yoJuldFirstLocCur(idCy));
+            end
+        end
+        
+        % composante en V de la vitesse en profondeur
+        locLat(1) = yoLatLastLocPrev(idCy);
+        locLat(2) = yoLatFirstLocCur(idCy);
+        locLon(1) = yoLonStart;
+        locLon(2) = locLon(1);
+        rangeLat = dist(locLat, locLon);
+        yoDeepV(idCy) = (rangeLat*100)/((yoJuldFirstLocCur(idCy)-yoJuldLastLocPrev(idCy))*24*3600);
+        if (yoLatFirstLocCur(idCy) < yoLatLastLocPrev(idCy))
+            yoDeepV(idCy) = yoDeepV(idCy)*-1;
+        end
+        
+        % estimation de l'erreur sur V
+        if (~isempty(idPrevCycle))
+            if ((yoSurfEndV(idPrevCycle) ~= g_yoUVDef) && (yoSurfStartV(idCy) ~= g_yoUVDef) && ...
+                    (yoDeepV(idCy) ~= g_yoUVDef) && (yoParkPres(idCy) ~= g_presDef) && ...
+                    (yoJuldLastLocPrev(idCy) ~= g_yoJuldDef) && (yoJuldFirstLocCur(idCy) ~= g_yoJuldDef))
+                [yoDeepVErr(idCy)] = ...
+                    compute_deep_vel_err(yoSurfEndV(idPrevCycle), yoSurfStartV(idCy), ...
+                    yoDeepV(idCy), yoParkPres(idCy), ...
+                    yoJuldLastLocPrev(idCy), yoJuldFirstLocCur(idCy));
+            end
+        end
+        
+        % contrôle des valeurs aberrantes
+        if ((yoDeepUErr(idCy) ~= g_yoDeepUVErrDef) && (yoDeepVErr(idCy) ~= g_yoDeepUVErrDef))
+            if ((yoDeepUErr(idCy) < g_yoDeepUVErrDef) || (yoDeepUErr(idCy) > 9999.99) || ...
+                    (yoDeepVErr(idCy) < g_yoDeepUVErrDef) || (yoDeepVErr(idCy) > 9999.99))
+                
+                fprintf('%d #%d: valeur (UDeepErr, VDeepErr)=(%f, %f) aberrante (forcée à la valeur par défaut)\n', ...
+                    floatNum, yoCycle(idCy), yoDeepUErr(idCy), yoDeepVErr(idCy));
+                
+                yoDeepUErr(idCy) = g_yoDeepUVErrDef;
+                yoDeepVErr(idCy) = g_yoDeepUVErrDef;
+            end
+        end
+    end
+end
 
-				 yoSurfStartUErr(idCy) = surfErr;
-				 yoSurfStartVErr(idCy) = surfErr;
-				 yoSurfEndUErr(idCy) = surfErr;
-				 yoSurfEndVErr(idCy) = surfErr;
+% sauvegarde des données
+idToPrint = find((yoSurfStartU ~= g_yoUVDef) | (yoSurfEndU ~= g_yoUVDef) | ...
+    (yoDeepU ~= g_yoUVDef));
 
-				 fprintf('%d #%d: positions AGGLOMEREES, vitesse de surface forcée à 0, SurfStartUErr=SurfStartVErr=SurfEndUErr=SurfEndVErr=%.1f cm/s\n', ...
-					floatNum, numCycle, surfErr);
-			  end
-		   end
-
-		   % contrôle de vitesses aberrantes (module de la vitesse > 3 m/s)
-		   if ((yoSurfStartU(idCy) ~= g_yoUVDef) && (yoSurfStartV(idCy) ~= g_yoUVDef))
-			  surfStartVel = sqrt(yoSurfStartU(idCy)*yoSurfStartU(idCy) + yoSurfStartV(idCy)*yoSurfStartV(idCy));
-			  %				[numCycle,surfStartVel];
-
-			  if (surfStartVel > 300)
-				 yoJuldSurfStartVel(idCy) = g_yoJuldDef;
-				 yoLonSurfStartVel(idCy) = g_yoLonDef;
-				 yoLatSurfStartVel(idCy) = g_yoLatDef;
-				 yoSurfStartU(idCy) = g_yoUVDef;
-				 yoSurfStartV(idCy) = g_yoUVDef;
-				 yoSurfStartUErr(idCy) = g_yoDeepUVErrDef;
-				 yoSurfStartVErr(idCy) = g_yoDeepUVErrDef;
-                  %keyboard
-				 fprintf('%d #%d: vitesse de surface à la remontée ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
-					floatNum, numCycle, surfStartVel);
-			  end
-		   end
-		   if ((yoSurfEndU(idCy) ~= g_yoUVDef) && (yoSurfEndV(idCy) ~= g_yoUVDef))
-			  surfEndVel = sqrt(yoSurfEndU(idCy)*yoSurfEndU(idCy) + yoSurfEndV(idCy)*yoSurfEndV(idCy));
-			  if (surfEndVel > 300)
-				 yoJuldSurfEndVel(idCy) = g_yoJuldDef;
-				 yoLonSurfEndVel(idCy) = g_yoLonDef;
-				 yoLatSurfEndVel(idCy) = g_yoLatDef;
-				 yoSurfEndU(idCy) = g_yoUVDef;
-				 yoSurfEndV(idCy) = g_yoUVDef;
-				 yoSurfEndUErr(idCy) = g_yoDeepUVErrDef;
-				 yoSurfEndVErr(idCy) = g_yoDeepUVErrDef;
-
-				 fprintf('%d #%d: vitesse de surface avant la descente ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
-					floatNum, numCycle, surfEndVel);
-			  end
-		   end
-
-		   % contrôle des valeurs aberrantes (hors format)
-		   if ((yoSurfStartU(idCy) < g_yoUVDef) || (yoSurfStartU(idCy) > 9999.99) || ...
-				 (yoSurfStartV(idCy) < g_yoUVDef) || (yoSurfStartV(idCy) > 9999.99))
-
-			  fprintf('%d #%d: valeur (USurfStart, VSurfStart)=(%f, %f) HORS FORMAT (forcée à la valeur par défaut)\n', ...
-				 floatNum, numCycle, yoSurfStartU(idCy), yoSurfStartV(idCy));
-
-			  yoJuldSurfStartVel(idCy) = g_yoJuldDef;
-			  yoLonSurfStartVel(idCy) = g_yoLonDef;
-			  yoLatSurfStartVel(idCy) = g_yoLatDef;
-			  yoSurfStartU(idCy) = g_yoUVDef;
-			  yoSurfStartV(idCy) = g_yoUVDef;
-			  yoSurfStartUErr(idCy) = g_yoDeepUVErrDef;
-			  yoSurfStartVErr(idCy) = g_yoDeepUVErrDef;
-		   end
-		   if ((yoSurfEndU(idCy) < g_yoUVDef) || (yoSurfEndU(idCy) > 9999.99) || ...
-				 (yoSurfEndV(idCy) < g_yoUVDef) || (yoSurfEndV(idCy) > 9999.99))
-
-			  fprintf('%d #%d: valeur (USurfEnd, VSurfEnd)=(%f, %f) HORS FORMAT (forcée à la valeur par défaut)\n', ...
-				 floatNum, numCycle, yoSurfEndU(idCy), yoSurfEndV(idCy));
-
-			  yoJuldSurfEndVel(idCy) = g_yoJuldDef;
-			  yoLonSurfEndVel(idCy) = g_yoLonDef;
-			  yoLatSurfEndVel(idCy) = g_yoLatDef;
-			  yoSurfEndU(idCy) = g_yoUVDef;
-			  yoSurfEndV(idCy) = g_yoUVDef;
-			  yoSurfEndUErr(idCy) = g_yoDeepUVErrDef;
-			  yoSurfEndVErr(idCy) = g_yoDeepUVErrDef;
-		   end
-
-		   % contrôle des valeurs aberrantes (hors format)
-		   if ((yoSurfStartUErr(idCy) < g_yoDeepUVErrDef) || (yoSurfStartUErr(idCy) > 9999.99) || ...
-				 (yoSurfStartVErr(idCy) < g_yoDeepUVErrDef) || (yoSurfStartVErr(idCy) > 9999.99))
-
-			  fprintf('%d #%d: valeur (USurfStartErr, VSurfStartErr)=(%f, %f) HORS FORMAT (forcée à la valeur par défaut)\n', ...
-				 floatNum, numCycle, yoSurfStartUErr(idCy), yoSurfStartVErr(idCy));
-
-			  yoSurfStartUErr(idCy) = g_yoDeepUVErrDef;
-			  yoSurfStartVErr(idCy) = g_yoDeepUVErrDef;
-		   end
-		   if ((yoSurfEndUErr(idCy) < g_yoDeepUVErrDef) || (yoSurfEndUErr(idCy) > 9999.99) || ...
-				 (yoSurfEndVErr(idCy) < g_yoDeepUVErrDef) || (yoSurfEndVErr(idCy) > 9999.99))
-
-			  fprintf('%d #%d: valeur (USurfEndErr, VSurfEndErr)=(%f, %f) HORS FORMAT (forcée à la valeur par défaut)\n', ...
-				 floatNum, numCycle, yoSurfEndUErr(idCy), yoSurfEndVErr(idCy));
-
-			  yoSurfEndUErr(idCy) = g_yoDeepUVErrDef;
-			  yoSurfEndVErr(idCy) = g_yoDeepUVErrDef;
-		   end
-		
-		   % première loc du cycle courant
-		   yoLonFirstLocCur(idCy) = cycleLon(1);
-		   yoLatFirstLocCur(idCy) = cycleLat(1);
-		   yoJuldFirstLocCur(idCy) = cycleDate(1)-JUL_CONVERT;
-
-		   % dernière loc du cycle courant
-		   yoLonLastLocCur(idCy) = cycleLon(end);
-		   yoLatLastLocCur(idCy) = cycleLat(end);
-		   yoJuldLastLocCur(idCy) = cycleDate(end)-JUL_CONVERT;
-
-		   % nombre de (bonnes) localisations Argos (ayant passé avec succès le
-		   % critère de Kobayashi)
-            yoNbLoc(idCy) = length(idGood) ;
-		end
-
-		% numéro de cycle
-		yoCycleNum(idCy) = numCycle;
-
-		
-        if ~isnan(T.representative_park_pressure.data(idCy))
-		yoParkPres(idCy) = T.representative_park_pressure.data(idCy);		
-		end
-		if ~isnan(T.representative_park_temperature.data(idCy))
-		yoParkTemp(idCy) =  T.representative_park_temperature.data(idCy);
-		end
-		%yoParkSal(idCy) = depSal(idCycle(idMeanParkMesCycle));
-		
-
-		% numéro du profil NetCDF
-		%yoProfNum(idCy) = unique(depProfNum(idCycle));
-	% end
-
-	 if (~isempty(cycleLon))
-		% même lorsque le cycle est GROUNDED, il faut stocker la dernière
-		% localisation Argos
-		idNextCycle = find(yoCycle == numCycle+1);
-		if (~isempty(idNextCycle))
-		   yoLonLastLocPrev(idNextCycle) = cycleLon(end);
-		   yoLatLastLocPrev(idNextCycle) = cycleLat(end);
-		   yoJuldLastLocPrev(idNextCycle) = cycleDate(end)-JUL_CONVERT;
-		end
-	 end
-
-  end
-
-  % changement de valeur par défaut entre DEP et ANDRO
-  yoParkPres(find(yoParkPres == g_presDef)) = g_yoPresDef;
-  yoParkTemp(find(yoParkTemp == g_tempDef)) = g_yoTempDef;
-  %yoParkSal(find(yoParkSal == g_salDef)) = g_yoSalDef;
-  yoParkSal(1:end) = g_yoSalDef;
-  
-  yoProfNum(find(yoProfNum == g_profNumDef)) = g_yoProfNumDef;
-		
-  % estimation des vitesses en profondeur
-  for idCy = 1:length(yoCycle)
-	 if ((yoLonLastLocPrev(idCy) ~= g_yoLonDef) && ...
-		   (yoLonFirstLocCur(idCy) ~= g_yoLonDef) && ...
-		   (GroundedNum(idCy) == -1))
-		
-		% gestion du passage de la ligne de changement de date
-		yoLonStart = yoLonLastLocPrev(idCy);
-		yoLonEnd = yoLonFirstLocCur(idCy);
-		if ((abs(yoLonStart-yoLonEnd) > 180))
-		   if (yoLonStart < 0)
-			  yoLonStart = yoLonStart + 360;
-		   else
-			  yoLonEnd = yoLonEnd + 360;
-		   end
-		end
-		
-		yoLonDeepVel(idCy) = yoLonStart + (yoLonEnd-yoLonStart)/2;
-		if (yoLonDeepVel(idCy) >= 180)
-		   yoLonDeepVel(idCy) = yoLonDeepVel(idCy) - 360;
-		end
-		yoLatDeepVel(idCy) = yoLatLastLocPrev(idCy) + (yoLatFirstLocCur(idCy)-yoLatLastLocPrev(idCy))/2;
-		yoJuldDeepVel(idCy) = yoJuldLastLocPrev(idCy) + (yoJuldFirstLocCur(idCy)-yoJuldLastLocPrev(idCy))/2;
-
-		% composante en U de la vitesse en profondeur
-		locLat(1) = yoLatDeepVel(idCy);
-		locLat(2) = locLat(1);
-		locLon(1) = yoLonStart;
-		locLon(2) = yoLonEnd;
-		rangeLon = dist(locLat, locLon);
-		yoDeepU(idCy) = (rangeLon*100)/((yoJuldFirstLocCur(idCy)-yoJuldLastLocPrev(idCy))*24*3600);
-		if (yoLonEnd < yoLonStart)
-		   yoDeepU(idCy) = yoDeepU(idCy)*-1;
-		end
-		
-		% estimation de l'erreur sur U
-		numCycle = yoCycle(idCy);
-		idPrevCycle = find(yoCycle == numCycle-1);
-		if (~isempty(idPrevCycle))
-		   if ((yoSurfEndU(idPrevCycle) ~= g_yoUVDef) && (yoSurfStartU(idCy) ~= g_yoUVDef) && ...
-				 (yoDeepU(idCy) ~= g_yoUVDef) && (yoParkPres(idCy) ~= g_presDef) && ...
-				 (yoJuldLastLocPrev(idCy) ~= g_yoJuldDef) && (yoJuldFirstLocCur(idCy) ~= g_yoJuldDef))
-			  [yoDeepUErr(idCy)] = ...
-				 compute_deep_vel_err(yoSurfEndU(idPrevCycle), yoSurfStartU(idCy), ...
-				 yoDeepU(idCy), yoParkPres(idCy), ...
-				 yoJuldLastLocPrev(idCy), yoJuldFirstLocCur(idCy));
-		   end
-		end
-		
-		% composante en V de la vitesse en profondeur
-		locLat(1) = yoLatLastLocPrev(idCy);
-		locLat(2) = yoLatFirstLocCur(idCy);
-		locLon(1) = yoLonStart;
-		locLon(2) = locLon(1);
-		rangeLat = dist(locLat, locLon);
-		yoDeepV(idCy) = (rangeLat*100)/((yoJuldFirstLocCur(idCy)-yoJuldLastLocPrev(idCy))*24*3600);
-		if (yoLatFirstLocCur(idCy) < yoLatLastLocPrev(idCy))
-		   yoDeepV(idCy) = yoDeepV(idCy)*-1;
-		end
-
-		% estimation de l'erreur sur V
-		if (~isempty(idPrevCycle))
-		   if ((yoSurfEndV(idPrevCycle) ~= g_yoUVDef) && (yoSurfStartV(idCy) ~= g_yoUVDef) && ...
-				 (yoDeepV(idCy) ~= g_yoUVDef) && (yoParkPres(idCy) ~= g_presDef) && ...
-				 (yoJuldLastLocPrev(idCy) ~= g_yoJuldDef) && (yoJuldFirstLocCur(idCy) ~= g_yoJuldDef))
-			  [yoDeepVErr(idCy)] = ...
-				 compute_deep_vel_err(yoSurfEndV(idPrevCycle), yoSurfStartV(idCy), ...
-				 yoDeepV(idCy), yoParkPres(idCy), ...
-				 yoJuldLastLocPrev(idCy), yoJuldFirstLocCur(idCy));
-		   end
-		end
-		
-		% contrôle des valeurs aberrantes
-		if ((yoDeepUErr(idCy) ~= g_yoDeepUVErrDef) && (yoDeepVErr(idCy) ~= g_yoDeepUVErrDef))
-		   if ((yoDeepUErr(idCy) < g_yoDeepUVErrDef) || (yoDeepUErr(idCy) > 9999.99) || ...
-				 (yoDeepVErr(idCy) < g_yoDeepUVErrDef) || (yoDeepVErr(idCy) > 9999.99))
-
-			  fprintf('%d #%d: valeur (UDeepErr, VDeepErr)=(%f, %f) aberrante (forcée à la valeur par défaut)\n', ...
-				 floatNum, yoCycle(idCy), yoDeepUErr(idCy), yoDeepVErr(idCy));
-
-			  yoDeepUErr(idCy) = g_yoDeepUVErrDef;
-			  yoDeepVErr(idCy) = g_yoDeepUVErrDef;
-		   end
-		end
-	 end
-  end
-
-  % sauvegarde des données
-  idToPrint = find((yoSurfStartU ~= g_yoUVDef) | (yoSurfEndU ~= g_yoUVDef) | ...
-	 (yoDeepU ~= g_yoUVDef));
-	 
-  for id = 1:length(idToPrint)
-	 idLig = idToPrint(id);
-	 fprintf(fidOut, outputFormat, ...
-		yoLonDeepVel(idLig), yoLatDeepVel(idLig), ...
-		yoParkPres(idLig), yoParkTemp(idLig), yoParkSal(idLig), ...
-		yoJuldDeepVel(idLig), yoDeepU(idLig), yoDeepV(idLig), ...
-		yoDeepUErr(idLig), yoDeepVErr(idLig), ...
-		yoLonSurfStartVel(idLig), yoLatSurfStartVel(idLig), yoJuldSurfStartVel(idLig), ...
-		yoSurfStartU(idLig), yoSurfStartV(idLig), yoSurfStartUErr(idLig), yoSurfStartVErr(idLig), ...
-		yoLonSurfEndVel(idLig), yoLatSurfEndVel(idLig), yoJuldSurfEndVel(idLig), ...
-		yoSurfEndU(idLig), yoSurfEndV(idLig), yoSurfEndUErr(idLig), yoSurfEndVErr(idLig), ...
-		yoLonLastLocPrev(idLig), yoLatLastLocPrev(idLig), yoJuldLastLocPrev(idLig), ...
-		yoLonFirstLocCur(idLig), yoLatFirstLocCur(idLig), yoJuldFirstLocCur(idLig), ...
-		yoLonLastLocCur(idLig), yoLatLastLocCur(idLig), yoJuldLastLocCur(idLig), ...
-		yoNbLoc(idLig), yoWmo(idLig), yoCycleNum(idLig), yoProfNum(idLig));
-  end
+for id = 1:length(idToPrint)
+    idLig = idToPrint(id);
+    fprintf(fidOut, outputFormat, ...
+        yoLonDeepVel(idLig), yoLatDeepVel(idLig), ...
+        yoParkPres(idLig), yoParkTemp(idLig), yoParkSal(idLig), ...
+        yoJuldDeepVel(idLig), yoDeepU(idLig), yoDeepV(idLig), ...
+        yoDeepUErr(idLig), yoDeepVErr(idLig), ...
+        yoLonSurfStartVel(idLig), yoLatSurfStartVel(idLig), yoJuldSurfStartVel(idLig), ...
+        yoSurfStartU(idLig), yoSurfStartV(idLig), yoSurfStartUErr(idLig), yoSurfStartVErr(idLig), ...
+        yoLonSurfEndVel(idLig), yoLatSurfEndVel(idLig), yoJuldSurfEndVel(idLig), ...
+        yoSurfEndU(idLig), yoSurfEndV(idLig), yoSurfEndUErr(idLig), yoSurfEndVErr(idLig), ...
+        yoLonLastLocPrev(idLig), yoLatLastLocPrev(idLig), yoJuldLastLocPrev(idLig), ...
+        yoLonFirstLocCur(idLig), yoLatFirstLocCur(idLig), yoJuldFirstLocCur(idLig), ...
+        yoLonLastLocCur(idLig), yoLatLastLocCur(idLig), yoJuldLastLocCur(idLig), ...
+        yoNbLoc(idLig), yoWmo(idLig), yoCycleNum(idLig), yoProfNum(idLig));
+end
 
 
 fclose(fidOut);
@@ -581,24 +589,24 @@ return;
 %   07/03/2012 - RNU - creation
 % ------------------------------------------------------------------------------
 function [o_dateSurfStart, o_lonSurfStart, o_latSurfStart, ...
-   o_surfStartU, o_surfStartV, o_surfStartUErr, o_surfStartVErr, ...
-   o_dateSurfEnd, o_lonSurfEnd, o_latSurfEnd, ...
-   o_surfEndU, o_surfEndV, o_surfEndUErr, o_surfEndVErr] = ...
-   compute_surf_vel_start_end(a_locDate, a_locLon, a_locLat, a_surfMaxDuration)
+    o_surfStartU, o_surfStartV, o_surfStartUErr, o_surfStartVErr, ...
+    o_dateSurfEnd, o_lonSurfEnd, o_latSurfEnd, ...
+    o_surfEndU, o_surfEndV, o_surfEndUErr, o_surfEndVErr] = ...
+    compute_surf_vel_start_end(a_locDate, a_locLon, a_locLat, a_surfMaxDuration)
 
 % vitesse de surface à la remontée
 idLocStart = find((a_locDate - a_locDate(1)) <= a_surfMaxDuration/24);
 
 [o_dateSurfStart, o_lonSurfStart, o_latSurfStart, ...
-   o_surfStartU, o_surfStartV, o_surfStartUErr, o_surfStartVErr] = ...
-   compute_surf_vel(a_locDate(idLocStart), a_locLon(idLocStart), a_locLat(idLocStart));
+    o_surfStartU, o_surfStartV, o_surfStartUErr, o_surfStartVErr] = ...
+    compute_surf_vel(a_locDate(idLocStart), a_locLon(idLocStart), a_locLat(idLocStart));
 
 % vitesse de surface avant la plongée
 idLocEnd = find((a_locDate(end) - a_locDate) <= a_surfMaxDuration/24);
 
 [o_dateSurfEnd, o_lonSurfEnd, o_latSurfEnd, ...
-   o_surfEndU, o_surfEndV, o_surfEndUErr, o_surfEndVErr] = ...
-   compute_surf_vel(a_locDate(idLocEnd), a_locLon(idLocEnd), a_locLat(idLocEnd));
+    o_surfEndU, o_surfEndV, o_surfEndUErr, o_surfEndVErr] = ...
+    compute_surf_vel(a_locDate(idLocEnd), a_locLon(idLocEnd), a_locLat(idLocEnd));
 
 return;
 
@@ -633,7 +641,7 @@ return;
 %   28/11/2008 - RNU - creation
 % ------------------------------------------------------------------------------
 function [o_dateSurf, o_lonSurf, o_latSurf, ...
-   o_surfU, o_surfV, o_surfUErr, o_surfVErr] = compute_surf_vel(a_locDate, a_locLon, a_locLat)
+    o_surfU, o_surfV, o_surfUErr, o_surfVErr] = compute_surf_vel(a_locDate, a_locLon, a_locLat)
 
 global g_yoLonDef g_yoLatDef g_yoJuldDef g_yoUVDef g_yoDeepUVErrDef;
 
@@ -651,9 +659,9 @@ o_surfVErr = g_yoDeepUVErrDef;
 % contrôle du passage de la ligne de changement de date
 deltaLon = abs(min(a_locLon) - max(a_locLon));
 if (deltaLon > 180)
-   id = find(a_locLon < 0);
-   a_locLon(id) = a_locLon(id) + 360;
-   %    fprintf('COUPE LA LIGNE\n');
+    id = find(a_locLon < 0);
+    a_locLon(id) = a_locLon(id) + 360;
+    %    fprintf('COUPE LA LIGNE\n');
 end
 
 % la date milieu est prise comme date de référence
@@ -670,14 +678,14 @@ denum = (s2 - nbLoc*dateMoy*dateMoy);
 
 % il faut au moins deux localisations Argos pour effectuer un calcul de vitesse
 if (nbLoc == 1)
-   return;
+    return;
 end
 
 % date et localisation de la vitesse de surface
 o_dateSurf = mean(a_locDate);
 o_lonSurf = lonMoy;
 if (o_lonSurf >= 180)
-   o_lonSurf = o_lonSurf - 360;
+    o_lonSurf = o_lonSurf - 360;
 end
 o_latSurf = latMoy;
 
@@ -694,7 +702,7 @@ o_surfV = vitLat*(60*1852/864);
 % il faut au moins trois localisations Argos pour effectuer un calcul d'erreur
 % sur la vitesse déterminée
 if (nbLoc == 2)
-   return;
+    return;
 end
 
 % calcul de l'erreur sur la vitesse en U
@@ -740,7 +748,7 @@ return;
 %   28/11/2008 - RNU - creation
 % ------------------------------------------------------------------------------
 function [o_deepUVErr] = compute_deep_vel_err( ...
-   a_surfUVPrev, a_surfUVCur, a_deepUV, a_parkPres, a_juldLastLocPrev, a_juldFirstLocCur)
+    a_surfUVPrev, a_surfUVCur, a_deepUV, a_parkPres, a_juldLastLocPrev, a_juldFirstLocCur)
 
 global g_yoDeepUVErrDef;
 

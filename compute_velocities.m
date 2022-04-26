@@ -101,12 +101,15 @@ flog=fopen(logfile,'a');
 % récupération des localisations Argos et détermination des vitesses de
 % surface
 
+
 for idCy_sorted = 1:length(yoCycle)
-    idCy = id_sorted(idCy_sorted);
+    %idCy = id_sorted(idCy_sorted);
+    idCy = idCy_sorted;
     numCycle = yoCycle(idCy_sorted);
-	
+    
     g_cycleNumber = numCycle;
     idCycle = find(T.cycle_number.data == numCycle);
+    idCyT = find(T.cycle_number_index.data == numCycle);  % cc 08/04/2022
     
     % on ne prend pas en compte les cycles #0 des flotteurs ni les cycles avec Alerte
     
@@ -138,12 +141,12 @@ for idCy_sorted = 1:length(yoCycle)
     cycleQc_koba = T.position_qc_koba.data(idCycle(idLoc));
     
     if (KOBA_CHECK == 1)
-	    %idGood = find((cycleQc ~= 6) & (cycleQc ~= 4) & (cycleQc_koba ~= 6) & (cycleDateQc ~= 4)& (cycleDateQc ~= 6))
+        %idGood = find((cycleQc ~= 6) & (cycleQc ~= 4) & (cycleQc_koba ~= 6) & (cycleDateQc ~= 4)& (cycleDateQc ~= 6))
         idGood = find((cycleQc ~= 6) & (cycleQc ~= 4) & (cycleQc_koba ~= 6) & (cycleDateQc ~= 4)& (cycleDateQc ~= 6) & (cycleAccuracy ~= 'I')  & (cycleAccuracy ~= 'A') & (cycleAccuracy ~= 'B')& (cycleAccuracy ~= 'Z')& (cycleAccuracy ~= 'U'));
     else
         idGood = find((cycleQc ~= 6) & (cycleQc ~= 4)  & (cycleDateQc ~= 4)& (cycleDateQc ~= 6) & (cycleAccuracy ~= 'I') & (cycleAccuracy ~= 'A') & (cycleAccuracy ~= 'B')& (cycleAccuracy ~= 'Z')& (cycleAccuracy ~= 'U'));
     end
-    
+    %keyboard
     if length(idGood)>=1
         first_good_loc(idCy_sorted)=idGood(1)-1;
         last_good_loc(idCy_sorted)=idGood(end)-length(cycleDate);
@@ -180,18 +183,18 @@ for idCy_sorted = 1:length(yoCycle)
     
     
     
-    %if (GroundedNum(idCy) == -1)
+    %if (GroundedNum(idCyT) == -1)
     if (~isempty(cycleLon))
         % if numCycle==252
         % keyboard
         % end
         % estimation de la vitesse de surface
-        [T.juld_first_surface_velocity.data(idCy), T.longitude_first_surface_velocity.data(idCy), T.latitude_first_surface_velocity.data(idCy), ...
-            T.u_first_surface_velocity.data(idCy), T.v_first_surface_velocity.data(idCy), ...
-            T.uerr_first_surface_velocity.data(idCy), T.verr_first_surface_velocity.data(idCy), ...
-            T.juld_last_surface_velocity.data(idCy), T.longitude_last_surface_velocity.data(idCy), T.latitude_last_surface_velocity.data(idCy), ...
-            T.u_last_surface_velocity.data(idCy), T.v_last_surface_velocity.data(idCy), ...
-            T.uerr_last_surface_velocity.data(idCy), T.verr_last_surface_velocity.data(idCy)] = ...
+        [T.juld_first_surface_velocity.data(idCyT), T.longitude_first_surface_velocity.data(idCyT), T.latitude_first_surface_velocity.data(idCyT), ...
+            T.u_first_surface_velocity.data(idCyT), T.v_first_surface_velocity.data(idCyT), ...
+            T.uerr_first_surface_velocity.data(idCyT), T.verr_first_surface_velocity.data(idCyT), ...
+            T.juld_last_surface_velocity.data(idCyT), T.longitude_last_surface_velocity.data(idCyT), T.latitude_last_surface_velocity.data(idCyT), ...
+            T.u_last_surface_velocity.data(idCyT), T.v_last_surface_velocity.data(idCyT), ...
+            T.uerr_last_surface_velocity.data(idCyT), T.verr_last_surface_velocity.data(idCyT)] = ...
             compute_surf_vel_start_end(cycleDate-JUL_CONVERT, cycleLon, cycleLat, SURF_VEL_MAX_DURATION);
         
         % test sur les positions agglomérées
@@ -214,10 +217,10 @@ for idCy_sorted = 1:length(yoCycle)
             [testAgloOk, lonBary, latBary, lonCirclePts, latCirclePts] = ...
                 check_argos_positions_aglo2(cycleLon', cycleLat', cycleAccuracy', radius);
             if (testAgloOk == 0)
-                T.u_first_surface_velocity.data(idCy) = 0;
-                T.v_first_surface_velocity.data(idCy) = 0;
-                T.u_last_surface_velocity.data(idCy) = 0;
-                T.v_last_surface_velocity.data(idCy) = 0;
+                T.u_first_surface_velocity.data(idCyT) = 0;
+                T.v_first_surface_velocity.data(idCyT) = 0;
+                T.u_last_surface_velocity.data(idCyT) = 0;
+                T.v_last_surface_velocity.data(idCyT) = 0;
                 
                 cycleAccuracy(find(cycleAccuracy == 'G')) = '4';
                 firstLocErr = precision(str2num(cycleAccuracy(1)))*100;
@@ -225,105 +228,105 @@ for idCy_sorted = 1:length(yoCycle)
                 surfErr = sqrt(firstLocErr*firstLocErr + lastLocErr*lastLocErr);
                 surfErr = surfErr/((cycleDate(end)-cycleDate(1))*86400);
                 
-                T.uerr_first_surface_velocity.data(idCy) = surfErr;
-                T.verr_first_surface_velocity.data(idCy) = surfErr;
-                T.uerr_last_surface_velocity.data(idCy) = surfErr;
-                T.verr_last_surface_velocity.data(idCy) = surfErr;
+                T.uerr_first_surface_velocity.data(idCyT) = surfErr;
+                T.verr_first_surface_velocity.data(idCyT) = surfErr;
+                T.uerr_last_surface_velocity.data(idCyT) = surfErr;
+                T.verr_last_surface_velocity.data(idCyT) = surfErr;
                 
                 fprintf(flog,'%d #%d: positions AGGLOMEREES, vitesse de surface forcée à 0, SurfStartUErr=SurfStartVErr=SurfEndUErr=SurfEndVErr=%.1f cm/s\n', ...
                     floatNum, numCycle, surfErr);
-			    %fprintf('%d #%d: positions AGGLOMEREES, vitesse de surface forcée à 0, SurfStartUErr=SurfStartVErr=SurfEndUErr=SurfEndVErr=%.1f cm/s\n', ...
+                %fprintf('%d #%d: positions AGGLOMEREES, vitesse de surface forcée à 0, SurfStartUErr=SurfStartVErr=SurfEndUErr=SurfEndVErr=%.1f cm/s\n', ...
                 %    floatNum, numCycle, surfErr);
             end
         end
         
         % contrôle de vitesses aberrantes (module de la vitesse > 3 m/s)
-        if (~isnan(T.u_first_surface_velocity.data(idCy) )) && (~isnan(T.v_first_surface_velocity.data(idCy) ))
-            surfStartVel = sqrt(T.u_first_surface_velocity.data(idCy).^2 + T.v_first_surface_velocity.data(idCy).^2);
+        if (~isnan(T.u_first_surface_velocity.data(idCyT) )) && (~isnan(T.v_first_surface_velocity.data(idCyT) ))
+            surfStartVel = sqrt(T.u_first_surface_velocity.data(idCyT).^2 + T.v_first_surface_velocity.data(idCyT).^2);
             %[numCycle,surfStartVel]
             
             if (surfStartVel > 300)
-                T.juld_first_surface_velocity.data(idCy) = NaN;
-                T.longitude_first_surface_velocity.data(idCy) = NaN;
-                T.latitude_first_surface_velocity.data(idCy) = NaN;
-                T.u_first_surface_velocity.data(idCy) = NaN;
-                T.v_first_surface_velocity.data(idCy) = NaN;
-                T.uerr_first_surface_velocity.data(idCy) = NaN;
-                T.verr_first_surface_velocity.data(idCy) = NaN;
+                T.juld_first_surface_velocity.data(idCyT) = NaN;
+                T.longitude_first_surface_velocity.data(idCyT) = NaN;
+                T.latitude_first_surface_velocity.data(idCyT) = NaN;
+                T.u_first_surface_velocity.data(idCyT) = NaN;
+                T.v_first_surface_velocity.data(idCyT) = NaN;
+                T.uerr_first_surface_velocity.data(idCyT) = NaN;
+                T.verr_first_surface_velocity.data(idCyT) = NaN;
                 
                 fprintf(flog,'%d #%d: vitesse de surface à la remontée ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
                     floatNum, numCycle, surfStartVel);
-				fprintf('%d #%d: vitesse de surface à la remontée ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
-                    floatNum, numCycle, surfStartVel);	
+                fprintf('%d #%d: vitesse de surface à la remontée ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
+                    floatNum, numCycle, surfStartVel);
                 
             end
         end
-        if (~isnan(T.u_last_surface_velocity.data(idCy) )) && (~isnan(T.v_last_surface_velocity.data(idCy) ))
-            surfEndVel = sqrt(T.u_last_surface_velocity.data(idCy).^2 + T.v_last_surface_velocity.data(idCy).^2);
+        if (~isnan(T.u_last_surface_velocity.data(idCyT) )) && (~isnan(T.v_last_surface_velocity.data(idCyT) ))
+            surfEndVel = sqrt(T.u_last_surface_velocity.data(idCyT).^2 + T.v_last_surface_velocity.data(idCyT).^2);
             if (surfEndVel > 300)
-                T.juld_last_surface_velocity.data(idCy) = NaN;
-                T.longitude_last_surface_velocity.data(idCy) = NaN;
-                T.latitude_last_surface_velocity.data(idCy) = NaN;
-                T.u_last_surface_velocity.data(idCy) = NaN;
-                T.v_last_surface_velocity.data(idCy) = NaN;
-                T.uerr_last_surface_velocity.data(idCy) = NaN;
-                T.verr_last_surface_velocity.data(idCy) = NaN;
+                T.juld_last_surface_velocity.data(idCyT) = NaN;
+                T.longitude_last_surface_velocity.data(idCyT) = NaN;
+                T.latitude_last_surface_velocity.data(idCyT) = NaN;
+                T.u_last_surface_velocity.data(idCyT) = NaN;
+                T.v_last_surface_velocity.data(idCyT) = NaN;
+                T.uerr_last_surface_velocity.data(idCyT) = NaN;
+                T.verr_last_surface_velocity.data(idCyT) = NaN;
                 
                 fprintf(flog,'%d #%d: vitesse de surface avant la descente ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
                     floatNum, numCycle, surfEndVel);
-				fprintf('%d #%d: vitesse de surface avant la descente ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
+                fprintf('%d #%d: vitesse de surface avant la descente ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
                     floatNum, numCycle, surfEndVel);
             end
         end
         
         % contrôle des valeurs aberrantes (hors format)
-        if (abs(T.u_first_surface_velocity.data(idCy)) >  9999.99) || ...
-                (abs(T.v_first_surface_velocity.data(idCy)) >  9999.99)
+        if (abs(T.u_first_surface_velocity.data(idCyT)) >  9999.99) || ...
+                (abs(T.v_first_surface_velocity.data(idCyT)) >  9999.99)
             
             fprintf(flog,'%d #%d: valeur (USurfStart, VSurfStart)=(%f, %f) HORS FORMAT (forcée à la valeur par défaut)\n', ...
-                floatNum, numCycle, T.u_first_surface_velocity.data(idCy), T.v_first_surface_velocity.data(idCy));
+                floatNum, numCycle, T.u_first_surface_velocity.data(idCyT), T.v_first_surface_velocity.data(idCyT));
             
-            T.juld_first_surface_velocity.data(idCy) = NaN;
-            T.longitude_first_surface_velocity.data(idCy) = NaN;
-            T.latitude_first_surface_velocity.data(idCy) = NaN;
-            T.u_first_surface_velocity.data(idCy) = NaN;
-            T.v_first_surface_velocity.data(idCy) = NaN;
-            T.uerr_first_surface_velocity.data(idCy) = NaN;
-            T.verr_first_surface_velocity.data(idCy) = NaN;
+            T.juld_first_surface_velocity.data(idCyT) = NaN;
+            T.longitude_first_surface_velocity.data(idCyT) = NaN;
+            T.latitude_first_surface_velocity.data(idCyT) = NaN;
+            T.u_first_surface_velocity.data(idCyT) = NaN;
+            T.v_first_surface_velocity.data(idCyT) = NaN;
+            T.uerr_first_surface_velocity.data(idCyT) = NaN;
+            T.verr_first_surface_velocity.data(idCyT) = NaN;
         end
-        if (abs(T.u_last_surface_velocity.data(idCy)) >  9999.99) || ...
-                (abs(T.v_last_surface_velocity.data(idCy)) >  9999.99)
+        if (abs(T.u_last_surface_velocity.data(idCyT)) >  9999.99) || ...
+                (abs(T.v_last_surface_velocity.data(idCyT)) >  9999.99)
             
             fprintf(flog,'%d #%d: valeur (USurfEnd, VSurfEnd)=(%f, %f) HORS FORMAT (forcée à la valeur par défaut)\n', ...
-                floatNum, numCycle,  T.u_last_surface_velocity.data(idCy), T.v_last_surface_velocity.data(idCy));
+                floatNum, numCycle,  T.u_last_surface_velocity.data(idCyT), T.v_last_surface_velocity.data(idCyT));
             
-            T.juld_last_surface_velocity.data(idCy) = NaN;
-            T.longitude_last_surface_velocity.data(idCy) = NaN;
-            T.latitude_last_surface_velocity.data(idCy) = NaN;
-            T.u_last_surface_velocity.data(idCy) = NaN;
-            T.v_last_surface_velocity.data(idCy) = NaN;
-            T.uerr_last_surface_velocity.data(idCy) = NaN;
-            T.verr_last_surface_velocity.data(idCy) = NaN;
+            T.juld_last_surface_velocity.data(idCyT) = NaN;
+            T.longitude_last_surface_velocity.data(idCyT) = NaN;
+            T.latitude_last_surface_velocity.data(idCyT) = NaN;
+            T.u_last_surface_velocity.data(idCyT) = NaN;
+            T.v_last_surface_velocity.data(idCyT) = NaN;
+            T.uerr_last_surface_velocity.data(idCyT) = NaN;
+            T.verr_last_surface_velocity.data(idCyT) = NaN;
         end
         
         % contrôle des valeurs aberrantes (hors format)
-        if (abs(T.uerr_first_surface_velocity.data(idCy)) >  9999.99) || ...
-                (abs(T.verr_first_surface_velocity.data(idCy)) >  9999.99)
+        if (abs(T.uerr_first_surface_velocity.data(idCyT)) >  9999.99) || ...
+                (abs(T.verr_first_surface_velocity.data(idCyT)) >  9999.99)
             
             fprintf(flog,'%d #%d: valeur (USurfStartErr, VSurfStartErr)=(%f, %f) HORS FORMAT (forcée à la valeur par défaut)\n', ...
-                floatNum, numCycle, T.uerr_first_surface_velocity.data(idCy), T.verr_first_surface_velocity.data(idCy));
+                floatNum, numCycle, T.uerr_first_surface_velocity.data(idCyT), T.verr_first_surface_velocity.data(idCyT));
             
-            T.uerr_first_surface_velocity.data(idCy) = NaN;
-            T.verr_first_surface_velocity.data(idCy) = NaN;
+            T.uerr_first_surface_velocity.data(idCyT) = NaN;
+            T.verr_first_surface_velocity.data(idCyT) = NaN;
         end
-        if (abs(T.uerr_last_surface_velocity.data(idCy)) >  9999.99) || ...
-                (abs(T.verr_last_surface_velocity.data(idCy)) >  9999.99)
+        if (abs(T.uerr_last_surface_velocity.data(idCyT)) >  9999.99) || ...
+                (abs(T.verr_last_surface_velocity.data(idCyT)) >  9999.99)
             
             fprintf(flog,'%d #%d: valeur (USurfEndErr, VSurfEndErr)=(%f, %f) HORS FORMAT (forcée à la valeur par défaut)\n', ...
-                floatNum, numCycle, T.uerr_last_surface_velocity.data(idCy), T.verr_last_surface_velocity.data(idCy));
+                floatNum, numCycle, T.uerr_last_surface_velocity.data(idCyT), T.verr_last_surface_velocity.data(idCyT));
             
-            T.uerr_last_surface_velocity.data(idCy) = NaN;
-            T.verr_last_surface_velocity.data(idCy) = NaN;
+            T.uerr_last_surface_velocity.data(idCyT) = NaN;
+            T.verr_last_surface_velocity.data(idCyT) = NaN;
         end
         
         % première loc du cycle courant
@@ -384,10 +387,16 @@ end
 
 % estimation des vitesses en profondeur
 for idCy_sorted = 1:length(yoCycle)
-    idCy = id_sorted(idCy_sorted);
+    %idCy = id_sorted(idCy_sorted);
+    idCy = idCy_sorted;
+    numCycle = yoCycle(idCy_sorted);
+    
+    g_cycleNumber = numCycle;
+    idCycle = find(T.cycle_number.data == numCycle);
+    idCyT = find(T.cycle_number_index.data == numCycle);  % cc 08/04/2022
     if (~isnan(yoLonLastLocPrev(idCy)) && ...
             ~isnan(yoLonFirstLocCur(idCy)) && ...
-            (GroundedNum(idCy) == -1))
+            (GroundedNum(idCyT) == -1))
         
         % gestion du passage de la ligne de changement de date
         yoLonStart = yoLonLastLocPrev(idCy);
@@ -400,34 +409,35 @@ for idCy_sorted = 1:length(yoCycle)
             end
         end
         
-        T.longitude_deep_velocity.data(idCy) = yoLonStart + (yoLonEnd-yoLonStart)/2;
-        if (T.longitude_deep_velocity.data(idCy) >= 180)
-            T.longitude_deep_velocity.data(idCy) = T.longitude_deep_velocity.data(idCy) - 360;
+        T.longitude_deep_velocity.data(idCyT) = yoLonStart + (yoLonEnd-yoLonStart)/2;
+        if (T.longitude_deep_velocity.data(idCyT) >= 180)
+            T.longitude_deep_velocity.data(idCyT) = T.longitude_deep_velocity.data(idCyT) - 360;
         end
-        T.latitude_deep_velocity.data(idCy) = yoLatLastLocPrev(idCy) + (yoLatFirstLocCur(idCy)-yoLatLastLocPrev(idCy))/2;
-        T.juld_deep_velocity.data(idCy) = yoJuldLastLocPrev(idCy) + (yoJuldFirstLocCur(idCy)-yoJuldLastLocPrev(idCy))/2;
+        T.latitude_deep_velocity.data(idCyT) = yoLatLastLocPrev(idCy) + (yoLatFirstLocCur(idCy)-yoLatLastLocPrev(idCy))/2;
+        T.juld_deep_velocity.data(idCyT) = yoJuldLastLocPrev(idCy) + (yoJuldFirstLocCur(idCy)-yoJuldLastLocPrev(idCy))/2;
         
         % composante en U de la vitesse en profondeur
-        locLat(1) = T.latitude_deep_velocity.data(idCy);
+        locLat(1) = T.latitude_deep_velocity.data(idCyT);
         locLat(2) = locLat(1);
         locLon(1) = yoLonStart;
         locLon(2) = yoLonEnd;
         rangeLon = dist(locLat, locLon);
-        T.u_deep_velocity.data(idCy) = (rangeLon*100)/((yoJuldFirstLocCur(idCy)-yoJuldLastLocPrev(idCy))*24*3600);
+        T.u_deep_velocity.data(idCyT) = (rangeLon*100)/((yoJuldFirstLocCur(idCy)-yoJuldLastLocPrev(idCy))*24*3600);
         if (yoLonEnd < yoLonStart)
-            T.u_deep_velocity.data(idCy) = T.u_deep_velocity.data(idCy)*-1;
+            T.u_deep_velocity.data(idCyT) = T.u_deep_velocity.data(idCyT)*-1;
         end
         
         % estimation de l'erreur sur U
         numCycle = yoCycle(idCy_sorted);
         idPrevCycle = find(yoCycle == numCycle-1);
-        if (~isempty(idPrevCycle))
-            if (~isnan( T.u_last_surface_velocity.data(idPrevCycle)) &&~isnan(T.u_first_surface_velocity.data(idCy) )&& ...
-                    ~isnan(T.u_deep_velocity.data(idCy))  && ~isnan(T.representative_park_pressure.data(idCy))  && ...
+        idPrevCycleT = find(T.cycle_number_index.data == numCycle-1);
+        if (~isempty(idPrevCycleT))
+            if (~isnan( T.u_last_surface_velocity.data(idPrevCycleT)) &&~isnan(T.u_first_surface_velocity.data(idCyT) )&& ...
+                    ~isnan(T.u_deep_velocity.data(idCyT))  && ~isnan(T.representative_park_pressure.data(idCyT))  && ...
                     ~isnan(yoJuldLastLocPrev(idCy) ) && ~isnan(yoJuldFirstLocCur(idCy)))
-                [T.uerr_deep_velocity.data(idCy)] = ...
-                    compute_deep_vel_err(T.u_last_surface_velocity.data(idPrevCycle), T.u_first_surface_velocity.data(idCy), ...
-                    T.u_deep_velocity.data(idCy), T.representative_park_pressure.data(idCy), ...
+                [T.uerr_deep_velocity.data(idCyT)] = ...
+                    compute_deep_vel_err(T.u_last_surface_velocity.data(idPrevCycleT), T.u_first_surface_velocity.data(idCyT), ...
+                    T.u_deep_velocity.data(idCyT), T.representative_park_pressure.data(idCyT), ...
                     yoJuldLastLocPrev(idCy), yoJuldFirstLocCur(idCy));
             end
         end
@@ -438,46 +448,46 @@ for idCy_sorted = 1:length(yoCycle)
         locLon(1) = yoLonStart;
         locLon(2) = locLon(1);
         rangeLat = dist(locLat, locLon);
-        T.v_deep_velocity.data(idCy) = (rangeLat*100)/((yoJuldFirstLocCur(idCy)-yoJuldLastLocPrev(idCy))*24*3600);
+        T.v_deep_velocity.data(idCyT) = (rangeLat*100)/((yoJuldFirstLocCur(idCy)-yoJuldLastLocPrev(idCy))*24*3600);
         if (yoLatFirstLocCur(idCy) < yoLatLastLocPrev(idCy))
-            T.v_deep_velocity.data(idCy) = T.v_deep_velocity.data(idCy)*-1;
+            T.v_deep_velocity.data(idCyT) = T.v_deep_velocity.data(idCyT)*-1;
         end
         
         % estimation de l'erreur sur V
-        if (~isempty(idPrevCycle))
-            if (~isnan(T.v_last_surface_velocity.data(idPrevCycle)) && ~isnan(T.v_first_surface_velocity.data(idCy))  && ...
-                    ~isnan(T.v_deep_velocity.data(idCy))  && ~isnan(T.representative_park_pressure.data(idCy)) && ...
+        if (~isempty(idPrevCycleT))
+            if (~isnan(T.v_last_surface_velocity.data(idPrevCycleT)) && ~isnan(T.v_first_surface_velocity.data(idCyT))  && ...
+                    ~isnan(T.v_deep_velocity.data(idCyT))  && ~isnan(T.representative_park_pressure.data(idCyT)) && ...
                     ~isnan(yoJuldLastLocPrev(idCy))  && ~isnan(yoJuldFirstLocCur(idCy)) )
-                [T.verr_deep_velocity.data(idCy)] = ...
-                    compute_deep_vel_err(T.v_last_surface_velocity.data(idPrevCycle), T.v_first_surface_velocity.data(idCy), ...
-                    T.v_deep_velocity.data(idCy), T.representative_park_pressure.data(idCy), ...
+                [T.verr_deep_velocity.data(idCyT)] = ...
+                    compute_deep_vel_err(T.v_last_surface_velocity.data(idPrevCycleT), T.v_first_surface_velocity.data(idCyT), ...
+                    T.v_deep_velocity.data(idCyT), T.representative_park_pressure.data(idCyT), ...
                     yoJuldLastLocPrev(idCy), yoJuldFirstLocCur(idCy));
             end
         end
         
         % contrôle des valeurs aberrantes
-        if ~isnan(T.uerr_deep_velocity.data(idCy)) && ~isnan(T.verr_deep_velocity.data(idCy))
-            if (abs(T.uerr_deep_velocity.data(idCy))  > 9999.99|| ...
-                    abs(T.verr_deep_velocity.data(idCy)) > 9999.99)
+        if ~isnan(T.uerr_deep_velocity.data(idCyT)) && ~isnan(T.verr_deep_velocity.data(idCyT))
+            if (abs(T.uerr_deep_velocity.data(idCyT))  > 9999.99|| ...
+                    abs(T.verr_deep_velocity.data(idCyT)) > 9999.99)
                 
                 fprintf(flog,'%d #%d: valeur (uerr_deep_velocity, verr_deep_velocity)=(%f, %f) aberrante (forcée à la valeur par défaut)\n', ...
-                    floatNum, yoCycle(idCy), T.uerr_deep_velocity.data(idCy), T.verr_deep_velocity.data(idCy));
-				fprintf('%d #%d: valeur (uerr_deep_velocity, verr_deep_velocity)=(%f, %f) aberrante (forcée à la valeur par défaut)\n', ...
-                    floatNum, yoCycle(idCy), T.uerr_deep_velocity.data(idCy), T.verr_deep_velocity.data(idCy));
+                    floatNum, yoCycle(idCy), T.uerr_deep_velocity.data(idCyT), T.verr_deep_velocity.data(idCyT));
+                fprintf('%d #%d: valeur (uerr_deep_velocity, verr_deep_velocity)=(%f, %f) aberrante (forcée à la valeur par défaut)\n', ...
+                    floatNum, yoCycle(idCy), T.uerr_deep_velocity.data(idCyT), T.verr_deep_velocity.data(idCyT));
                 
-                T.uerr_deep_velocity.data(idCy) = NaN;
-                T.verr_deep_velocity.data(idCy) = NaN;
+                T.uerr_deep_velocity.data(idCyT) = NaN;
+                T.verr_deep_velocity.data(idCyT) = NaN;
             end
         end
         
         % consigne les vitesses qui sont calculés avec des positions éloignées des first/last loc
         if first_good_loc(idCy)~=0
             fprintf(flog,'%d #%d: Loc utilisee a la remontee ne correspond pas a la premiere loc argos. First Loc+%d Vitesse de surface: %f Temps moyen(h) entre deux locs  %f \n', ...
-                floatNum, yoCycle(idCy), first_good_loc(idCy), T.v_first_surface_velocity.data(idCy), diffTimeLoc*24);
+                floatNum, yoCycle(idCy), first_good_loc(idCy), T.v_first_surface_velocity.data(idCyT), diffTimeLoc*24);
         end
         if last_good_loc(idCy)~=0
             fprintf(flog,'%d #%d: Loc utilisee a la descente ne correspond pas a la derniere loc argos. Last Loc%d Vitesse de surface: %f Temps moyen(h) entre deux locs  %f \n', ...
-                floatNum, yoCycle(idCy), last_good_loc(idCy), T.v_last_surface_velocity.data(idCy), diffTimeLoc*24);
+                floatNum, yoCycle(idCy), last_good_loc(idCy), T.v_last_surface_velocity.data(idCyT), diffTimeLoc*24);
         end
         
     end
