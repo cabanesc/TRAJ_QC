@@ -170,34 +170,82 @@ isok(a_cycles_sorted==0|a_cycles_sorted==1)=1; % ne tient pas compte des duree d
 			 o_alerte6= [o_alerte6 a_cycles_sorted(~isok)];
 end
 
+%keyboard
 
-
-% Pb numerotation de cycle % uniquement pour des flotteurs mono-mission
-
-if max(M.CycleTime)<=2   % TODO test à ameliorer
-	if sum(isok)>=1
-	iserrcycl=abs(dateModMed-medianoutnan(dateModMed(isok)))>dureeCycleTh*0.5;
-	else
-	iserrcycl=[];
-	end
-
-	iserrcycl(1)=0;
-
-
-	if ~isempty(iserrcycl)&sum(iserrcycl)>0 
+% Pb numerotation de cycle : on cherche la duplication de cycle et les sauts de cycle.
+%keyboard
+% cycle duplique avec incrementation erronee du numero de cycle
+iserrcycl=(a_duree_cycle==0&~isok');
+if ~isempty(iserrcycl)&sum(iserrcycl)>0 
 		fid_alerte=fopen(file_alerte,'a');
 		fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ',discarded(for u&v), CYCLE NUMBER could be wrong ']);
 		fclose(fid_alerte);
 		fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ',discarded(for u&v), CYCLE NUMBER could be wrong']);
 		o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(iserrcycl)];
-		%o_alertCyc_e5 = [o_alertCyc_e5 a_cycles_sorted(iserrcycl)];
-	elseif isempty(iserrcycl)
-		fid_alerte=fopen(file_alerte,'a');
-		fprintf(fid_alerte, '%s\n',[ floatname ',warning, Can''t check cycle number ']);
-		fclose(fid_alerte);
-		fprintf('%s\n',[ floatname ',warning, Can''t check cycle number ']);
-	end
 end
+
+% Pour les flotteurs qui n'ont pas plus de deux missions avec des duree de cycle differentes 
+% on trouve les cycles dont la duree n'est pas celle attendue: on
+% calcule la répartition (hist)
+% Si la duree de cycle est peu frequente (occurence <=2) et si elle est multiple de la longueur theorique ; le cycle est eliminé du calcul u &v
+if length(unique(M.CycleTime))<=2 
+	[m,h]=hist(a_duree_cycle(~isok),[0:1:100]); % repartition
+	ll=find(m>=1);                               % indice des duree qui apparaissent au moins une fois
+    if isempty(ll)==0                            
+        dd=diff(ll)>1;                           % on ne prends pas en compte les durees de cycle avec fortes occurences(>2) et les durees de cycle proche 
+        if isempty(dd)==0
+            dd=[dd(1) dd]; %
+            ik=m(ll)<=2&dd;
+            duree_prob=h(ll(ik));                % les durees problematiques sont celles avec une faible occurence et isolée.
+        else
+            ik=m(ll)<=2;
+            duree_prob=h(ll(ik));
+        end
+        for ill=1:length(duree_prob)
+            if duree_prob(ill)>0                  % si les durees problemeatique sont multiples de la duree theorique, on elimine le cycle du calcul de u&v
+                iserrcycl= find((a_duree_cycle>=duree_prob(ill)-0.5)&(a_duree_cycle<duree_prob(ill)+0.5));
+                isbad=(mod(duree_prob(ill),round(dureeCycleTh(iserrcycl)))==0&duree_prob(ill)~=round(dureeCycleTh(iserrcycl)));
+                iserrcycl=iserrcycl(isbad);
+                if ~isempty(iserrcycl)&sum(iserrcycl)>0
+                    fid_alerte=fopen(file_alerte,'a');
+                    fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ',discarded(for u&v), CYCLE NUMBER could be wrong ']);
+                    fclose(fid_alerte);
+                    fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ',discarded(for u&v), CYCLE NUMBER could be wrong']);
+                    o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(iserrcycl)];
+                end
+            end
+        end
+    end
+end
+
+
+
+%uniquement pour des flotteurs mono-mission
+
+% if max(M.CycleTime)<=2   % TODO test à ameliorer
+	% if sum(isok)>=1
+	% iserrcycl=abs(dateModMed-medianoutnan(dateModMed(isok)))>dureeCycleTh*0.5;
+	% else
+	% iserrcycl=[];
+	% end
+
+	% iserrcycl(1)=0;
+
+
+	% if ~isempty(iserrcycl)&sum(iserrcycl)>0 
+		% fid_alerte=fopen(file_alerte,'a');
+		% fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ',discarded(for u&v), CYCLE NUMBER could be wrong ']);
+		% fclose(fid_alerte);
+		% fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ',discarded(for u&v), CYCLE NUMBER could be wrong']);
+		% o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(iserrcycl)];
+		%o_alertCyc_e5 = [o_alertCyc_e5 a_cycles_sorted(iserrcycl)];
+	% elseif isempty(iserrcycl)
+		% fid_alerte=fopen(file_alerte,'a');
+		% fprintf(fid_alerte, '%s\n',[ floatname ',warning, Can''t check cycle number ']);
+		% fclose(fid_alerte);
+		% fprintf('%s\n',[ floatname ',warning, Can''t check cycle number ']);
+	% end
+% end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
