@@ -66,8 +66,8 @@ if thelon>180
 thelon=thelon-360;
 end
 thelat = T.latitude.data(idLoc);
-isoklon = (thelon>=-180&thelon<=180);    %%%attention  dans certains cas, longitude de 0 à 360. (apex incois ap9) vois si selon le type de flotteur
-isoklat = (thelat>=-90&thelat<=90);
+isoklon = (thelon>=-180&thelon<=180)|isnan(thelon);    %%%attention  dans certains cas, longitude de 0 à 360. (apex incois ap9) vois si selon le type de flotteur
+isoklat = (thelat>=-90&thelat<=90)|isnan(thelon);
 %str2double(strtrim(allfloats{1}));
 % trouve les flags 0
 isflag0 = T.position_qc.data(idLoc)==0;
@@ -77,14 +77,14 @@ T.position_qc.data(idLoc(isoklat&isflag0))=1; % on remplace par 1 les flag 0 uni
 T.position_qc.data(idLoc((~isoklat|~isoklon)&~isflag4))=6;%
 %T.position_qc.data(idLoc(isoklat&isoklon&isflag0))=1; % on remplace par 1 les flag 0 uniquement.
 %T.position_qc.data(idLoc(~isoklon|~isoklat))=6;   % A voir si on met un qc special ('6') ou '4'
-if(sum (~isoklat)>0)
+if(sum ((~isoklat|~isoklon)&~isflag4)>0)
     %if sum(~isoklat)>0|sum(~isoklon)>0
     fid_alerte=fopen(file_alerte,'a');
-    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(T.cycle_number.data(idLoc(isoklat==0))') ',flagged, LOCATION POSITIONS are not realistic.']);
+    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(T.cycle_number.data(idLoc((~isoklat|~isoklon)&~isflag4))') ',flagged, LOCATION POSITIONS are not realistic.']);
     fclose(fid_alerte);
-    fprintf('%s\n',[ floatname ', cycle ' num2str(T.cycle_number.data(idLoc(isoklat==0))') ',flagged, LOCATION POSITIONS are not realistic.']);
+    fprintf('%s\n',[ floatname ', cycle ' num2str(T.cycle_number.data(idLoc((~isoklat|~isoklon)&~isflag4))') ',flagged, LOCATION POSITIONS are not realistic.']);
     if P.Stat==1
-        o_alertCyc_e9 = [o_alertCyc_e9 T.cycle_number.data(idLoc(isoklat==0))'];
+        o_alertCyc_e9 = [o_alertCyc_e9 T.cycle_number.data(idLoc((~isoklat|~isoklon)&~isflag4))'];
         o_alerte8=str2double(floatname);
     end
     
