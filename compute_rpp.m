@@ -310,6 +310,18 @@ if (finalOk == 0)
 				
 				theidMis = find(M.config_mission_number==T.config_mission_number.data(T.cycle_number_index.data==unique(T.cycle_number.data(idCyc_loc))));
 				meta_park_pressure = M.ParkPressure(theidMis);
+                if isempty(theidMis)     % add cc 29/04/2022 on perd beaucoup de donnees lorsque T.config_mission_number est n'importe quoi eg csio
+                    if length(unique(M.ParkPressure))==1
+                        theidMis =1;
+                        meta_park_pressure = M.ParkPressure(theidMis);
+                        if verbose==1
+                        fid_alerte=fopen(file_alerte,'a');
+                        fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, UNIQUE VALUE for PARK META: used for RPP ']);
+						fclose(fid_alerte);
+						fprintf('%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, UNIQUE VALUE for PARK META: used for RPP ']); 
+                        end
+                   end
+                end
 				if isempty(theidMis)==0&meta_park_pressure<=max_pres_prof;
 				    if verbose==1
 						fid_alerte=fopen(file_alerte,'a');
@@ -323,6 +335,7 @@ if (finalOk == 0)
 
 				else
 					if verbose==1&unique(T.cycle_number.data(idCyc_loc))~=0
+                        
 						fid_alerte=fopen(file_alerte,'a');
 						fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, RPP == FILLVALUE, NO PROFILE']);
 						fclose(fid_alerte);
