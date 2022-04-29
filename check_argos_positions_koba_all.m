@@ -78,6 +78,7 @@ posAccNum(find(a_posAcc == 'Z')) = 6;
 posAccNum(find(a_posAcc == 'I')) = 6;  % iridium
 posAccNum(find(a_posAcc == 'R')) = 4;  % rafos
 posAccNum(find(a_posAcc == 'U')) = 6;
+posAccNum(find(a_posAcc == ' ')) = 6;  % ajout cc 29/04/2022
 % on associe à chaque classe de localisation, la précision estimée en latitude
 % et longitude fournie (en m) par Argos
 precision(4) = 1000;

@@ -46,6 +46,7 @@ precision(1) = 1000;
 precision(2) = 350;
 precision(3) = 150;
 
+a_posQc(a_posQc==' ')='U';  % cc 28/04/2022
 
 % precision affectée à une position GPS/Beidou/GLONASS /GALILEO/GNSS 
 precision(4) = 30;
