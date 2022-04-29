@@ -383,7 +383,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 					clear idCyc_m_d idCyc_m_p isok_d isok_p ;
 					
 					duree_cycle(2:length(end_cycles)) = diff(end_cycles)./diff(cycles);    %%duree de chaque cycle  (sauf le cycle 0 ou le cycle 1 pour flotteur APEX)
-					if cycles(1)==0|cycles(1)==1
+					if (cycles(1)==0|cycles(1)==1)&~isempty(date_ok_1)
 						duree_cycle(1)=date_ok_1(end)-date_ok_1(1);
 					else
 						duree_cycle(1)=NaN;
@@ -1265,10 +1265,9 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 							ecartcycle=PARAM.TIME_DIFF_FLLOCS_AR;
 						end
 						
-						
+						ecartFirstLastLoc(istat)=NaN;
 						if (sum(idCyc) > 0)
-							
-							
+
 							% VERIF DOUBLE DE DATE DE LOC
 							%-----------------------------
 							% trouve les doubles de date (qd <=30s) et choisi la date
@@ -1628,6 +1627,8 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 								  
 								else % cc 15/09/2020 :si aucune date de loc valide pour cycle 0 ou 1
 									ecartLaunchDateFirstLoc(k)=NaN;
+                                    ecartFirstLastLoc(icounterfloat,istat)=NaN;
+
 								end
 							elseif numCycle>1 & id==1
 								fid_alerte=fopen(file_alerte,'a');
@@ -1974,8 +1975,10 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 							
 							%end
 							%end   %%fin de la condition sur id>1
-						end  %%fin de la condition (sum(idCyc) > 0 & id==1) || (sum(idCyc)>0  & sum(idCycprec{id}) > 0)
-						% idCycprec=idCyc_sorted;
+                        else  %%fin de la condition (sum(idCyc) > 0 & id==1) || (sum(idCyc)>0  & sum(idCycprec{id}) > 0)
+                            ecartLaunchDateFirstLoc(k)= NaN;
+                        end
+                            % idCycprec=idCyc_sorted;
 						
 					end   %%%Fin de la boucle sur les cycles
 					%
