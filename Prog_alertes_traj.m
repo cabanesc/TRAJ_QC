@@ -17,8 +17,8 @@ global PARAM;
 global P;
  % add cc 15/09/2020
 %%% fichier config - recuperation des path
-P = config_UPDATE2022_csio;
-%P = config_TEST;
+%P = config_UPDATE2022_csio;
+P = config_TEST;
 %P = config_SAGA_2021;
 %P= config_SELECT2021;
 %P=config;
@@ -368,7 +368,11 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 						isok_d=~isnan(T.juld.data(idCyc_m_d));
 						isok_p=~isnan(T.pres.data(idCyc_m_p));
 						date_ok=T.juld.data(idCyc_m_d(isok_d));
-						end_cycles(cm)=date_ok(end);
+						if isempty(date_ok)==0
+                        end_cycles(cm)=date_ok(end);
+                        else
+                          end_cycles(cm)=NaN;
+                        end
 						
 					end
 					
@@ -448,14 +452,14 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 							%
 							
 							id_mission_meta=(find(M.config_mission_number==missions(m)));
-							if isempty(id_mission_meta)==0  % correction cc 12/02/2021
+							if isempty(id_mission_meta)==0 & length(id_mission_meta)==1 % correction cc 12/02/2021 & 29/04/2022
 							%if length(missions)<=length(M.CycleTime)   
 								%if abs(dureeMedianCycle(m)-M.CycleTime(missions(m)))>0.1
 								if abs(dureeMedianCycle(m)-M.CycleTime(id_mission_meta))>PARAM.TIME_DIFF_CYCLE
 									fid_alerte=fopen(file_alerte,'a');
-									fprintf(fid_alerte,'%s\n',[ floatname ', ,warning, CYCLE DURATION in Meta and Traj files are not consitent, (Meta:', num2str(M.CycleTime(m)),' days and Traj:',num2str(dureeMedianCycle(m)), ' days)']);
+									fprintf(fid_alerte,'%s\n',[ floatname ', ,warning, CYCLE DURATION in Meta and Traj files are not consitent, (Meta:', num2str(M.CycleTime(id_mission_meta)),' days and Traj:',num2str(dureeMedianCycle(m)), ' days)']);
 									fclose(fid_alerte);
-									fprintf('%s\n',[ floatname ', ,warning, CYCLE DURATION in Meta and Traj files are not consitent, (Meta: ', num2str(M.CycleTime(m)),' days and Traj: ',num2str(dureeMedianCycle(m)), ' days)']);
+									fprintf('%s\n',[ floatname ', ,warning, CYCLE DURATION in Meta and Traj files are not consitent, (Meta: ', num2str(M.CycleTime(id_mission_meta)),' days and Traj: ',num2str(dureeMedianCycle(m)), ' days)']);
 									if(P.Stat==1)
 										alertCyc_e10 = [alertCyc_e10 cycles_m{m}];
 										alerte1(k)=str2double(floatname);
@@ -1012,7 +1016,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 							
 							%%pour stats
 							presall_traj(icounterfloat,m) = presMedianDrift(m) ;
-							if(isnan(missions(m))==0)&isempty(id_mission_meta)==0
+							if(isnan(missions(m))==0) && isempty(id_mission_meta)==0 && length(id_mission_meta)==1
 								if(length(missions)<=length(M.ParkPressure))
 									ParkPress_all(icounterfloat,m) = -M.ParkPressure(id_mission_meta);
 								end
@@ -1022,7 +1026,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 							
 							%%%Comparaison entre pression mediane et pression indiquee dans fichier meta
 							
-							if ~isempty(id_mission_meta) && isnan(presMedianDrift(m))==0
+							if ~isempty(id_mission_meta) && isnan(presMedianDrift(m))==0 &&length(id_mission_meta)==1
 								
 								if (abs(presMedianDrift(m)- (-M.ParkPressure(id_mission_meta)))>PARAM.PRESS_PARK_DIFF_M) % NC laisser une marge d'erreur
 									fid_alerte=fopen(file_alerte,'a');

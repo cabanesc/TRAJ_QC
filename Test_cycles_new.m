@@ -1,4 +1,4 @@
-
+ 
 
 function [o_alerte3, o_alerte4, o_alerte5, o_alerte6, o_alertCyc_e4,o_alertCyc_e5, idCycprec] = ...
     Test_cycles(a_idLoc, a_cycles, a_cycles_1, a_cycles_sorted, a_duree_cycle,a_mission, a_dureeMedianCycle)
@@ -264,25 +264,29 @@ isCyc = find(a_cycles == a_cycles_sorted(1));
 numMis = unique(T.config_mission_number.data(isCyc));
 
 if ~isnan(numMis)
-	isMis = find(a_config_mission_number == numMis);
-	%dureeCumulee(1)=a_dureeMedianCycle(isMis)*(a_cycles_sorted(1)-1);
-	idCyc = a_idLoc(T.cycle_number.data(a_idLoc) == a_cycles_sorted(1));
-	
-		dureeCumulee(1)=T.juld.data(idCyc(1));
-		dureeMod=T.juld.data(idCyc)-dureeCumulee(1);
-		% detection de date erronnée au sein du cycle
-		iserr=abs(dureeMod-median(dureeMod))>a_dureeMedianCycle(isMis);
-		 if sum(iserr)>0
-		   % fid_alerte=fopen(file_alerte,'a');
-			% fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(1)) ', DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
-			% fclose(fid_alerte);
-			% fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(1)) ', DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
-			 o_alertCyc_e5 = [o_alertCyc_e5 a_cycles_sorted(1)];
-		 end
-	
-	
-	dateModMed(1)=median(dureeMod);
-	dureeCycleTh(1)=a_dureeMedianCycle(isMis);
+    isMis = find(a_config_mission_number == numMis);
+    if isempty(isMis)==0
+        %dureeCumulee(1)=a_dureeMedianCycle(isMis)*(a_cycles_sorted(1)-1);
+        idCyc = a_idLoc(T.cycle_number.data(a_idLoc) == a_cycles_sorted(1));
+        
+        dureeCumulee(1)=T.juld.data(idCyc(1));
+        dureeMod=T.juld.data(idCyc)-dureeCumulee(1);
+        % detection de date erronnée au sein du cycle
+        iserr=abs(dureeMod-median(dureeMod))>a_dureeMedianCycle(isMis);
+        if sum(iserr)>0
+            % fid_alerte=fopen(file_alerte,'a');
+            % fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(1)) ', DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
+            % fclose(fid_alerte);
+            % fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(1)) ', DATE DE LOC ERRONNEE AU SEIN DU CYCLE ']);
+            o_alertCyc_e5 = [o_alertCyc_e5 a_cycles_sorted(1)];
+        end
+        
+        
+        dateModMed(1)=median(dureeMod);
+        dureeCycleTh(1)=a_dureeMedianCycle(isMis);
+    else
+        dureeCumulee(1)=0;
+    end
 else
     dureeCumulee(1)=0;
 end
@@ -291,7 +295,7 @@ for id=2:length(a_cycles_sorted)
 	isCyc = find(a_cycles == a_cycles_sorted(id));
 	numMis = unique(T.config_mission_number.data(isCyc));
 	isMis = find(a_config_mission_number == numMis);
-	if ~isnan(numMis)&~isempty(isMis)		
+	if ~isnan(numMis)&~isempty(isMis)&length(isMis)==1		
 		dureeCumulee(id)=dureeCumulee(id-1)+a_dureeMedianCycle(isMis)*(a_cycles_sorted(id)-a_cycles_sorted(id-1));
 		idCyc = a_idLoc(T.cycle_number.data(a_idLoc) == a_cycles_sorted(id));
 		dureeMod=T.juld.data(idCyc)-dureeCumulee(id);
