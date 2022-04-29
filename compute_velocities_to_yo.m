@@ -170,9 +170,7 @@ for  idCy_sorted = 1:length(yoCycle)
     g_cycleNumber = numCycle;
     idCycle = find(T.cycle_number.data == numCycle);
     idCyT = find(T.cycle_number_index.data == numCycle);  % cc 08/04/2022
-%     if isequal(idCyT,idCy)==0
-%         keyboard
-%     end
+     
     % on ne prend pas en compte les cycles #0 des flotteurs ni les cycles avec Alerte
     if (numCycle == 0)| (ismember(numCycle,alertes_cycle))
         continue;
@@ -194,6 +192,8 @@ for  idCy_sorted = 1:length(yoCycle)
     cycleAccuracy = T.position_accuracy.data(idCycle(idArgosLocCycle));
     cycleQc = T.position_qc.data(idCycle(idArgosLocCycle));
     cycleQc_koba = T.position_qc_koba.data(idCycle(idArgosLocCycle));
+    cycleAccuracy(find(cycleAccuracy == ' ')) = 'U'; % add cc 29/04/2022
+
     if (KOBA_CHECK == 1)
         idGood = find((cycleQc ~= 6) & (cycleQc ~= 4) & (cycleQc_koba ~= 6) & (cycleDateQc ~= 4)& (cycleDateQc ~= 6) & (cycleAccuracy ~= 'I') & (cycleAccuracy ~= 'A') & (cycleAccuracy ~= 'B')& (cycleAccuracy ~= 'Z')& (cycleAccuracy ~= 'U'));
     else

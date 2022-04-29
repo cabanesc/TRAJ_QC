@@ -139,7 +139,7 @@ for idCy_sorted = 1:length(yoCycle)
     cycleAccuracy = T.position_accuracy.data(idCycle(idLoc));
     cycleQc = T.position_qc.data(idCycle(idLoc));
     cycleQc_koba = T.position_qc_koba.data(idCycle(idLoc));
-    
+    cycleAccuracy(find(cycleAccuracy == ' ')) = 'U';  % add cc 29/04/2022
     if (KOBA_CHECK == 1)
         %idGood = find((cycleQc ~= 6) & (cycleQc ~= 4) & (cycleQc_koba ~= 6) & (cycleDateQc ~= 4)& (cycleDateQc ~= 6))
         idGood = find((cycleQc ~= 6) & (cycleQc ~= 4) & (cycleQc_koba ~= 6) & (cycleDateQc ~= 4)& (cycleDateQc ~= 6) & (cycleAccuracy ~= 'I')  & (cycleAccuracy ~= 'A') & (cycleAccuracy ~= 'B')& (cycleAccuracy ~= 'Z')& (cycleAccuracy ~= 'U'));
@@ -184,7 +184,7 @@ for idCy_sorted = 1:length(yoCycle)
     
     
     %if (GroundedNum(idCyT) == -1)
-    if (~isempty(cycleLon))
+    if (~isempty(cycleLon))&(~isempty(idCyT))
         % if numCycle==252
         % keyboard
         % end
@@ -396,7 +396,7 @@ for idCy_sorted = 1:length(yoCycle)
     idCyT = find(T.cycle_number_index.data == numCycle);  % cc 08/04/2022
     if (~isnan(yoLonLastLocPrev(idCy)) && ...
             ~isnan(yoLonFirstLocCur(idCy)) && ...
-            (GroundedNum(idCyT) == -1))
+            (GroundedNum(idCyT) == -1))&& (~isempty(idCyT))
         
         % gestion du passage de la ligne de changement de date
         yoLonStart = yoLonLastLocPrev(idCy);
