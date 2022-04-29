@@ -17,13 +17,14 @@ global PARAM;
 global P;
  % add cc 15/09/2020
 %%% fichier config - recuperation des path
+P = config_UPDATE2022_csio;
 %P = config_TEST;
-P = config_SAGA_2021;
+%P = config_SAGA_2021;
 %P= config_SELECT2021;
 %P=config;
 Liste_Float = P.Liste_Float
 
-addpath('/home1/homedir5/perso/ccabanes/matlab/libs_cc/Myfun/')
+addpath('/home/lops/users/ccabanes/matlab/libs_cc/Myfun/')
 
 addpath(P.DIR_TOOL);
 addpath([P.DIR_TOOL '/Lib_Argo/']);
@@ -31,13 +32,21 @@ addpath([P.DIR_TOOL '/Lib_Argo/Plots']);
 addpath([P.DIR_TOOL 'Lib_Argo/Tests_TR']);
 addpath([P.DIR_TOOL '/Lib_Argo/RWnetcdf/R2008b']);
 
-addpath([P.DIR_SOFT '/decArgo_soft/soft/sub']);
-addpath([P.DIR_SOFT '/decArgo_soft/soft/util']);
-addpath([P.DIR_SOFT '/decArgo_soft/soft/util/sub']);
-addpath([P.DIR_SOFT '/decArgo_soft/soft/util2']);
-addpath([P.DIR_SOFT '/decArgo_soft/soft/misc']);
-addpath([P.DIR_SOFT '/decArgo_soft/soft/sub_foreign']);
-addpath([P.DIR_SOFT '/decArgo_soft/soft/m_map1.4e']);
+% addpath([P.DIR_SOFT '/decArgo_soft/soft/sub']);
+% addpath([P.DIR_SOFT '/decArgo_soft/soft/util']);
+% addpath([P.DIR_SOFT '/decArgo_soft/soft/util/sub']);
+% addpath([P.DIR_SOFT '/decArgo_soft/soft/util2']);
+% addpath([P.DIR_SOFT '/decArgo_soft/soft/misc']);
+% addpath([P.DIR_SOFT '/decArgo_soft/soft/sub_foreign']);
+% addpath([P.DIR_SOFT '/decArgo_soft/soft/m_map1.4e']);
+
+addpath([P.DIR_SOFT 'decArgo_soft/sub'])
+addpath([P.DIR_SOFT 'decArgo_soft/util'])
+addpath([P.DIR_SOFT 'decArgo_soft/util/sub'])
+addpath([P.DIR_SOFT 'decArgo_soft/util2'])
+addpath([P.DIR_SOFT 'decArgo_soft/misc'])
+addpath([P.DIR_SOFT 'decArgo_soft/sub_foreign'])
+addpath(genpath([P.DIR_SOFT '_ressources/pourMatlab/']))
 
 addpath(P.DIR_VISU);
 addpath('./lib/lib_ext')
@@ -218,7 +227,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
     %%************************************************************************
     
     %% BOUCLE SUR LES FLOTTEURS
-    
+    %for k=length(allfloats{1}):length(allfloats{1})
     for k=1:length(allfloats{1})
         disp(' ')
 		disp(['LIST: ' fliplr(strtok( fliplr(Liste_Float{ilist}),'/')) ' :' num2str(k) '/' num2str(length(allfloats{1}))])
@@ -342,7 +351,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 					end_cycles=[];
 					pres_ok = [];
 					cycles_m={};
-					
+					duree_cycle=[];
 					% on selectionne les missions renseignees
 					allmiss=T.config_mission_number.data(~isnan(T.config_mission_number.data)); % correction cc T.config_mission_number.data=NaN pour iLaunch
 					missions=unique(allmiss,'stable')';
@@ -367,7 +376,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 					isok_d=~isnan(T.juld.data(idCyc_m_d));
 					date_ok_1=T.juld.data(idCyc_m_d(isok_d));
 					
-					clear idCyc_m_d idCyc_m_p isok_d isok_p;
+					clear idCyc_m_d idCyc_m_p isok_d isok_p ;
 					
 					duree_cycle(2:length(end_cycles)) = diff(end_cycles)./diff(cycles);    %%duree de chaque cycle  (sauf le cycle 0 ou le cycle 1 pour flotteur APEX)
 					if cycles(1)==0|cycles(1)==1
@@ -718,9 +727,17 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 							maxvoisins(i_rpp)=NaN;    
 							else
 								%%% recupere la bathy de la premiere pos du cycle
+								if (P.Bathy==2) % SRTM30
 								
-								[o_elev, o_lon, o_lat] = get_srtm_elev(long_first_curr, long_first_curr,...
+									[o_elev, o_lon, o_lat] = get_srtm_elev(long_first_curr, long_first_curr,...
 									lat_first_curr, lat_first_curr); 
+								
+								elseif (P.Bathy==3) % GEBCO
+									[o_elev, o_lon, o_lat] = get_gebco_elev_zone(long_first_curr, long_first_curr,...
+									lat_first_curr, lat_first_curr,'');
+								else
+									error('Check configuration for P.Bathy: value is not defined')
+							    end
 								
 	%CC							
 								% [o_elev2, o_lon2, o_lat2] = get_srtm_elev(long_first_curr-0.01, long_first_curr+0.01,...
@@ -735,8 +752,8 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 	 % %CC                                       
 									
 								
-								if(length(o_lon)>1 & length(o_lat)>1 & abs(long_first_curr)<max(abs(o_lon)) ...
-										& abs(long_first_curr)>min(abs(o_lon)))
+								if(length(o_lon)>1 & length(o_lat)>1 & abs(long_first_curr)<max(max(abs(o_lon))) ...   % cc 21/01/2022 addapt to gebco
+										& abs(long_first_curr)>min(min(abs(o_lon))))
 									elev_first_curr = interp2(o_lon,o_lat,o_elev,long_first_curr,lat_first_curr);
 									%                     elseif(length(o_lon)<=1 || length(o_lat)<=1) %remove cc : 15/09/2020
 									%                         elev_first_curr = mean(o_elev);
@@ -748,10 +765,21 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 								if(id>1 & isempty(idCycprec{id})==0&~isempty(long_last_prec)&~isempty(lat_last_prec))
 									%%%recupere la bathy de la derniere pos du cycle
 									%%%precedent s'il existe
-									[o_elev_end, o_lon_end, o_lat_end] = get_srtm_elev(long_last_prec, long_last_prec,...
-										lat_last_prec, lat_last_prec);
-									if(length(o_lon_end)>1 & length(o_lat_end)>1 & abs(long_last_prec)<max(abs(o_lon_end)) ...
-											& abs(long_last_prec)>min(abs(o_lon_end)))
+									
+									if (P.Bathy==2) % SRTM30
+								
+										[o_elev_end, o_lon_end, o_lat_end] = get_srtm_elev(long_last_prec, long_last_prec,...
+										lat_last_prec, lat_last_prec); 
+								
+									elseif (P.Bathy==3) % GEBCO
+										[o_elev_end, o_lon_end, o_lat_end] = get_gebco_elev_zone(long_last_prec, long_last_prec,...
+										lat_last_prec, lat_last_prec,'');
+									else
+										error('Check configuration for P.Bathy: value is not defined')
+									end	
+									
+									if(length(o_lon_end)>1 & length(o_lat_end)>1 & abs(long_last_prec)<max(max(abs(o_lon_end))) ...
+											& abs(long_last_prec)>min(min(abs(o_lon_end))))
 										elev_last_prec = interp2(o_lon_end,o_lat_end,o_elev_end,long_last_prec,lat_last_prec);
 										%                         elseif(length(o_lon_end)<=1 ||length(o_lat_end)<=1) %remove cc : 15/09/2020
 										%                             elev_last_prec = mean(o_elev_end);
@@ -817,7 +845,6 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 							T.representative_park_temperature.data(idCycleTraj)=tabFinalParkTemp; % stokage pour fichier yo
 							
 						   
-							
 							
 							
 							
@@ -934,6 +961,8 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 					%if ~isempty(idDrift)& isempty(find(~isnan(T.pres.data(idDrift)), 1))==0  %% si dispose de mesure en profondeur et si au moins une valeur nonNan parmi les pressions
 					if ~isempty(idLoc) % correction cc 03/11/2020 on ne passe pas si pas de loc
 						% par nunero de mission
+						park_prof=[];
+						pres_ok_m=[];
 						for m = 1:length(missions)
 							
 							idcMis=find(T.config_mission_number.data==missions(m));
@@ -1035,7 +1064,9 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 									|| presMedianDrift(m)>-M.ParkPressure(m)+PARAM.PRESS_PARK_DIFF_M
 								
 								park_prof(m) = presMedianDrift(m);
-							end
+							elseif isnan(M.ParkPressure(m))
+							    park_prof(m) = presMedianDrift(m);
+						    end
 							
 						end  %%fin de la boucle sur les missions
 						
@@ -1147,7 +1178,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 							
 							if  ((elev_end_all(i_rpp)>=park_prof(idMis)-PARAM.PRESS_PARK_DIFF_BATH | elev_all(i_rpp)>=park_prof(idMis)-PARAM.PRESS_PARK_DIFF_BATH)) ...
 									  & ((isnan(pres_drift_mes(i_rpp))||pres_drift_mes(i_rpp)<-100)|| ((elev_end_all(i_rpp)>=pres_drift_mes(i_rpp)-seuil | elev_all(i_rpp)>=pres_drift_mes(i_rpp)-seuil)))  % modif condition cc 21/01/2021 pour ne pas prendre en compte les flotteurs qui ne peuvent pas plonger et restent près de la surface (pas mal de provor-arvor iridium dans ce cas)
-						   
+						   %keyboard
 								%if(GroundedNum(id)~=2)    %%% 2 = 'N'	% correction cc 03/11/2020 Si le flotteur dit qu'il n'est pas grounded alors, pas d'alerte grounded
 								alerte_grounded = 1;
 								iground=iground+1;
@@ -1646,11 +1677,22 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/2020
 										
 										
 										%%%Recupere indices de la premiere loc
-										[o_elev, o_lon, o_lat] = get_srtm_elev(dlon-0.01, dlon+0.01,...
+										if P.Bathy==2  % SRTM30
+											[o_elev, o_lon, o_lat] = get_srtm_elev(dlon-0.01, dlon+0.01,...
 											dlat-0.01, dlat+0.01);
-										[mini,ilong] = min(abs(o_lon-dlon));
-										[mini,ilat] = min(abs(o_lat-dlat));
-										LONG = o_lon'; LAT = o_lat';
+											[mini,ilong] = min(abs(o_lon-dlon));
+										    [mini,ilat] = min(abs(o_lat-dlat));
+											LONG = o_lon'; LAT = o_lat';
+										elseif P.Bathy==3 % GEBCO	
+											[o_elev, o_lon, o_lat] = get_gebco_elev_zone(dlon-0.01, dlon+0.01,...
+											dlat-0.01, dlat+0.01,'');
+											[mini,ilong] = min(abs(o_lon(1,:)-dlon));
+										    [mini,ilat] = min(abs(o_lat(:,1)-dlat));
+											LONG = o_lon(1,:)'; LAT = o_lat(:,1);
+										else
+										error('Check configuration for P.Bathy: value is not defined')
+										end
+					
 										elev_float = o_elev(ilat,ilong);
 										
 									end
