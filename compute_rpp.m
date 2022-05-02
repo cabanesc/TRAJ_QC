@@ -6,7 +6,7 @@ function [tabFinalParkPres,tabFinalParkTemp,tabFinalParkPsal,tabFinalParkEtat,ta
 
 global file_alerte;
 global floatname;
-
+global PARAM
 
 depPres=T.pres.data(idCyc_drift);
 depPres_qc=T.pres_qc.data(idCyc_drift);
@@ -322,7 +322,7 @@ if (finalOk == 0)
                         end
                    end
                 end
-				if isempty(theidMis)==0&meta_park_pressure<=max_pres_prof;
+				if isempty(theidMis)==0 && meta_park_pressure<=max_pres_prof+PARAM.PRESS_PARK_DIFF_BATH
 				    if verbose==1
 						fid_alerte=fopen(file_alerte,'a');
 						fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, RPP == META, : ' num2str(meta_park_pressure)]);

@@ -178,9 +178,9 @@ end
 iserrcycl=(a_duree_cycle==0&~isok');
 if ~isempty(iserrcycl)&sum(iserrcycl)>0 
 		fid_alerte=fopen(file_alerte,'a');
-		fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ',discarded(for u&v), CYCLE NUMBER could be wrong ']);
+		fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ',discarded(for u&v), CYCLE NUMBER could be wrong (duplicate)']);
 		fclose(fid_alerte);
-		fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ',discarded(for u&v), CYCLE NUMBER could be wrong']);
+		fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ',discarded(for u&v), CYCLE NUMBER could be wrong (duplicate)']);
 		o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(iserrcycl)];
 end
 
