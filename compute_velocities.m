@@ -23,7 +23,7 @@
 %   19/10/2016 - BRN - modification
 %                      PSAL sur RPP mis à FillValue (format ANDRO)
 % ------------------------------------------------------------------------------
-function T=compute_velocities(T,P,alertes_cycle);
+function T=compute_velocities(T,CONF,alertes_cycle);
 
 
 % durée maximale de prise ne compte des positions Argos utilisées pour
@@ -95,7 +95,7 @@ latSurfPrev = NaN;
 
 
 
-logfile=[P.DIR_HOME '/logs/compute_velocities.log'];
+logfile=[CONF.DIR_HOME '/logs/compute_velocities.log'];
 
 flog=fopen(logfile,'a');
 % récupération des localisations Argos et détermination des vitesses de

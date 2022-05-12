@@ -23,7 +23,7 @@ function [o_alerte7, o_alerte8, o_alerte9, o_alertCyc_e5, o_alertCyc_e6,o_alertC
 global PARAM;
 global T;
 global M;
-global P;
+global CONF;
 global floatname;
 global file_alerte;
 
@@ -49,7 +49,7 @@ if sum(~isok)>0
     fprintf(fid_alerte, [ floatname ', cycle ' num2str(T.cycle_number.data(idLoc(isok==0))') ',flagged, LOCATION DATES are not realistic']);
     fprintf('%s\n',[ floatname ', cycle ' num2str(T.cycle_number.data(idLoc(isok==0))') ',flagged, LOCATION DATES are not realistic']);
     fclose(fid_alerte);
-    if(P.Stat==1)
+    if(CONF.Stat==1)
         o_alertCyc_e5 = [o_alertCyc_e5 T.cycle_number.data(idLoc(isok==0))'];
         o_alerte7=str2double(floatname);
     end
@@ -83,7 +83,7 @@ if(sum ((~isoklat|~isoklon)&~isflag4)>0)
     fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(T.cycle_number.data(idLoc((~isoklat|~isoklon)&~isflag4))') ',flagged, LOCATION POSITIONS are not realistic.']);
     fclose(fid_alerte);
     fprintf('%s\n',[ floatname ', cycle ' num2str(T.cycle_number.data(idLoc((~isoklat|~isoklon)&~isflag4))') ',flagged, LOCATION POSITIONS are not realistic.']);
-    if P.Stat==1
+    if CONF.Stat==1
         o_alertCyc_e9 = [o_alertCyc_e9 T.cycle_number.data(idLoc((~isoklat|~isoklon)&~isflag4))'];
         o_alerte8=str2double(floatname);
     end
@@ -109,7 +109,7 @@ if abs(LaunchLat-M.launch_latitude)>PARAM.LOC_LAUNCH_DIFF_M | abs(LaunchLon-M.la
 			isflag4 = T.position_qc.data(iLaunch)==4; % add cc 05/10/2020
 			T.position_qc.data(iLaunch&~isflag4)=6;% flag special pour confirmer ou non le launch date ?
 			isflagged='flagged';
-			if P.Stat==1
+			if CONF.Stat==1
 				o_alertCyc_e6 = [o_alertCyc_e6 1];
 				o_alerte9=str2double(floatname);
 			end
@@ -138,7 +138,7 @@ if abs(LaunchDate+datenum('01011950','ddmmyyyy')-LaunchDate_meta)> PARAM.DATE_LA
 end
 
 %%%pour STATS
-if P.Stat==1
+if CONF.Stat==1
     o_Diff_LaunchD = LaunchDate+datenum('01011950','ddmmyyyy') - LaunchDate_meta;
     o_Diff_LaunchLat = LaunchLat - M.launch_latitude;
     o_Diff_LaunchLon = LaunchLon - M.launch_longitude;

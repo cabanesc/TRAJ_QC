@@ -69,7 +69,8 @@ for id=2:length(a_cycles)
     numCycle_prec = a_cycles(id-1);
     isCyc = (T.cycle_number.data(a_idLoc) == numCycle);
     idCyc = a_idLoc(isCyc);
-    numMis = T.config_mission_number.data(id);
+    idCycT = find(T.cycle_number_index.data == numCycle);
+    numMis = T.config_mission_number.data(idCycT);
     %isMis = find(M.config_mission_number == numMis);
     %idMis = find(double(a_mission)==numMis);
     if(id>1)
@@ -184,12 +185,26 @@ if ~isempty(iserrcycl)&sum(iserrcycl)>0
 		o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(iserrcycl)];
 end
 
+% trouve les durée de cycle aberrantes
+iserrcycl= find((a_duree_cycle>400|a_duree_cycle<0));
+if ~isempty(iserrcycl)&sum(iserrcycl)>0
+    fid_alerte=fopen(file_alerte,'a');
+    fprintf(fid_alerte, '%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ',discarded(for u&v), CYCLE TIME is not realistic ']);
+    fclose(fid_alerte);
+    fprintf('%s\n',[ floatname ', ' num2str(a_cycles_sorted(iserrcycl)) ',discarded(for u&v), CYCLE TIME is not realistic']);
+    o_alertCyc_e4 = [o_alertCyc_e4 a_cycles_sorted(iserrcycl)];
+end
+
+clear iserrcycl
+
 % Pour les flotteurs qui n'ont pas plus de deux missions avec des duree de cycle differentes 
 % on trouve les cycles dont la duree n'est pas celle attendue: on
 % calcule la répartition (hist)
 % Si la duree de cycle est peu frequente (occurence <=2) et si elle est multiple de la longueur theorique ; le cycle est eliminé du calcul u &v
+
+
 if length(unique(M.CycleTime))<=2 
-	[m,h]=hist(a_duree_cycle(~isok),[0:1:100]); % repartition
+	[m,h]=hist(a_duree_cycle(~isok),[0:1:400]); % repartition
 	ll=find(m>=1);                               % indice des duree qui apparaissent au moins une fois
     if isempty(ll)==0                            
         dd=diff(ll)>1;                           % on ne prends pas en compte les durees de cycle avec fortes occurences(>2) et les durees de cycle proche 
@@ -292,8 +307,8 @@ else
 end
 
 for id=2:length(a_cycles_sorted)
-	isCyc = find(a_cycles == a_cycles_sorted(id));
-	numMis = unique(T.config_mission_number.data(isCyc));
+	isCycT = find(T.cycle_number_index.data == a_cycles_sorted(id));
+	numMis = unique(T.config_mission_number.data(isCycT));
 	isMis = find(a_config_mission_number == numMis);
 	if ~isnan(numMis)&~isempty(isMis)&length(isMis)==1		
 		dureeCumulee(id)=dureeCumulee(id-1)+a_dureeMedianCycle(isMis)*(a_cycles_sorted(id)-a_cycles_sorted(id-1));

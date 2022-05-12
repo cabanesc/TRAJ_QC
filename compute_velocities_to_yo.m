@@ -3,12 +3,12 @@
 % Pour calcul et stockage des vitesses de surface et en profondeur dans les fichiers  andro
 %
 % SYNTAX :
-%   compute_velocities((T,P,alertes_cycle)
+%   compute_velocities((T,CONF,alertes_cycle)
 %
 % INPUT PARAMETERS :
 %   T :structure fichier Traj (ajout des variables vitesses)
 %   alertes_cycle : numero de cycle en alerte
-%   P : structure config
+%   CONF : structure config
 %
 % OUTPUT PARAMETERS :
 %   T :structure fichier Traj (ajout des variables vitesses)
@@ -25,7 +25,7 @@
 %   19/10/2016 - BRN - modification
 %                      PSAL sur RPP mis à FillValue (format ANDRO)
 % ------------------------------------------------------------------------------
-function T=compute_velocities(T,P,alertes_cycle);
+function T=compute_velocities(T,CONF,alertes_cycle);
 
 
 global g_presDef g_tempDef g_salDef;
@@ -79,12 +79,12 @@ precision(3) = 150;
 % precision affectée à une position GPS
 precision(4) = 30;
 
-%P= config;
+%CONF= config;
 
 % fichier de sortie
 %yoFileName = [argoDispDirectory '/data/' 'androPTS' name '_' depInput '_' datestr(now, 'yyyymmddTHHMMSS') '.dat'];
 %yoFileName = [argoDispDirectoryFinal 'androPTS' name '_' depInput '_' datestr(now, 'yyyymmddTHHMMSS') '.dat'];
-yoFileName = P.ATLAS_FILE;
+yoFileName = CONF.ATLAS_FILE;
 fidOut = fopen(yoFileName, 'at');
 %fidOut = fopen(yoFileName, 'wt');
 
@@ -426,6 +426,7 @@ for  idCy_sorted = 1:length(yoCycle)
 %for idCy = 1:length(yoCycle)
     if ((yoLonLastLocPrev(idCy) ~= g_yoLonDef) && ...
             (yoLonFirstLocCur(idCy) ~= g_yoLonDef) && ...
+            (~isempty(idCyT)) && ...
             (GroundedNum(idCyT) == -1))
         
         % gestion du passage de la ligne de changement de date
