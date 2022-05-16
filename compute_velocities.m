@@ -95,7 +95,7 @@ latSurfPrev = NaN;
 
 
 
-logfile=[CONF.DIR_HOME '/logs/compute_velocities.log'];
+logfile=[CONF.DIR_DATA '/logs/compute_velocities.log'];
 
 flog=fopen(logfile,'a');
 % récupération des localisations Argos et détermination des vitesses de

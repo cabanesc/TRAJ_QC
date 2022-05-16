@@ -311,15 +311,17 @@ if (finalOk == 0)
                 theidMis = find(M.config_mission_number==T.config_mission_number.data(T.cycle_number_index.data==unique(T.cycle_number.data(idCyc_loc))));
                 meta_park_pressure = M.ParkPressure(theidMis);
                 if isempty(theidMis)||length(theidMis)>1    % add cc 29/04/2022 on perd beaucoup de donnees lorsque T.config_mission_number est n'importe quoi eg csio
+                    if unique(T.cycle_number.data(idCyc_loc))~=0  % on n'est pas sur le cycle 0
                     if length(unique(M.ParkPressure))==1
                         theidMis =1;
                         meta_park_pressure = M.ParkPressure(theidMis);
                         if verbose==1
                             fid_alerte=fopen(file_alerte,'a');
-                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, Mission number in traj does not allow to retrieve PARK META, but we used the UNIQUE VALUE of PARK META (same for all missions)']);
+                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, Mission number in traj does not allow to retrieve PARK META, but there is only one VALUE for PARK META (same for all missions): ' num2str(meta_park_pressure)]);
                             fclose(fid_alerte);
-                            fprintf('%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, Mission number in traj does not allow to retrieve PARK META, but we used the UNIQUE VALUE of PARK META (same for all missions)']);
+                            fprintf('%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, Mission number in traj does not allow to retrieve PARK META, but there is only one VALUE for PARK META (same for all missions): ' num2str(meta_park_pressure)]);
                         end
+                    end
                     end
                 end
                 if length(theidMis)==1
@@ -341,9 +343,9 @@ if (finalOk == 0)
                         if verbose==1&unique(T.cycle_number.data(idCyc_loc))~=0
                             
                             fid_alerte=fopen(file_alerte,'a');
-                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, RPP == FILLVALUE, NO PROFILE']);
+                            fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, RPP == FILLVALUE, NO PROFILE DOWN to PARK_META']);
                             fclose(fid_alerte);
-                            fprintf('%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, RPP == FILLVALUE, NO PROFILE']);
+                            fprintf('%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, RPP == FILLVALUE, NO PROFILE DOWN to PARK_META ']);
                         end
                     end
                 end
@@ -352,7 +354,7 @@ if (finalOk == 0)
             else
                 if verbose==1&unique(T.cycle_number.data(idCyc_loc))~=0
                     fid_alerte=fopen(file_alerte,'a');
-                    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, RPP == FILLVALUE, NO pROFILE']);
+                    fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, RPP == FILLVALUE, NO PROFILE']);
                     fclose(fid_alerte);
                     fprintf('%s\n',[ floatname ', cycle ' num2str(unique(T.cycle_number.data(idCyc_loc))) ',warning, RPP == FILLVALUE, NO PROFILE']);
                 end

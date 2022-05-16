@@ -321,5 +321,5 @@ o_lon = longitudes;
 o_lat = latitudes;
 
 clear lon lat elev longitudes latitudes
-
+fclose all;
 return

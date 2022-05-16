@@ -1,5 +1,4 @@
 function [M,Mf] = read_file_meta_nc(meta_fileName)
-
 % read all the variables
 [Mf,DimM] = read_netcdf_allthefile(meta_fileName);
 Mf=replace_fill_bynan(Mf);
@@ -36,7 +35,7 @@ for iparam = 1:3
     
     for k=1:length(units)
         idF = find(findstr_tab(launch_config_parameter,['CONFIG_' configParam{iparam} '_' units{k}]));
-        if isempty(idF)==0 & Mf.launch_config_parameter_value.data(idF)>0
+        if isempty(idF)==0
             M.(configParam{iparam}) = repmat(Mf.launch_config_parameter_value.data(idF),DimM.n_missions.dimlength,1)./ratio(k);
         end
     end
@@ -51,7 +50,7 @@ for iparam = 4:5
     
     for k=1:length(units)
         idF = find(findstr_tab(launch_config_parameter,['CONFIG_' configParam{iparam} '_' units{k}]));
-        if isempty(idF)==0 & Mf.launch_config_parameter_value.data(idF)>0
+        if isempty(idF)==0
             M.(configParam{iparam}) = repmat(Mf.launch_config_parameter_value.data(idF),DimM.n_missions.dimlength,1)./ratio(k);
         end
     end
@@ -61,7 +60,7 @@ iparam = 6;
 % initialize
 M.(configParam{iparam}) = NaN*zeros(DimM.n_missions.dimlength,1);
 idF = find(findstr_tab(launch_config_parameter,['CONFIG_' configParam{iparam} '_LOGICAL']));
-if isempty(idF)==0 & Mf.launch_config_parameter_value.data(idF)
+if isempty(idF)==0
     M.(configParam{iparam}) = repmat(Mf.launch_config_parameter_value.data(idF),DimM.n_missions.dimlength,1)./ratio(k);
 end
    
@@ -73,7 +72,7 @@ ratio=[1,24,1440,86400];
 for iparam = 1:3
     for k=1:length(units)
         idF = find(findstr_tab(config_parameter,['CONFIG_' configParam{iparam} '_' units{k}]));
-        if isempty(idF)==0 & Mf.config_parameter_value.data(:,idF)>0
+        if isempty(idF)==0
             M.(configParam{iparam}) = Mf.config_parameter_value.data(:,idF)./ratio(k);
         end
     end
@@ -85,7 +84,7 @@ ratio=[1,10,100,0.1];
 for iparam = 4:5   
     for k=1:length(units)
         idF = find(findstr_tab(config_parameter,['CONFIG_' configParam{iparam} '_' units{k}]));
-        if isempty(idF)==0&Mf.config_parameter_value.data(:,idF)>0
+        if isempty(idF)==0
             M.(configParam{iparam}) = Mf.config_parameter_value.data(:,idF)./ratio(k);
         end
     end
@@ -93,7 +92,7 @@ end
 
 iparam = 6;
 idF = find(findstr_tab(config_parameter,['CONFIG_' configParam{iparam} '_LOGICAL']));
-if isempty(idF)==0&Mf.config_parameter_value.data(:,idF)>0
+if isempty(idF)==0
     M.(configParam{iparam}) = Mf.config_parameter_value.data(:,idF)./ratio(k);
 end
    
@@ -117,8 +116,11 @@ M.launch_date=strtrim(Mf.launch_date.data)';
 M.launch_latitude=Mf.launch_latitude.data;
 M.launch_longitude=Mf.launch_longitude.data;
 M.launch_qc=Mf.launch_qc.data;
+M.startup_date=strtrim(Mf.startup_date.data)';
+M.startup_date_qc=Mf.startup_date_qc.data;
 M.pi_name=strtrim(Mf.pi_name.data)';
 M.dac_format_id=strtrim(Mf.dac_format_id.data)';
 M.controller_board_type_primary=strtrim(Mf.controller_board_type_primary.data)';
-
+ii=find(findstr_tab(Mf.sensor.data,'CTD_CNDC'));
+M.ctd_cndc_serial_number=strtrim(Mf.sensor_serial_no.data(ii,:));
 

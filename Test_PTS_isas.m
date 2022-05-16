@@ -29,7 +29,7 @@ global I_temp_std;
 global I_psal;
 global I_temp;
 
-
+%tic
 o_alerte11 = []; o_alerte12 = [];
 isas_alert= 0; isas_non_ref= 0;proche_surface= 0;
 
@@ -89,8 +89,6 @@ I_psal_max=I_psal_profile_all_max+PARAM.S_N_STD*I_psal_std_profile(ii);
 ii=find(I_psal.depth.data(idmin)==I_psal_std.depth.data);
 if isempty(ii); ii=length(I_psal_std.depth.data);end
 I_psal_min=max(I_psal_profile_all_min-PARAM.S_N_STD*I_psal_std_profile(ii),-2);
-
-
 
 
 pres_alert=0;
@@ -180,8 +178,9 @@ isstd = T.measurement_code.data==294&T.cycle_number.data==cycles_sorted(id);
 presstd =T.pres.data(isstd);
 
 % on remet a jour psal_noqc4
+if isfield(T,'psal_qc')
 psal_noqc4 = T.psal_qc.data(idCyc_drift)<4;
-
+end
 % % on ne verifie la coherence P,T (istocheck=1) a partir d'ISAS:
 % % Pour les variables instantannées : oui
 % % Pour les variables moyennes : non sauf si la pression du flotteur reste stable pdt la dérive
@@ -202,8 +201,11 @@ istocheck(~ismean)=1;
 
 imes=0;
 imes2=0;
+
+
 %on verifie les couples (P,T),(P,S) quand c'est possible
 for i=1:length(temp_mes)
+    
     %if unique(T.cycle_number.data(idCyc_drift))==226
     %keyboard
     %end
@@ -235,14 +237,16 @@ for i=1:length(temp_mes)
     temp_th_i = interp1(I_temp.depth.data,I_temp_profile,pres_mes_i);
     % on  regarde les profiles voisins
     temp_th_i_all=NaN*zeros(size(I_temp_profile_all,2),size(I_temp_profile_all,3));
-    for ii=1:size(I_temp_profile_all,2)
-        for jj=1:size(I_temp_profile_all,3)
-            temp_th_i_all(ii,jj) = interp1(I_temp.depth.data,I_temp_profile_all(:,ii,jj),pres_mes_i);
+    if isnan(temp_th_i)
+        for ii=1:size(I_temp_profile_all,2)
+            for jj=1:size(I_temp_profile_all,3)
+                temp_th_i_all(ii,jj) = interp1(I_temp.depth.data,I_temp_profile_all(:,ii,jj),pres_mes_i);
+            end
         end
     end
+    
     temp_std_th_i = interp1(I_temp_std.depth.data,I_temp_std_profile,pres_mes_i);
     if isnan(temp_std_th_i)&~isempty(id_Notnan_temp_std_profile)
-        
         if pres_mes_i>I_temp_std.depth.data(id_Notnan_temp_std_profile(end))
             temp_std_th_i= I_temp_std_profile(id_Notnan_temp_std_profile(end));
         else
@@ -252,20 +256,22 @@ for i=1:length(temp_mes)
     if  ~isnan(temp_th_i)&~(isminmax(i))
         non_ref=0;
     end
+    
     if isnan(temp_th_i)&sum(sum(~isnan(temp_th_i_all)))>=1
         temp_th_i =meanoutnan(meanoutnan(temp_th_i_all));
         temp_std_th_i = sqrt(temp_std_th_i^2+std(temp_th_i_all(~isnan(temp_th_i_all)))^2);
         fid_alerte=fopen(file_alerte,'a');
         fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, TEMP is not referenced in ISAS ']);
         fclose(fid_alerte);
-        
     end
     
     psal_th_i = interp1(I_psal.depth.data,I_psal_profile,pres_mes_i);
     psal_th_i_all=NaN*zeros(size(I_psal_profile_all,2),size(I_psal_profile_all,3));
-    for ii=1:size(I_psal_profile_all,2)
-        for jj=1:size(I_psal_profile_all,3)
-            psal_th_i_all(ii,jj) = interp1(I_psal.depth.data,I_psal_profile_all(:,ii,jj),pres_mes_i);
+    if isnan(psal_th_i)
+        for ii=1:size(I_psal_profile_all,2)
+            for jj=1:size(I_psal_profile_all,3)
+                psal_th_i_all(ii,jj) = interp1(I_psal.depth.data,I_psal_profile_all(:,ii,jj),pres_mes_i);
+            end
         end
     end
     psal_std_th_i = interp1(I_psal_std.depth.data,I_psal_std_profile,pres_mes_i);
@@ -393,12 +399,12 @@ for i=1:length(temp_mes)
             mission=(T.config_mission_number.data(idcy));
             idmis=find(M.config_mission_number==mission);
             if isempty(idmis)==0
-                if M.ProfilePressure(idmis) > M.ParkPressure(idmis)
-                    bad_pres(i)=(pres_mes_i>max(M.ProfilePressure));
+                if M.ProfilePressure(idmis) > M.ParkPressure(idmis) 
+                    bad_pres(i)=(pres_mes_i>max(M.ProfilePressure)+PARAM.PRESS_PARK_DIFF_BATH);
                 end
             end
             if pres_noqc4(i)==1 & bad_pres(i)==1
-                T.pres_qc.data(idCyc_drift(i))=3;
+                T.pres_qc.data(idCyc_drift(i))=6;
                 fid_alerte=fopen(file_alerte,'a');
                 fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD PRESSURE DETECTED (NO TEMP) ']);
                 fclose(fid_alerte);
@@ -407,6 +413,7 @@ for i=1:length(temp_mes)
             end
         end
     end
+    
 end
 
 %keyboard
@@ -432,3 +439,4 @@ if psal_alert==1
 end
 isas_non_ref=non_ref;
 
+%toc

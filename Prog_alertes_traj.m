@@ -4,40 +4,40 @@
 %%%  - controle des cycles
 %%%  - controle des localisations argos (dates et positions)
 %%%  - controle des pressions/profondeur de parking, grounded ou non
-%%%  - controlle des derives en surface et en profondeur
+%%%  - controle des derives en surface et en profondeur
 %%%
 %%  Date:  04/2020
 %%% Auteur: Gaelle Herbert: gaelle.herbert@ecomail.fr
-%%  version Matlab: 2016b
+%   Revisions  2020-2022 (cc)
+%%  version Matlab: 2020b
 %%----------------------------------------------------------------------
 clear all
 close all
 path(pathdef)
-
 global PARAM;
 global CONF;
 % add cc 15/09/2020
 %%% fichier config - recuperation des paths
-%CONF = config_UPDATE2022_incois;
-CONF = config_TEST;
+CONF = config_UPDATE2022;
+%CONF = config_TEST;
 %CONF = config_SAGA_2021;
 %CONF= config_SELECT2021;
 %CONF=config;
 Liste_Float = CONF.Liste_Float
 
-addpath(genpath('/home/lops/users/ccabanes/dvlpRD/Argo/WorkOnBase/Trajectoire/git/TRAJ_QC_NEW/lib/'))
-addpath(genpath([CONF.DIR_SOFT '_ressources/pourMatlab/']))
+addpath(genpath('/home/lops/users/ccabanes/dvlpRD/Argo/WorkOnBase/Trajectoire/git/TRAJ_QC/lib/'))
+addpath(genpath([CONF.DIR_MMAP]))
 
 % recuperation des parametres
 PARAM = param
 
 % logfile pour le calcul des vitesses
-logfile=[CONF.DIR_HOME '/logs/compute_velocities.log'];
+logfile=[CONF.DIR_DATA '/logs/compute_velocities.log'];
 
 flog=fopen(logfile,'w');
 fclose(flog);
-if ~exist([CONF.DIR_HOME '/logs/'])
-    mkdir([CONF.DIR_HOME '/logs/'])
+if ~exist([CONF.DIR_DATA '/logs/'])
+    mkdir([CONF.DIR_DATA '/logs/'])
 end
 
 % Initialisation fichier Atlas pour les vitesses
@@ -49,6 +49,7 @@ end
 % fclose(fidOut)
 
 for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
+    
     % Liste des flotteurs a tester
     clearvars -except Liste_Float   ilist flog logfile PARAM CONF
     global floatname;
@@ -68,35 +69,35 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
     fclose(fid1);
     
     %% Creation du répertoire /STAT s'il n'existe pas
-    if ~exist([CONF.DIR_STAT CONF.liste_rep_alerte{ilist}],'dir')
-        mkdir([CONF.DIR_STAT CONF.liste_rep_alerte{ilist}]);
+    if ~exist([CONF.DIR_ERR CONF.liste_rep_alerte{ilist}],'dir')
+        mkdir([CONF.DIR_ERR CONF.liste_rep_alerte{ilist}]);
     end
     %% Creation du répertoire /HOME/alerts/... s'il n'existe pas  % add cc 02/11/2020
-    if ~exist([CONF.DIR_HOME 'alerts/' CONF.liste_rep_alerte{ilist}],'dir')
-        mkdir([CONF.DIR_HOME 'alerts/' CONF.liste_rep_alerte{ilist}]);
+    if ~exist([CONF.DIR_DATA 'alerts/' CONF.liste_rep_alerte{ilist}],'dir')
+        mkdir([CONF.DIR_DATA 'alerts/' CONF.liste_rep_alerte{ilist}]);
     end
     
     
     %% Fichier log des alertes
  
-    file_alerte = [CONF.DIR_HOME 'alerts/' CONF.liste_rep_alerte{ilist} '/RT_alertes.csv'];  % modif chemin alertes cc 02/11/2020
+    file_alerte = [CONF.DIR_DATA 'alerts/' CONF.liste_rep_alerte{ilist} '/RT_alertes.csv'];  % modif chemin alertes cc 02/11/2020
     fid_alerte = fopen(file_alerte,'wt');
     fclose(fid_alerte);
     %% Fichiers log des alertes par erreurs
     if(CONF.Bathy==1)
-        file3 = [CONF.DIR_HOME 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_grounded_etopo.txt'];
+        file3 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_grounded_etopo.txt'];
         fid3 = fopen(file3,'w+');
     else
-        file3 = [CONF.DIR_HOME 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_grounded_srtm_b.txt'];
+        file3 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_grounded_srtm_b.txt'];
         fid3 = fopen(file3,'w+');
     end
-    file4 = [CONF.DIR_HOME 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_cycle_b.txt'];
-    file5 = [CONF.DIR_HOME 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_locdate_b.txt'];
-    file6 = [CONF.DIR_HOME 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_launchdate_b.txt'];
-    file7 = [CONF.DIR_HOME 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_pressure_b.txt'];
-    file8 = [CONF.DIR_HOME 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_locterre_b.txt'];
-    file9 = [CONF.DIR_HOME 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_locpos_b.txt'];
-    file10 = [CONF.DIR_HOME 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_metatrajcyc_b.txt'];
+    file4 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_cycle_b.txt'];
+    file5 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_locdate_b.txt'];
+    file6 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_launchdate_b.txt'];
+    file7 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_pressure_b.txt'];
+    file8 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_locterre_b.txt'];
+    file9 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_locpos_b.txt'];
+    file10 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_metatrajcyc_b.txt'];
     
     
     fid4 = fopen(file4,'w+');
@@ -200,6 +201,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
     %% BOUCLE SUR LES FLOTTEURS
     %for k=length(allfloats{1}):length(allfloats{1})
     for k=1:length(allfloats{1})
+        tic
         disp(' ')
         disp(['LIST: ' fliplr(strtok( fliplr(Liste_Float{ilist}),'/')) ' :' num2str(k) '/' num2str(length(allfloats{1}))])
         disp(' ')
@@ -252,8 +254,8 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                 PARAM.PRESS_STD_MAX=PARAM.PRESS_PARK_DUMB;
             end
             PARAM.ISDEEP=0;
-            if isfield(M,'ProfilePressure')& isfield(M,'ParkPressure')
-                if M.ProfilePressure>2000 & M.ParkPressure>2000
+            if isfield(M,'ProfilePressure')&& isfield(M,'ParkPressure')
+                if max(M.ProfilePressure)>2000 || max(M.ParkPressure)>2000
                     PARAM.ISDEEP=1;
                 end
             end
@@ -728,7 +730,8 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                                 
                                 
                                 if(length(o_lon)>1 & length(o_lat)>1 & abs(long_first_curr)<max(max(abs(o_lon))) ...   % cc 21/01/2022 addapt to gebco
-                                        & abs(long_first_curr)>min(min(abs(o_lon))))
+                                        & abs(long_first_curr)>min(min(abs(o_lon))) & abs(lat_first_curr)<max(max(abs(o_lat))) ...
+                                        & abs(lat_first_curr)>min(min(abs(o_lat))))
                                     elev_first_curr = interp2(o_lon,o_lat,o_elev,long_first_curr,lat_first_curr);
                                     %                     elseif(length(o_lon)<=1 || length(o_lat)<=1) %remove cc : 15/09/2020
                                     %                         elev_first_curr = mean(o_elev);
@@ -805,8 +808,14 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             % end
                             % on recalcule rpp en tenant compte des flags
                             [tabFinalParkPres,tabFinalParkTemp,tabFinalParkPsal,tabFinalParkEtat,tabFinalMaxParkPres]= compute_rpp(T,M,idCyc_drift,idCyc,prof_fileName,1); %add cc 29/09/2020 add a function to compute rpp
-                            if idCyc_sorted(id)==48
-                                %keyboard
+                            if duree_cycle((id))<1 & tabFinalParkPres>1800
+                                fid_alerte=fopen(file_alerte,'a');
+                                fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning, RPP == FILLVALUE, CYCLE TIME IS TOO SHORT TO DRIFT']);
+                                fclose(fid_alerte);
+                                fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',warning,  RPP == FILLVALUE, CYCLE TIME IS TOO SHORT TO DRIFT']);
+                                    
+                                tabFinalParkPres=NaN;
+                                tabFinalParkTemp=NaN;
                             end
                             % i_rpp
                             % unique(T.cycle_number.data(idCyc_drift))
@@ -1242,6 +1251,9 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                         elseif strfind('ARGOS',M.trans_system)
                             bornesurf=100000;
                             ecartcycle=PARAM.TIME_DIFF_FLLOCS_AR;
+                        else
+                            bornesurf=20000;
+                            ecartcycle=PARAM.TIME_DIFF_FLLOCS_IR;
                         end
                         
                         ecartFirstLastLoc(istat)=NaN;
@@ -1491,7 +1503,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                                             
                                             %% On verifie la Startuo Date (allumage du flotteur qui doit etre anterieur
                                             %% au lancement) dans le cas ou elle est présente dans le fichier meta
-                                            if isfield(M,'startup_date')==1
+                                            if isfield(M,'startup_date')==1 && ~isempty(M.startup_date)
                                                 StartDate = datenum(M.startup_date,'yyyymmddHHMMSS');
                                                 Diff_LS = LaunchDate+datenum('01011950','ddmmyyyy') - StartDate;
                                                 
@@ -1502,9 +1514,9 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                                                         T.juld_qc.data(iLaunch)= 6; %add cc 15/09/2020
                                                     end
                                                     fid_alerte=fopen(file_alerte,'a');
-                                                    fprintf(fid_alerte,'%s\n',[ floatname,', ,warning, LAUNCH DATE is earlier than the START DATE, by  ', num2str(Diff_LS), ' days']);
+                                                    fprintf(fid_alerte,'%s\n',[ floatname,', ,flagged, LAUNCH DATE is earlier than the START DATE, by  ', num2str(Diff_LS), ' days']);
                                                     fclose(fid_alerte);
-                                                    fprintf('%s\n',[ floatname,', ,warning, LAUNCH DATE is earlier than the START DATE, by  ', num2str(Diff_LS), ' days']);
+                                                    fprintf('%s\n',[ floatname,', ,flagged, LAUNCH DATE is earlier than the START DATE, by  ', num2str(Diff_LS), ' days']);
                                                     if CONF.Stat == 1
                                                         alertCyc_e6 = [alertCyc_e6 1];
                                                         alerte20(k)=str2double(floatname);
@@ -1512,16 +1524,16 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                                                     
                                                 elseif M.startup_date_qc=='1' && Diff_LS>1
                                                     fid_alerte=fopen(file_alerte,'a');
-                                                    fprintf(fid_alerte,'%s\n',[floatname, ', ,flagged, LAUNCH DATE is later than the START DATE, by  ', num2str(Diff_LS), ' days']);
+                                                    fprintf(fid_alerte,'%s\n',[floatname, ', ,warning, LAUNCH DATE is later than the START DATE, by  ', num2str(Diff_LS), ' days']);
                                                     fclose(fid_alerte);
-                                                    M.launch_qc = '6';          %correction cc 9/10/2020
-                                                    if T.juld_qc.data(iLaunch)~=4;
-                                                        T.juld_qc.data(iLaunch)= 6; %add cc 9/10/2020
-                                                    end
-                                                    fprintf('%s\n',[floatname, ', ,flagged, LAUNCH DATE is later than the START DATE, by  ', num2str(Diff_LS), ' days']);
-                                                    if CONF.Stat == 1
-                                                        alertCyc_e6 = [alertCyc_e6 1];
-                                                    end
+                                                    %M.launch_qc = '6';          %correction cc 9/10/2020
+                                                    %if T.juld_qc.data(iLaunch)~=4;
+                                                    %    T.juld_qc.data(iLaunch)= 6; %add cc 9/10/2020
+                                                    %end
+                                                    fprintf('%s\n',[floatname, ', ,warning, LAUNCH DATE is later than the START DATE, by  ', num2str(Diff_LS), ' days']);
+                                                    %if CONF.Stat == 1
+                                                    %    alertCyc_e6 = [alertCyc_e6 1];
+                                                    %end
                                                 end
                                             end
                                             % il se peut que la LaunchDate (metadonnee rentree à la main) puisse etre erronee:
@@ -1548,7 +1560,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                                                     fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, LOCATION DATES are earlier than LAUNCH DATE']);
                                                     fclose(fid_alerte);
                                                     fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, LOCATION DATES are earlier than LAUNCH DATE']);
-                                                    %T.juld.data(idSorted(isbad))=2;                 %%%%FLAG � 2 les dates Loc du 1er cycle (douteuses)
+                                                    %T.juld.data(idSorted(isbad))=2;                 %%%%FLAG a 2 les dates Loc du 1er cycle (douteuses)
                                                     
                                                     notQC4=T.juld_qc.data(idCyc(idSorted))~=4;
                                                     T.juld_qc.data(idCyc(idSorted(isbad&notQC4)))=6;   % correction cc 15/09/2020
@@ -1878,7 +1890,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             %%% duplicata de dates/lon/lat).
                             %if(id>1 & sum(idCycprec{id})>0)
                             %
-                            fid_koba = fopen([CONF.DIR_HOME,'log_koba.txt'],'wt');
+                            fid_koba = fopen([CONF.DIR_DATA,'log_koba.txt'],'wt');
                             %locDate_prec = T.juld.data(idCycprec{id}); isok = find(locDate_prec(T.position_qc.data(idCycprec{id})<4));
                             
                             %if(isempty(isok)==0)
@@ -2113,7 +2125,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
         end % condition existence fichier traj
         disp('****************************************************************************** ')
         
-        
+     toc   
     end  %% fin de la boucle sur les flotteurs
     
     disp(' ---------------- END OF TESTS -----------------------------------------------')
@@ -2124,14 +2136,14 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
     
     if CONF.Stat==1&&isempty(idLoc)==0
         Diff_Cyc = Diff_Medcyc_Mcyc(Diff_Medcyc_Mcyc>0);
-        Name_fileStat = [CONF.DIR_STAT CONF.liste_rep_alerte{ilist} '/variables_stat.mat'];   % modif chemin sauvegarde cc 02/11/2020
+        Name_fileStat = [CONF.DIR_ERR CONF.liste_rep_alerte{ilist} '/variables_stat.mat'];   % modif chemin sauvegarde cc 02/11/2020
         save(Name_fileStat,'Diff_Medcyc_Mcyc','Diff_Ppark','Diff_Cyc',...
             'Diff_LaunchD','Diff_LaunchLat','Diff_LaunchLon','ecartMaxLocCycle_fl',...
             'ecartMeanLocCycle_fl','ecartFirstLastLoc','ecartLaunchDateFirstLoc',...
             'ecartLaunchDateFirstLoc','distancederiveprof',...
             'distancederivesurf','pres_drift_mes','temp_drift_mes','psal_drift_mes');
         
-        Name_fileStat2 = [CONF.DIR_STAT CONF.liste_rep_alerte{ilist} '/alertes_stat.mat'];     % modif chemin sauvegarde cc 02/11/2020
+        Name_fileStat2 = [CONF.DIR_ERR CONF.liste_rep_alerte{ilist} '/alertes_stat.mat'];     % modif chemin sauvegarde cc 02/11/2020
         save(Name_fileStat2,'alerte1', 'alerte2', 'alerte3', 'alerte4', 'alerte5', 'alerte6', ...
             'alerte7', 'alerte8', 'alerte9', 'alerte10', 'alerte11', 'alerte12', 'alerte13', 'alerte14', ...
             'alerte15', 'alerte16', 'alerte17', 'alerte18','alerte19', 'alerte20', 'alerte21', ...
