@@ -480,6 +480,18 @@ for idCy_sorted = 1:length(yoCycle)
             end
         end
         
+        if ~isnan(T.v_deep_velocity.data(idCyT)) && ~isnan(T.u_deep_velocity.data(idCyT))
+            deepVel = sqrt(T.v_deep_velocity.data(idCyT)*T.v_deep_velocity.data(idCyT) + T.u_deep_velocity.data(idCyT)*T.u_deep_velocity.data(idCyT));
+            if (deepVel > 300 )
+                T.u_deep_velocity.data(idCyT) = NaN;
+                T.v_deep_velocity.data(idCyT) = NaN;
+                T.uerr_deep_velocity.data(idCyT) = NaN;
+                T.verr_deep_velocity.data(idCyT) = NaN;
+                fprintf('%d #%d: vitesse en profondeur ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
+                    floatNum, numCycle, deepVel);
+            end
+        end
+        
         % consigne les vitesses qui sont calculés avec des positions éloignées des first/last loc
         if first_good_loc(idCy)~=0
             fprintf(flog,'%d #%d: Loc utilisee a la remontee ne correspond pas a la premiere loc argos. First Loc+%d Vitesse de surface: %f Temps moyen(h) entre deux locs  %f \n', ...

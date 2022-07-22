@@ -183,7 +183,7 @@ for  idCy_sorted = 1:length(yoCycle)
     else
         idArgosLocCycle =   find(T.measurement_code.data(idCycle)== g_typeArgosLoc);     %%%ne prend pas la première loca en surface car launch
     end
-    
+     
     
     cycleDate = T.juld.data(idCycle(idArgosLocCycle));
     cycleDateQc = T.juld_qc.data(idCycle(idArgosLocCycle));
@@ -393,7 +393,7 @@ for  idCy_sorted = 1:length(yoCycle)
     % numéro du profil NetCDF
     %yoProfNum(idCy) = unique(depProfNum(idCycle));
     % end
-    
+        
     if (~isempty(cycleLon))
         % même lorsque le cycle est GROUNDED, il faut stocker la dernière
         % localisation Argos
@@ -417,12 +417,14 @@ yoProfNum(find(yoProfNum == g_profNumDef)) = g_yoProfNumDef;
 
 % estimation des vitesses en profondeur
 for  idCy_sorted = 1:length(yoCycle)
+    
     %idCy = id_sorted(idCy_sorted);
     idCy = idCy_sorted;
     numCycle = yoCycle(idCy_sorted);
     g_cycleNumber = numCycle;
     idCycle = find(T.cycle_number.data == numCycle);
     idCyT = find(T.cycle_number_index.data == numCycle);  % cc 08/04/2022
+ 
 %for idCy = 1:length(yoCycle)
     if ((yoLonLastLocPrev(idCy) ~= g_yoLonDef) && ...
             (yoLonFirstLocCur(idCy) ~= g_yoLonDef) && ...
@@ -457,7 +459,7 @@ for  idCy_sorted = 1:length(yoCycle)
         if (yoLonEnd < yoLonStart)
             yoDeepU(idCy) = yoDeepU(idCy)*-1;
         end
-        
+       
         % estimation de l'erreur sur U
         numCycle = yoCycle(idCy);
         idPrevCycle = find(yoCycle == numCycle-1);
@@ -505,6 +507,20 @@ for  idCy_sorted = 1:length(yoCycle)
                 
                 yoDeepUErr(idCy) = g_yoDeepUVErrDef;
                 yoDeepVErr(idCy) = g_yoDeepUVErrDef;
+            end
+        end
+        
+    
+        if ((yoDeepU(idCy) ~= g_yoUVDef) && (yoDeepV(idCy) ~= g_yoUVDef))
+            deepVel = sqrt(yoDeepU(idCy)*yoDeepU(idCy) + yoDeepV(idCy)*yoDeepV(idCy));
+            if (deepVel > 300 )
+                yoDeepU(idCy) = g_yoUVDef;
+                yoDeepV(idCy) = g_yoUVDef;
+                yoDeepUErr(idCy) = g_yoDeepUVErrDef;
+                yoDeepVErr(idCy) = g_yoDeepUVErrDef;
+                
+                fprintf('%d #%d: vitesse en profondeur ABERRANTE ||v||=%.1f > 3 m.s (forcée à la valeur par défaut)\n', ...
+                    floatNum, numCycle, deepVel);
             end
         end
     end
