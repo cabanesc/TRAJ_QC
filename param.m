@@ -1,7 +1,7 @@
 function parameters = param()
 
 parameters.TIME_STD_DUREE_CYCLE_M = 100;% in day % Max value for Standard Deviation of cycle duration (for more than one cycle)  
-parameters.TIME_DIFF_CYCLE = .1; % in day % Max value for difference in cycle duration between META and TRAJ file
+parameters.TIME_DIFF_CYCLE = 1; % in day % Max value for difference in cycle duration between META and TRAJ file
 parameters.TIME_DIFF_DOUBLE_DATE_LOC = 0; % in hour (initial 30s) % add cc 05/10/2020
 parameters.PRESS_PARK_DIFF_BATHY_QC = 100; % Put QC=4 if pressure is xxx dbar below the bathymertry
 parameters.PRESS_PARK_DUMB = 2200; % Threshold for dumb park pressure, put QC=4 (cc : ce parametre doit s'adapter si deep => fait ligne 255 Prog_alertes_traj.m)
@@ -14,8 +14,8 @@ parameters.PRESS_PARK_DIFF_M = 30; % difference of pressure between estimated me
 parameters.PRESS_PARK_DIFF_ISAS = 100; % difference of pressure between estimated pressure from ISAS temperature and estimated from measurements
 parameters.PRESS_PARK_DIFF_BATH= 30; % difference of measured parking pressure and bathymetry
 parameters.TIME_DIFF_2LOCS = 10; % in hour % Threshold for acceptable difference between successive location
-parameters.TIME_DIFF_FLLOCS_AR = 24; % in hour % Thershold for acceptable differnce between first and last location for Argos transmission system (within one cycle)
-parameters.TIME_DIFF_FLLOCS_IR = 10; % in hour % Thershold for acceptable differnce between first and last location for Iridium transmission system (within one cycle)
+parameters.TIME_DIFF_FLLOCS_AR = 24; % in hour % Thershold for acceptable difference between first and last location for Argos transmission system (within one cycle)
+parameters.TIME_DIFF_FLLOCS_IR = 10; % in hour % Thershold for acceptable difference between first and last location for Iridium transmission system (within one cycle)
 parameters.TIME_DIFF_FLLOCS_EOL = 60; % in hour % Threshold for assuming EOL (float End Of Life)
 %parameters.TIME_LAUNCH_FIRST_LOC = -3/24; % in day % Difference between launch time and first loc
 parameters.TIME_LAUNCH_FIRST_LOC = 3; % in hour % Difference between launch time and first loc  % correction cc 15/09/2020 mettre tous en heure
