@@ -128,12 +128,15 @@ end
 % on fait au moins 1 test donc on passe  le flag 0 a 1 pour PRES,TEMP et PSAL %
 % si la verif par rapport aux bornes echoue => flag 6
 % cc 14/01/2021
+%     if unique(T.cycle_number.data(idCyc_drift))==213
+%     keyboard
+%     end
 
 T.pres_qc.data(idCyc_drift(pres_qc0))=1;
-bad_pres=(pres_mes>PARAM.PRESS_PARK_DUMB|pres_mes<-5);
-bad_pres=(pres_mes>PARAM.PRESS_PARK_DUMB|pres_mes<-5|(pres_mes==0&temp_mes==0));
 bad_temp=(temp_mes<I_temp_min|temp_mes>I_temp_max)|(pres_mes==0&temp_mes==0);
-bad_psal=(psal_mes<I_psal_min|psal_mes>I_psal_max)|(pres_mes==0&temp_mes==0&psal_mes==0);
+%bad_pres=(pres_mes>PARAM.PRESS_PARK_DUMB|pres_mes<-5);
+bad_pres=(pres_mes>PARAM.PRESS_PARK_DUMB|pres_mes<-5|(pres_mes==0&temp_mes==0)|bad_temp&pres_mes<0);
+bad_psal=bad_pres|bad_temp|(psal_mes<I_psal_min|psal_mes>I_psal_max)|(pres_mes==0&temp_mes==0&psal_mes==0);
 
 if sum(bad_temp&temp_noqc4)>=1
     T.temp_qc.data(idCyc_drift(bad_temp&temp_noqc4))=6;
@@ -206,9 +209,9 @@ imes2=0;
 %on verifie les couples (P,T),(P,S) quand c'est possible
 for i=1:length(temp_mes)
     
-    %if unique(T.cycle_number.data(idCyc_drift))==226
-    %keyboard
-    %end
+%     if unique(T.cycle_number.data(idCyc_drift))==42
+%     keyboard
+%     end
     
     %temp_mes_i = T.temp.data(idCyc_drift(i));
     %pres_mes_i = T.pres.data(idCyc_drift(i));
