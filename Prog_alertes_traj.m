@@ -12,17 +12,17 @@
 %%  version Matlab: 2020b
 %%----------------------------------------------------------------------
 clear all
-close all
+%close all
 path(pathdef)
 global PARAM;
 global CONF;
 % add cc 15/09/2020
 %%% fichier config - recuperation des paths
-CONF = config_UPDATE2022;
-%CONF = config_TEST;
+%CONF = config_UPDATE2022;
+%CONF = config_ALL_replay;
 %CONF = config_SAGA_2021;
-%CONF= config_SELECT2021;
-%CONF=config;
+%CONF= config_SELECT2021_new;
+CONF=config_TEST;
 Liste_Float = CONF.Liste_Float
 
 addpath(genpath('/home/lops/users/ccabanes/dvlpRD/Argo/WorkOnBase/Trajectoire/git/TRAJ_QC/lib/'))
@@ -306,6 +306,25 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                 end
                 
                 if isempty(idLoc)==0
+                    % recuperation bathy GEBCO: si recuperation pour chaque
+                    % cycle (option_bath=2) probablement probleme de
+                    % memoire cache au bout d'une certain nombre de flotteurs, du a un grand nombre d'ouverture gros
+                    % fichier. Du coup, on recupere la bathy pour le
+                    % flotteur (option_bath=1) si region pas trop grande et
+                    % pas de passage ligne changement de date.
+                    % TODO: a ameliorer
+                    
+                    if (CONF.Bathy==3) % GEBCO
+                        if (max(T.longitude.data)-min(T.longitude.data)).*(max(T.latitude.data)-min(T.latitude.data))<360*10 & (max(T.longitude.data).*min(T.longitude.data))>-3600
+                            option_bath=1;
+                            
+                            [o_elev_f, o_lon_f, o_lat_f] = get_gebco_elev_zone_new(min(T.longitude.data),max(T.longitude.data),min(T.latitude.data),max(T.latitude.data),'');
+                        else
+                            option_bath=2;
+                        end
+                        
+                    end
+                    
                     % on cree la liste des numéros de cycles théoriques (cycles_1) et reel (cycles)
                     %-----------------------------------------------------------------------------
                     CycLoc = T.cycle_number.data(idLoc);
@@ -384,9 +403,9 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             cyclesm = cycles_m{m};
                             index = find(cyclesm==0);
                             
-                            % if(~isempty(index)) cyclesm(index)=NaN; cycles_m{m} = cyclesm; end    %%ne regarde qu'a� partir du cycle 1.
+                            % if(~isempty(index)) cyclesm(index)=NaN; cycles_m{m} = cyclesm; end    %%ne regarde qu'a partir du cycle 1.
                             
-                            if(length(find(~isnan(cycles_m{m})))>=1)    %pour les cas ou� cycles_m ~= juste le cycle 0
+                            if(length(find(~isnan(cycles_m{m})))>=1)    %pour les cas ou cycles_m ~= juste le cycle 0
                                 Begin = cycles(1);
                                 %if Begin == 0
                                 %    duree_cycle_m = duree_cycle(find(ismember(cycles,cycles_m{m})==1)-1);
@@ -613,7 +632,6 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                         % numero du cycle
                         numCycle = cycles_sorted(id);
                         
-                        
                         idCycleTraj=find(T.cycle_number_index.data==numCycle);
                         numMis=T.config_mission_number.data(idCycleTraj);
                         
@@ -667,6 +685,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             %pres_drift_mes(i_rpp)=abs(mynanmean(T.pres.data(idCyc_drift)));
                             [tabFinalParkPres,tabFinalParkTemp,tabFinalParkEtat,tabFinalMaxParkPres]= compute_rpp(T,M,idCyc_drift,idCyc,prof_fileName,0); %add cc 29/09/2020 add a function to compute rpp
                             pres_drift_mes(i_rpp)=tabFinalParkPres;
+                            
                             %%   DETERMINE l'elevation a la derniere loc du cycle precedent et premiere loc du cycle courant
                             %   elev_all et elev_end_all
                             
@@ -710,8 +729,16 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                                         lat_first_curr, lat_first_curr);
                                     
                                 elseif (CONF.Bathy==3) % GEBCO
-                                    [o_elev, o_lon, o_lat] = get_gebco_elev_zone(long_first_curr, long_first_curr,...
-                                        lat_first_curr, lat_first_curr,'');
+                                       if option_bath==2
+                                     [o_elev, o_lon, o_lat] = get_gebco_elev_zone(long_first_curr, long_first_curr,...
+                                         lat_first_curr, lat_first_curr,'');
+                                       else
+                                      % restreindre tableau 
+                                      ibath=find(o_lon_f>=long_first_curr-0.1&o_lon_f<=long_first_curr+0.1);
+                                      jbath=find(o_lat_f>=lat_first_curr-0.1&o_lat_f<=lat_first_curr+0.1);
+                                      [o_lon,o_lat] = meshgrid(o_lon_f(ibath),o_lat_f(jbath));
+                                      o_elev=o_elev_f(jbath,ibath);
+                                       end
                                 else
                                     error('Check configuration for CONF.Bathy: value is not defined')
                                 end
@@ -750,15 +777,26 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                                             lat_last_prec, lat_last_prec);
                                         
                                     elseif (CONF.Bathy==3) % GEBCO
-                                        [o_elev_end, o_lon_end, o_lat_end] = get_gebco_elev_zone(long_last_prec, long_last_prec,...
-                                            lat_last_prec, lat_last_prec,'');
+                                        if option_bath==2
+                                            [o_elev_end, o_lon_end, o_lat_end] = get_gebco_elev_zone(long_last_prec, long_last_prec,...
+                                                lat_last_prec, lat_last_prec,'');
+                                        else
+                                            ibath=find(o_lon_f>=long_last_prec-0.1&o_lon_f<=long_last_prec+0.1);
+                                            jbath=find(o_lat_f>=lat_last_prec-0.1&o_lat_f<=lat_last_prec+0.1);
+                                            
+                                            [o_lon_end,o_lat_end] = meshgrid(o_lon_f(ibath),o_lat_f(jbath));
+                                            o_elev_end=o_elev_f(jbath,ibath);
+                                        end
+                                          
                                     else
                                         error('Check configuration for CONF.Bathy: value is not defined')
                                     end
                                     
                                     if(length(o_lon_end)>1 & length(o_lat_end)>1 & abs(long_last_prec)<max(max(abs(o_lon_end))) ...
                                             & abs(long_last_prec)>min(min(abs(o_lon_end))))
+                                        
                                         elev_last_prec = interp2(o_lon_end,o_lat_end,o_elev_end,long_last_prec,lat_last_prec);
+                                        
                                         %                         elseif(length(o_lon_end)<=1 ||length(o_lat_end)<=1) %remove cc : 15/09/2020
                                         %                             elev_last_prec = mean(o_elev_end);
                                     else
@@ -778,6 +816,8 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             else
                                 elev_end_all(i_rpp) = NaN;  % add cc 15/09/2020
                             end
+                            
+                            
                             
                             
                             
@@ -803,6 +843,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             isas_alert(i_rpp)=one_isas_alert;
                             isas_non_ref(i_rpp)=one_isas_non_ref;
                             proche_surface(i_rpp)=one_proche_surface;
+                            
                             % if unique(T.cycle_number.data(idCyc_drift))==111
                             %
                             % end
@@ -1073,6 +1114,8 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                     disp('---------------- GROUNDED, LOC POSITION and DATE, LAUNCH_DATE, EOL ----------- ')
                     disp(' ')
                     %
+                 
+                    
                     for id=1:length(cycles_sorted)
                         
                         istat=istat+1;
@@ -1694,8 +1737,18 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                                             [mini,ilat] = min(abs(o_lat-dlat));
                                             LONG = o_lon'; LAT = o_lat';
                                         elseif CONF.Bathy==3 % GEBCO
-                                            [o_elev, o_lon, o_lat] = get_gebco_elev_zone(dlon-0.01, dlon+0.01,...
-                                                dlat-0.01, dlat+0.01,'');
+                                            if option_bath==2
+%                                             [o_elev, o_lon, o_lat] = get_gebco_elev_zone(dlon-0.01, dlon+0.01,...
+%                                                 dlat-0.01, dlat+0.01,'');
+                                            else
+                                                
+                                      ibath=find(o_lon_f>=dlon-0.1&o_lon_f<=dlon+0.1);
+                                      jbath=find(o_lat_f>=dlat-0.1&o_lat_f<=dlat+0.1);
+                                      [o_lon,o_lat] = meshgrid(o_lon_f(ibath),o_lat_f(jbath));
+
+                                     
+                                      o_elev=o_elev_f(jbath,ibath);
+                                            end
                                             [mini,ilong] = min(abs(o_lon(1,:)-dlon));
                                             [mini,ilat] = min(abs(o_lat(:,1)-dlat));
                                             LONG = o_lon(1,:)'; LAT = o_lat(:,1);
@@ -1804,7 +1857,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             % Si superieure aux bornes donnees, on se dit que la
                             % localisation est douteuse
                             %if id>1 & (T.position_qc.data(idCyc)~=6|T.position_qc.data(idCyc)~=4) & ~isnan(dureeCycle)
-                            a=6378137;%repere de reference est le WGS84, a� convertir en cartesiennes pour calculer les distances)
+                            a=6378137;%repere de reference est le WGS84, a convertir en cartesiennes pour calculer les distances)
                             % dlatlas=dlat;
                             % dlonlas=dlon;
                             
@@ -1820,7 +1873,9 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                                 dlatlas=T.latitude.data(idCycprec{id}(end));
                                 dlonlas=T.longitude.data(idCycprec{id}(end));
                                 ddates=T.juld.data(idCycprec{id}(end));
-                                distanceprof=a*acos(sin(dlat*pi/180)*sin(dlatlas*pi/180)+cos(dlat*pi/180)*cos(dlatlas*pi/180)*cos((dlonlas-dlon)*pi/180));
+          
+                                distanceprof= dist([dlatlas dlat],[dlonlas dlon]);
+                                %distanceprof=a*acos(sin(dlat*pi/180)*sin(dlatlas*pi/180)+cos(dlat*pi/180)*cos(dlatlas*pi/180)*cos((dlonlas-dlon)*pi/180));
                                 distancederiveprof(istat)=distanceprof; %regroupe les valeurs de dérive en profondeur
                                 % la borne varie en fonction de la duree de cycle
                                 % calculee et il ne faut pas que la vitesse du
@@ -1828,13 +1883,20 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                                 
                                 %cc 04/02/2021: les tests sont fait plus tard , compute_velocities.m
                                 %%%%EN PROFONDEUR
-                                
+                                % Produit un warning lorsque on est en bout
+                                % de distribution pour les vitesses (voir JAOT, 2013)
+                                if T.representative_park_pressure.data(idCycleTraj)>800
+                                    PARAM.SPEED_MAX=0.5;
+                                else
+                                    PARAM.SPEED_MAX=1.25;
+                                end
                                 if distanceprof> dureeCycle*(cycles_sorted(id)-cycles_sorted(id-1))*(24*60*60)*PARAM.SPEED_MAX % borne a adapter en fonction de la duree du cycle (vitesse maximale du flotteur : 3 m/s)
-                                    %cc 02/02/2021  en commentatire les test sont fait dans les calculs des vitesses en tenant compte des flag 4 et 6
-                                    % fid_alerte=fopen(file_alerte,'a');
-                                    % fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',DERIVE EN PROFONDEUR, > ' num2str(dureeCycle*(cycles(id)-cycles(id-1))*(24*60*60)*PARAM.SPEED_MAX/1000) 'km :' num2str(distanceprof/1000) ' km. Loc Argos probablement erronée.']);
-                                    % fclose(fid_alerte);
-                                    % fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',DERIVE EN PROFONDEUR > ' num2str(dureeCycle*(cycles(id)-cycles(id-1))*(24*60*60)*PARAM.SPEED_MAX/1000) 'km :' num2str(distanceprof/1000) ' km. Loc Argos probablement erronée.']);
+                                    %cc 02/02/2021  
+                                     fid_alerte=fopen(file_alerte,'a');
+                                     fprintf(fid_alerte,'%s\n',[floatname ', cycle ' num2str(cycles_sorted(id)) ' ,warning, TOO LARGE DEEP DISPLACEMENTS ? ,'  num2str(distanceprof/1000) 'km at ' num2str(T.representative_park_pressure.data(idCycleTraj)) 'db, in ' num2str(dureeCycle*(cycles_sorted(id)-cycles_sorted(id-1))) ' days']);
+
+                                     fclose(fid_alerte);
+                                     fprintf('%s\n',[floatname ', cycle ' num2str(cycles_sorted(id)) ' ,warning, TOO LARGE DEEP DISPLACEMENTS ? ,'  num2str(distanceprof/1000) 'km at ' num2str(T.representative_park_pressure.data(idCycleTraj)) 'db, in ' num2str(dureeCycle*(cycles_sorted(id)-cycles_sorted(id-1))) ' days']);
                                     if CONF.Stat == 1
                                         %alertCyc_e9 = [alertCyc_e9 cycles_sorted(id)];  % cc remove 06/11/2020
                                         alerte28(k,cycles_sorted(id)+1)=str2double(floatname);
@@ -1885,7 +1947,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             %end       %%fin de la condition sur idCyc et idCycprec
                             
                             %%% Test de Koba et al. pour localiser les positions Argos
-                            %%% erronees a� partir du calcul de vitesse entre les loc de
+                            %%% erronees a partir du calcul de vitesse entre les loc de
                             %%% surface. (ne considere pas dans le resultat final les
                             %%% duplicata de dates/lon/lat).
                             %if(id>1 & sum(idCycprec{id})>0)
@@ -1895,7 +1957,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             
                             %if(isempty(isok)==0)
                             
-                            %%% exclu le cas ou tous les qc seraient a� 4 (qd flotteur sur le continent par ex)
+                            %%% exclu le cas ou tous les qc seraient a 4 (qd flotteur sur le continent par ex)
                             %locDate_prec_ok = locDate_prec(isok);
                             %locLat_sorted(find(locPosition_qc_sorted==6))=NaN; locLon_sorted(find(locPosition_qc_sorted==6))=NaN;
                             %locLat_sorted(find(locPosition_qc_sorted==3))=NaN; locLon_sorted(find(locPosition_qc_sorted==3))=NaN; % remarque cc 06/11/2020: des tests koba sont realisés en TR avec flag des positions a 3

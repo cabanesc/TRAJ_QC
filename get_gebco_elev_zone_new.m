@@ -29,7 +29,7 @@ function [o_elev, o_lon, o_lat] = get_gebco_elev_zone( ...
    a_lonMin, a_lonMax, a_latMin, a_latMax, a_gebcoFileName)
    
 global DIR_BATHY
-%tic
+tic
 % output parameters initialization
 o_elev = [];
 o_lon = [];
@@ -314,13 +314,14 @@ end
 
 netcdf.close(fCdf);
 
-[longitudes, latitudes] = meshgrid(lonVal, latVal);
+%[longitudes, latitudes] = meshgrid(lonVal, latVal);
 
 o_elev = elev;
-o_lon = longitudes;
-o_lat  = latitudes;
-
+%o_lon = longitudes;
+%o_lat  = latitudes;
+o_lon = lonVal;
+o_lat  = latVal;
 clear lon lat elev longitudes latitudes
 status = fclose('all');
-%toc
+toc
 return
