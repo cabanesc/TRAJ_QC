@@ -249,6 +249,9 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
             disp(['NOT FOUND: ' traj_fileName_R]);
         else
             
+            
+          
+            
             if isfield(M,'ProfilePressure')
                 PARAM.PRESS_PARK_DUMB=max(max(M.ProfilePressure)+400, PARAM.PRESS_PARK_DUMB);
                 PARAM.PRESS_STD_MAX=PARAM.PRESS_PARK_DUMB;
@@ -264,11 +267,23 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
             % RECUPERATION des indices de localisation (idLoc) et de derive en profondeur (idDrift)
             % -------------------------------------------------------------------------------------
             icounterfloat=icounterfloat+1;
-            T_sav=T;
             T=format_flags_char2num(T);%change flag char strings to numerical vectors
             %ex '11111441111 ' -> [1 1 1 1 1 4 4 1 1 1 1 999]
             
             T=replace_fill_bynan(T);   % remplace les fillValues (9999.. par des NaN)
+            
+            % sauvegarde de T avant mise a 1 des qc 4 et 3
+            T_sav=T;
+            isbadqc = T.juld_qc.data==3|T.juld_qc.data==4;
+            T.juld_qc.data(isbadqc)=1;
+            isbadqc = T.position_qc.data==3|T.position_qc.data==4;
+            T.position_qc.data(isbadqc)=1;
+            isbadqc = T.pres_qc.data==3|T.pres_qc.data==4;
+            T.pres_qc.data(isbadqc)=1;
+            isbadqc = T.psal_qc.data==3|T.psal_qc.data==4;
+            T.psal_qc.data(isbadqc)=1;
+            isbadqc = T.temp_qc.data==3|T.temp_qc.data==4;
+            T.temp_qc.data(isbadqc)=1;
             
             if str2num(T.format_version.data')>=3.1
                 if length(unique(T.cycle_number_index.data))==length((T.cycle_number_index.data))   % cc 03/05/2022 ajout deuxieme test pour eliminer flotteurs dont les fichiers traj sont completement pourris
@@ -2152,6 +2167,33 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                     % Sauvegarde des nouveaux fichiers traj contenant les flags et les vitesses (deep, surface , errors,...)
                     if CONF.save_traj_file==1
                         disp(' ')
+                        
+                        % gestion des flags: on avait mis a 1 les flag 3 et 4 pour permettre la comparaison avec les alertes du process andro
+                        % avant de sauvegarder les fichiers traj, on remet
+                        % des flag 3 ou 4 aux données qui n'ont pas ete
+                        % detectees par nos tests (tests defficients ou
+                        % données pas testées)
+                        % si mauvaise donnée detectee par nos tests elle a un flag 6
+                        
+                        for iflag=[3,4]
+                            isbadqc = T_sav.juld_qc.data==iflag & T.juld_qc.data==1;
+                            T.juld_qc.data(isbadqc)=iflag;
+                            
+                            isbadqc = T_sav.position_qc.data==iflag & T.position_qc.data==1;
+                            T.position_qc.data(isbadqc)=iflag;
+                            
+                            isbadqc = T_sav.pres_qc.data==iflag & T.pres_qc.data==1;
+                            T.pres_qc.data(isbadqc)=iflag;
+                            
+                            isbadqc = T_sav.psal_qc.data==iflag & T.psal_qc.data==1;
+                            T.psal_qc.data(isbadqc)=iflag;
+                            isbadqc = T_sav.temp_qc.data==iflag & T.temp_qc.data==1;
+                            T.temp_qc.data(isbadqc)=iflag;
+                            sum(isbadqc)
+                        end
+                        
+                        
+                        
                         disp('---------------- COMPUTE_VELOCITIES -------------------------------------------- ')
                         
                         filename_new =[CONF.DIR_NEW_TRAJ_FILE traj_fileName_final];
