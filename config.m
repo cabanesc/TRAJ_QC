@@ -66,8 +66,9 @@ elseif conf.Bathy==3  % GEBCO   %
 end
 
 
-conf.map = 0;      %%%1 affiche une carte et localise les erreurs.
-conf.Stat = 1;   %%% 1: recupere les cycles concernees par des erreurs donnees   ; 0: ne recupere pas %  cc toujours a 1
+conf.map = 0;      %%%1 affiche une carte et localise les erreurs. OBSOLETE  cc: toujours a 0
+conf.Stat = 1;     %%% 1: recupere les cycles concernees par des erreurs donnees   ; 0: ne recupere pas %  cc toujours a 1
+conf.rmFlag = 1;   %%% rmFlag=0: on tient compte de flag (3 ou 4) dejà mis dans fichiers netcdf. Si un de nos test echoue, cela ne produit pas d'alerte si dejà flag 3 ou 4; rmFlag=1 on ne tient pas compte des flags (3 et 4) - facilite comparaison avec alertes du process ANDRO
 
 %%%% OUTPUTS
 

@@ -274,16 +274,20 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
             
             % sauvegarde de T avant mise a 1 des qc 4 et 3
             T_sav=T;
-            isbadqc = T.juld_qc.data==3|T.juld_qc.data==4;
-            T.juld_qc.data(isbadqc)=1;
-            isbadqc = T.position_qc.data==3|T.position_qc.data==4;
-            T.position_qc.data(isbadqc)=1;
-            isbadqc = T.pres_qc.data==3|T.pres_qc.data==4;
-            T.pres_qc.data(isbadqc)=1;
-            isbadqc = T.psal_qc.data==3|T.psal_qc.data==4;
-            T.psal_qc.data(isbadqc)=1;
-            isbadqc = T.temp_qc.data==3|T.temp_qc.data==4;
-            T.temp_qc.data(isbadqc)=1;
+            if CONF.rmFlag==1
+                isbadqc = T.juld_qc.data==3|T.juld_qc.data==4;
+                sum(isbadqc)
+                keyboard
+                T.juld_qc.data(isbadqc)=1;
+                isbadqc = T.position_qc.data==3|T.position_qc.data==4;sum(isbadqc)
+                T.position_qc.data(isbadqc)=1;
+                isbadqc = T.pres_qc.data==3|T.pres_qc.data==4;sum(isbadqc)
+                T.pres_qc.data(isbadqc)=1;
+                isbadqc = T.psal_qc.data==3|T.psal_qc.data==4;sum(isbadqc)
+                T.psal_qc.data(isbadqc)=1;
+                isbadqc = T.temp_qc.data==3|T.temp_qc.data==4;sum(isbadqc)
+                T.temp_qc.data(isbadqc)=1;
+            end
             
             if str2num(T.format_version.data')>=3.1
                 if length(unique(T.cycle_number_index.data))==length((T.cycle_number_index.data))   % cc 03/05/2022 ajout deuxieme test pour eliminer flotteurs dont les fichiers traj sont completement pourris
@@ -2174,24 +2178,24 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                         % detectees par nos tests (tests defficients ou
                         % données pas testées)
                         % si mauvaise donnée detectee par nos tests elle a un flag 6
-                        
-                        for iflag=[3,4]
-                            isbadqc = T_sav.juld_qc.data==iflag & T.juld_qc.data==1;
-                            T.juld_qc.data(isbadqc)=iflag;
-                            
-                            isbadqc = T_sav.position_qc.data==iflag & T.position_qc.data==1;
-                            T.position_qc.data(isbadqc)=iflag;
-                            
-                            isbadqc = T_sav.pres_qc.data==iflag & T.pres_qc.data==1;
-                            T.pres_qc.data(isbadqc)=iflag;
-                            
-                            isbadqc = T_sav.psal_qc.data==iflag & T.psal_qc.data==1;
-                            T.psal_qc.data(isbadqc)=iflag;
-                            isbadqc = T_sav.temp_qc.data==iflag & T.temp_qc.data==1;
-                            T.temp_qc.data(isbadqc)=iflag;
-                            sum(isbadqc)
+                        if CONF.rmFlag==1
+                            for iflag=[3,4]
+                                isbadqc = T_sav.juld_qc.data==iflag & T.juld_qc.data==1;
+                                T.juld_qc.data(isbadqc)=iflag;
+                                
+                                isbadqc = T_sav.position_qc.data==iflag & T.position_qc.data==1;
+                                T.position_qc.data(isbadqc)=iflag;
+                                
+                                isbadqc = T_sav.pres_qc.data==iflag & T.pres_qc.data==1;
+                                T.pres_qc.data(isbadqc)=iflag;
+                                
+                                isbadqc = T_sav.psal_qc.data==iflag & T.psal_qc.data==1;
+                                T.psal_qc.data(isbadqc)=iflag;
+                                isbadqc = T_sav.temp_qc.data==iflag & T.temp_qc.data==1;
+                                T.temp_qc.data(isbadqc)=iflag;
+                                sum(isbadqc)
+                            end
                         end
-                        
                         
                         
                         disp('---------------- COMPUTE_VELOCITIES -------------------------------------------- ')
