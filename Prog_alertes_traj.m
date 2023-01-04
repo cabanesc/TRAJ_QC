@@ -97,6 +97,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
     file7 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_pressure_b.txt'];
     file8 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_locterre_b.txt'];
     file9 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_locpos_b.txt'];
+	file9d = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_locpos_details.txt'];  % cc 04/01/2023 pour stocker les positions en alertes
     file10 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_metatrajcyc_b.txt'];
     
     
@@ -106,11 +107,12 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
     fid7 = fopen(file7,'w+');
     fid8 = fopen(file8,'w+');
     fid9 = fopen(file9,'w+');
+	fid9d = fopen(file9d,'w+');    % cc 04/01/2023 pour stocker les positions en alertes
     fid10 = fopen(file10,'w+');
     
     
     fclose(fid3);
-    fclose(fid4);fclose(fid5); fclose(fid6);fclose(fid7); fclose(fid8);fclose(fid9);
+    fclose(fid4);fclose(fid5); fclose(fid6);fclose(fid7); fclose(fid8);fclose(fid9);fclose(fid9d);
     fclose(fid10);
     %%
     istat=0;
@@ -262,7 +264,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                     PARAM.ISDEEP=1;
                 end
             end
-            PARAM.ISDEEP
+            PARAM.ISDEEP;
             
             % RECUPERATION des indices de localisation (idLoc) et de derive en profondeur (idDrift)
             % -------------------------------------------------------------------------------------
@@ -277,7 +279,6 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
             if CONF.rmFlag==1
                 isbadqc = T.juld_qc.data==3|T.juld_qc.data==4;
                 sum(isbadqc)
-                keyboard
                 T.juld_qc.data(isbadqc)=1;
                 isbadqc = T.position_qc.data==3|T.position_qc.data==4;sum(isbadqc)
                 T.position_qc.data(isbadqc)=1;
@@ -1944,11 +1945,11 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                                     % fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DERIVE EN SURFACE ENTRE 1er et DERNIERE LOC D'' UN CYCLE, >' num2str(bornesurf/1000) 'km :' num2str(distancesurf/1000) ' km. Loc Argos probablement erronée.']);
                                     % fclose(fid_alerte);
                                     %   fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ', DERIVE EN SURFACE ENTRE 1er et DERNIERE LOC D''UN CYCLE>' num2str(bornesurf/1000) 'km :' num2str(distancesurf/1000) ' km. Loc Argos probablement erronée.']);
-                                    if CONF.Stat == 1
-                                        alertCyc_e9 = [alertCyc_e9 cycles_sorted(id)];
-                                        alerte29(k,cycles_sorted(id)+1)=str2double(floatname);
+                                    % if CONF.Stat == 1
+                                         alertCyc_e9 = [alertCyc_e9 cycles_sorted(id)];
+                                        % alerte29(k,cycles_sorted(id)+1)=str2double(floatname);
                                         
-                                    end
+                                    % end
                                     if(CONF.map==1)
                                         m_plot(dlonend,dlatend,'color','r','marker','^','markersize',5)
                                         m_plot(dlon,dlat,'color','r','marker','x','markersize',5)
@@ -1993,6 +1994,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             ranges = distance_lpo(locLat, locLon);
                             ECART_MAX_LOC_ARGOS=30; % remarque pour altran, le seuil est 30km.
                             idKo = find(ranges > ECART_MAX_LOC_ARGOS*1000);
+							
                             % sauvegarde des resultats koba pour calcul des vitesses
                             T.position_qc_koba.data(idCyc(idSorted(o_idBadPos)))=6;
                             
@@ -2002,7 +2004,10 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                                 fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, LOCATION POSITIONS more than ' num2str(ECART_MAX_LOC_ARGOS) 'km away']);
                                 fclose(fid_alerte);
                                 fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, LOCATION POSITIONS more than ' num2str(ECART_MAX_LOC_ARGOS) 'km away']);
-                                if CONF.Stat == 1
+								fid9d = fopen(file9d,'a');  % cc 04/01/2023 stockae des info positions flaggees
+								fprintf(fid9d,'%s\n',[ floatname ',' num2str(cycles_sorted(id)) ',' num2str(o_idBadPos')]);
+								
+								if CONF.Stat == 1
                                     alertCyc_e9 = [alertCyc_e9 cycles_sorted(id)];
                                 end
                                 o_idGoodPos=[];
