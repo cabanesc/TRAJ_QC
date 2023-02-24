@@ -95,6 +95,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
     file5 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_locdate_b.txt'];
     file6 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_launchdate_b.txt'];
     file7 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_pressure_b.txt'];
+    file7d = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_pressure_b_details.txt'];
     file8 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_locterre_b.txt'];
     file9 = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_locpos_b.txt'];
 	file9d = [CONF.DIR_DATA 'alerts/'  CONF.liste_rep_alerte{ilist} '/Alertes_locpos_details.txt'];  % cc 04/01/2023 pour stocker les positions en alertes
@@ -105,6 +106,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
     fid5 = fopen(file5,'w+');
     fid6 = fopen(file6,'w+');
     fid7 = fopen(file7,'w+');
+    fid7d = fopen(file7d,'w+');
     fid8 = fopen(file8,'w+');
     fid9 = fopen(file9,'w+');
 	fid9d = fopen(file9d,'w+');    % cc 04/01/2023 pour stocker les positions en alertes
@@ -112,7 +114,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
     
     
     fclose(fid3);
-    fclose(fid4);fclose(fid5); fclose(fid6);fclose(fid7); fclose(fid8);fclose(fid9);fclose(fid9d);
+    fclose(fid4);fclose(fid5); fclose(fid6);fclose(fid7); fclose(fid7d);fclose(fid8);fclose(fid9);fclose(fid9d);
     fclose(fid10);
     %%
     istat=0;
@@ -708,7 +710,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             
                             %%   DETERMINE l'elevation a la derniere loc du cycle precedent et premiere loc du cycle courant
                             %   elev_all et elev_end_all
-                            
+                          
                             if(CONF.Bathy==1)  % ETOPO
                                 
                                 ilong = round(mean(find(LONG(:,1)<=long_first_curr+max(diff(LONG)/2) & ...
@@ -859,7 +861,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             % On fait un premier check des pressions en cours de derive : Test_PTS_isas   add cc 29/09/2020
                             % et on recalcule pres_drift_mes en tenant compte des flags
                             
-                            [o_alerte11, o_alerte12,one_isas_alert,one_isas_non_ref,one_proche_surface] = Test_PTS_isas(idCyc_drift, id, cycles_sorted,ilong_drift, ilat_drift,i_rpp);
+                            [o_alerte11, o_alerte12,one_isas_alert,one_isas_non_ref,one_proche_surface] = Test_PTS_isas(file7d,idCyc_drift, id, cycles_sorted,ilong_drift, ilat_drift,i_rpp);
                             isas_alert(i_rpp)=one_isas_alert;
                             isas_non_ref(i_rpp)=one_isas_non_ref;
                             proche_surface(i_rpp)=one_proche_surface;
@@ -957,7 +959,8 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             %                 selec = idCyc_drift(isok_p); select = T.pres.data(selec);
                             
                             %recuperation des pressions de derive et moyenne par cycle
-                            if(elev_first_curr<-PARAM.PRESS_FOND) & -pres_drift_mes(i_rpp)>PARAM.PRESS_SURF  %ne recupere les pressions que quand la bathy est <-1500
+                            LIM_PRESS_FOND=max(PARAM.PRESS_FOND,-pres_drift_mes(i_rpp)+500); %% cc 23/02/2023 tient compte des deep
+                            if(elev_first_curr<-LIM_PRESS_FOND) &-pres_drift_mes(i_rpp)>PARAM.PRESS_SURF  %ne recupere les pressions que quand la bathy est <-1500
                                 pres_ok(id) = -pres_drift_mes(i_rpp);
                                 %pres_ok(id) = abs(mynanmean(select(find(select>PARAM.PRESS_SURF))));     %ne prend pas les pressions <50m
                             else
@@ -990,7 +993,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                     % - croissance des dates
                     % - ecart max entre deux loc consecutives
                     % - ecart max entre la premiere et derniere loc
-                    % -  date de lancement anterieure a� permiere loc
+                    % -  date de lancement anterieure a permiere loc
                     % - loca lisation sur l'ocean
                     % - derive en surface et en profondeur
                     % - ecart entre les locs de surface
@@ -1011,6 +1014,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                         Diff_Ppark=[];
                         ParkPress_all=[];
                         presall_met=[];
+                        TcycunM={};
                         for m = 1:length(missions)
                             
                             idcMis=find(T.config_mission_number.data==missions(m));
@@ -1035,7 +1039,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             %% Calcul de la pression mediane par numero de mission
                             if(~isempty(idcMisok))& sum(~isnan(pres))>0   % correction cc 27/05/2021
                                 if sum(~isnan(cycles_m{m}))>=1    %% pour les cas ou cycles_m{m} ~= juste le cycle 0
-                                    %%prise en compte du qc mis suite a� la verif avec la bathy
+                                    %%prise en compte du qc mis suite a la verif avec la bathy
                                     %  cc 21/09/2020 : tester avec PARAM.PRESS_STD plus
                                     %  grand
                                     %keyboard
@@ -1110,18 +1114,53 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             %%%pression mediane est bien differente de la valeur indiquee dans
                             %%%les meta.
                             %if (m<=length(M.ParkPressure) & abs(presMedianDrift(m) - -M.ParkPressure(m)) <  PARAM.PRESS_PARK_DIFF_M)
-                            if m<=length(M.ParkPressure) & ( abs(presMedianDrift(m) - -M.ParkPressure(m)) <  PARAM.PRESS_PARK_DIFF_M||isnan(presMedianDrift(m)))% correction cc 27/05/2021
+                            if m<=length(M.ParkPressure) && ( abs(presMedianDrift(m) - -M.ParkPressure(m)) <  PARAM.PRESS_PARK_DIFF_M||isnan(presMedianDrift(m)))% correction cc 27/05/2021
                                 %%si nbre de mission dans meta et traj est <= et si la mediane de la pression est proche de celle indiquee dans les meta
                                 park_prof(m) = -M.ParkPressure(m);
                             elseif m>length(M.ParkPressure) || presMedianDrift(m)<-M.ParkPressure(m)-PARAM.PRESS_PARK_DIFF_M ...  %%%si nbre de mission dans meta manquant ou si la mediane de la pression trop eloignee de celle indiquee dans les meta
                                     || presMedianDrift(m)>-M.ParkPressure(m)+PARAM.PRESS_PARK_DIFF_M
-                                
-                                park_prof(m) = presMedianDrift(m);
+                                if ~isnan(presMedianDrift(m))
+                                    park_prof(m) = presMedianDrift(m);
+                                else
+                                    park_prof(m) = - max(M.ParkPressure); % cc 23/02/2023  rajout cas si presMedianDrift est nan pour eviter bug
+                                end
                             elseif isnan(M.ParkPressure(m))
                                 park_prof(m) = presMedianDrift(m);
                             end
                             
+                            %TcycunM{m}=Tcycun;
+                            
                         end  %%fin de la boucle sur les missions
+                        
+                        % Affichage des pressions de parking prises en
+                        % compte. Eventuellement sauvegarde dans fichier
+                        
+%                         unique_park_prof=unique(park_prof,'stable');
+%                         %affiche les pression de park pour chaque mission
+%                         fprintf('%s\n',[ 'Retained parking pressure, cycles  :'])
+% 
+%                         for iparkp=1:length(unique_park_prof)
+%                             iuni=find(park_prof==unique_park_prof(iparkp));
+%                             TcycunM_i=[];
+%                             for kiuni=1:length(iuni)
+%                                 TcycunM_i=sort([TcycunM_i;TcycunM{iuni(kiuni)}]);
+%                             end
+%                             indexb=[find(diff(TcycunM_i)~=1); length(TcycunM_i)];
+%                             indexa=[1; find(diff(TcycunM_i)~=1)+1];
+%                             strindex='[';
+%                             for kindex=1:length(indexa)
+%                                 if indexa(kindex)~=indexb(kindex);
+%                                 strindex=[strindex  num2str(TcycunM_i(indexa(kindex))) ':' num2str(TcycunM_i(indexb(kindex))) ' , '];
+%                                 else
+%                                 strindex=[strindex  num2str(TcycunM_i(indexa(kindex))) ' , '];
+%                                 end
+%                             end
+%                             strindex=[strindex ']'];
+%                             strindex=strrep(strindex,' , ]',']');
+%                             fprintf('%s\n',[ floatname ', ' num2str(-unique_park_prof(iparkp)) ', ' strindex])
+%                             %fprintf('%s\n',[ floatname ', ' num2str(-unique_park_prof(iparkp)) ', ' strindex])
+%                          end
+                            
                         
                     end   %%fin de la condition sur idLoc
                     
@@ -1230,6 +1269,9 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                             pente=elev_all(i_rpp)-elev_end_all(i_rpp);
                             seuil=pente;
                             seuil(pente<100)=100;
+                            
+                            
+                            
                             
                             if  ((elev_end_all(i_rpp)>=park_prof(idMis)-PARAM.PRESS_PARK_DIFF_BATH | elev_all(i_rpp)>=park_prof(idMis)-PARAM.PRESS_PARK_DIFF_BATH)) ...
                                     & ((isnan(pres_drift_mes(i_rpp))||pres_drift_mes(i_rpp)<-100)|| ((elev_end_all(i_rpp)>=pres_drift_mes(i_rpp)-seuil | elev_all(i_rpp)>=pres_drift_mes(i_rpp)-seuil)))  % modif condition cc 21/01/2021 pour ne pas prendre en compte les flotteurs qui ne peuvent pas plonger et restent près de la surface (pas mal de provor-arvor iridium dans ce cas)
@@ -2123,7 +2165,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
                         if(isempty(alertCyc_e9)==0)
                             fid9=fopen(file9,'a');
                             fprintf(fid9,'%s\n',[floatname ', [' num2str(unique(alertCyc_e9)) ']']);   %%% alerte loc pos
-                            fclose(fid9);
+                            fclose(fid9);fclose(fid9d);
                         end
                         if(isempty(alertCyc_e10)==0)
                             fid10=fopen(file10,'a');
@@ -2242,6 +2284,7 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
     end  %% fin de la boucle sur les flotteurs
     
     disp(' ---------------- END OF TESTS -----------------------------------------------')
+    
     
     % fclose(fid3)
     % fclose(fid4);fclose(fid5); fclose(fid6);fclose(fid7); fclose(fid8);fclose(fid9);
