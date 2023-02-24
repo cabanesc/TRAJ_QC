@@ -227,7 +227,11 @@ for ilist=1:length(Liste_Float)   % add boucle cc 02/11/202
             % lecture des traj
             ii=ii+1;
             traj_fileName_R = [CONF.DIR_FTP CONF.DAC{ii} '/' floatname '/' floatname '_Rtraj.nc'];
+            if CONF.onlyR==1
+            traj_fileName_D = [CONF.DIR_FTP CONF.DAC{ii} '/' floatname '/' floatname '_Rtraj.nc'];
+            else
             traj_fileName_D = [CONF.DIR_FTP CONF.DAC{ii} '/' floatname '/' floatname '_Dtraj.nc'];
+            end
             if exist(traj_fileName_D,'file');
                 [T,DimT,GlobT]=read_netcdf_allthefile(traj_fileName_D);
                 traj_fileName_final=[floatname '_Dtraj.nc'];

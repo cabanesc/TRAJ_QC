@@ -48,7 +48,7 @@ end
 
 % Directory of Bathymety data
 %---------------------------
-conf.Bathy=2  ;
+conf.Bathy=3  ;
 
 if(conf.Bathy==1)  % obsolete
     conf.DIR_BATHY='/home5/pharos/REFERENCE_DATA/BATHYMETRY/DATA/ETOPO2v2c_f4.nc';
@@ -69,6 +69,7 @@ end
 conf.map = 0;      %%%1 affiche une carte et localise les erreurs. OBSOLETE  cc: toujours a 0
 conf.Stat = 1;     %%% 1: recupere les cycles concernees par des erreurs donnees   ; 0: ne recupere pas %  cc toujours a 1
 conf.rmFlag = 1;   %%% rmFlag=0: on tient compte de flag (3 ou 4) dejà mis dans fichiers netcdf. Si un de nos test echoue, cela ne produit pas d'alerte si dejà flag 3 ou 4; rmFlag=1 on ne tient pas compte des flags (3 et 4) - facilite comparaison avec alertes du process ANDRO
+conf.onlyR  =1;    %%% onlyR=1: ne travaille que sur les fichiers Rtraj;  onlyR=0 prend les fichiers Dtraj quand ils existent
 
 %%%% OUTPUTS
 
