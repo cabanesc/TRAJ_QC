@@ -213,9 +213,12 @@ while (1)
       posAcc1 = posAccNum(order(maxId));
       prec0 = precision(posAcc0);
       prec1 = precision(posAcc1);
+      
 
       % case of another Argos class
-      if (posAcc0 ~= posAcc1)
+      %if (posAcc0 ~= posAcc1)
+      if (posAcc0 ~= posAcc1)& (distance(maxId)/3)< sqrt(prec0*prec0 + prec1*prec1) % cc 06/03/2023 take into account position accuracy only if that makes sense: the distance between the two points is less than 3 times the error on positions. If distance is much larger than error, we want to comparate the two routes.
+          
          if (posAcc0 > posAcc1)
             flagged = maxId - 1;
          else
