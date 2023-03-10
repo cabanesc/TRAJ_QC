@@ -29,7 +29,7 @@ global I_temp_std;
 global I_psal;
 global I_temp;
 
-fid = fopen(file7d,'a');  % cc 04/01/2023 stockae des info positions flaggees
+fid = fopen(file7d,'a');  % cc 04/01/2023 stockgae des info positions flaggees
 strbadpres=['['];
 %tic
 o_alerte11 = []; o_alerte12 = [];
@@ -156,8 +156,11 @@ if sum(bad_pres&pres_noqc4)>=1
     fprintf(fid_alerte,'%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD PRESSURE DETECTED,' num2str(T.pres.data(idCyc_drift(bad_pres&pres_noqc4))') ]);
     fclose(fid_alerte);
     fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD PRESSURE DETECTED,' num2str(T.pres.data(idCyc_drift(bad_pres&pres_noqc4))') ])
-   % fprintf(fid,'%s\n',[ floatname ',' num2str(cycles_sorted(id)) ',' num2str(T.pres.data(idCyc_drift(bad_pres&pres_noqc4))')]);%cc 13/02/2023 stockae des info pressions flaggees
-    strbadpres=[strbadpres,num2str(T.pres.data(idCyc_drift(bad_pres&pres_noqc4))')];
+    % fprintf(fid,'%s\n',[ floatname ',' num2str(cycles_sorted(id)) ',' num2str(T.pres.data(idCyc_drift(bad_pres&pres_noqc4))')]);%cc 13/02/2023 stockae des info pressions flaggees
+    index_bad=idCyc_drift(bad_pres&pres_noqc4);
+    for  ibad=1:length(index_bad)
+        strbadpres=[strbadpres,num2str(T.pres.data(index_bad(ibad))'), ',' , num2str(T.pres.data(index_bad(ibad))'), '; '];
+    end
     pres_alert=1;
     
 end
@@ -321,7 +324,7 @@ for i=1:length(temp_mes)
                         fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, P and T are not consistent,:  TEMP(' num2str(temp_mes_i) ') ~= TEMP ISAS at same P (' num2str(temp_th_i) ')'])
                         pres_alert=1;
                         %fprintf(fid,'%s\n',[ floatname ',' num2str(cycles_sorted(id)) ',' num2str(T.pres.data(idCyc_drift(i))')]);%cc 13/02/2023 stockage des info pressions flaggees
-                        strbadpres=[strbadpres,num2str(T.pres.data(idCyc_drift(i))'), '  '];
+                        strbadpres=[strbadpres,num2str(T.pres.data(idCyc_drift(i))'), ',', num2str(T.temp.data(idCyc_drift(i))'), '; '];
                     end
                     
                 else
@@ -421,7 +424,7 @@ for i=1:length(temp_mes)
                 fprintf('%s\n',[ floatname ', cycle ' num2str(cycles_sorted(id)) ',flagged, BAD PRESSURE DETECTED (NO TEMP) '])
                 pres_alert=1;
                % fprintf(fid,'%s\n',[ floatname ',' num2str(cycles_sorted(id)) ',' num2str(T.pres.data(idCyc_drift(i))')]);%cc 13/02/2023 stockae des info pressions flaggees
-                strbadpres=[strbadpres,num2str(T.pres.data(idCyc_drift(i))), '  '];
+                strbadpres=[strbadpres,num2str(T.pres.data(idCyc_drift(i))), ',',num2str(T.temp.data(idCyc_drift(i))), '; '];
             end
         end
     end
@@ -438,6 +441,7 @@ if pres_alert==1
         m_plot(TEMP_LONG(ilong_drift,1),TEMP_LAT(ilat_drift,1),'color',[0.3010 0.7450 0.9330],'marker','*','markersize',5)
     end
     isas_alert=1;
+    strbadpres(end-1:end)=[];
     fprintf(fid,'%s\n',[ floatname ',' num2str(cycles_sorted(id)) ',' strbadpres ']']);
 else
     isas_alert=0;
