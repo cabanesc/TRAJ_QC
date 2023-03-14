@@ -159,7 +159,7 @@ if sum(bad_pres&pres_noqc4)>=1
     % fprintf(fid,'%s\n',[ floatname ',' num2str(cycles_sorted(id)) ',' num2str(T.pres.data(idCyc_drift(bad_pres&pres_noqc4))')]);%cc 13/02/2023 stockae des info pressions flaggees
     index_bad=idCyc_drift(bad_pres&pres_noqc4);
     for  ibad=1:length(index_bad)
-        strbadpres=[strbadpres,num2str(T.pres.data(index_bad(ibad))'), ',' , num2str(T.pres.data(index_bad(ibad))'), '; '];
+        strbadpres=[strbadpres,num2str(T.pres.data(index_bad(ibad))'), ',' , num2str(T.temp.data(index_bad(ibad))'), '; '];
     end
     pres_alert=1;
     
